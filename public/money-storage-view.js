@@ -2,8 +2,9 @@ const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[ch]));
 const fmt = value => {
+  if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
-  return value !== null && value !== "" && Number.isFinite(n)
+  return Number.isFinite(n)
     ? n.toLocaleString("ru-RU", { maximumFractionDigits: 12 })
     : "—";
 };

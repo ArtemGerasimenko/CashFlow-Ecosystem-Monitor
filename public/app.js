@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const num = value => {
+  if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:8}) : "—";
 };
@@ -29,10 +30,10 @@ function pairRows(levels) {
     return {price:null,quantity:null};
   }).filter(x=>x.price!=null);
 }
-function sideTable(levels,side) {
+function sideTable(levels,side,baseAsset="BTC") {
   const rows=pairRows(levels);
   if (!rows.length) return `<div class="empty-side">Нет уровней стакана</div>`;
-  return `<div class="book-table ${side}"><div class="book-head"><span>Цена (USDT)</span><span>Объём (BTC)</span></div>${rows.map(row=>`<div class="book-row"><strong>${num(row.price)}</strong><span>${num(row.quantity)}</span></div>`).join("")}</div>`;
+  return `<div class="book-table ${side}"><div class="book-head"><span>Цена (USDT)</span><span>Объём (${esc(baseAsset)})</span></div>${rows.map(row=>`<div class="book-row"><strong>${num(row.price)}</strong><span>${num(row.quantity)}</span></div>`).join("")}</div>`;
 }
 function market(xt) {
   if (!xt?.ok) return `<p>${esc(xt?.message||"XT пока не вернул данные")}</p>`;
@@ -60,7 +61,7 @@ function market(xt) {
     <div><span>Минимум 24ч</span><strong>${num(ticker.l??ticker.lowPrice)}</strong></div>
   </div>
   <h3 class="book-title">Стакан заявок · первые 10 уровней</h3>
-  <div class="book-grid"><section><h4 class="bid-label">Покупки (BID)</h4>${sideTable(book.bids,"bid")}</section><section><h4 class="ask-label">Продажи (ASK)</h4>${sideTable(book.asks,"ask")}</section></div>
+  <div class="book-grid"><section><h4 class="bid-label">Покупки (BID)</h4>${sideTable(book.bids,"bid",(d.symbol||ticker.s||"BTC_USDT").split("_")[0].toUpperCase())}</section><section><h4 class="ask-label">Продажи (ASK)</h4>${sideTable(book.asks,"ask",(d.symbol||ticker.s||"BTC_USDT").split("_")[0].toUpperCase())}</section></div>
   <p class="market-updated">Последнее получение данных: ${esc(updated)}</p>`;
 }
 
@@ -86,7 +87,7 @@ function blackbitView(source){
 function winanceView(source){
   if(!source?.ok) return `<p>${esc(source?.message||"Winance пока не вернул данные")}</p>`;
   const d=source.data||{}, pairs=d.pairs||{};
-  const fmt=v=>Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{maximumFractionDigits:8}):"—";
+  const fmt=v=>v===null||v===undefined||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{maximumFractionDigits:8}):"—";
   const pairCard=(pair,label,unit)=>`<div class="winance-pair"><span>${label}</span><strong>${fmt(pair?.rate)} ${unit}</strong><small>Объём: ${fmt(pair?.volumeBase)} ERUB</small></div>`;
   const history=(rows,unit)=>`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${(rows||[]).slice(-7).reverse().map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>Winance · ERUB Market</h2></div><span class="live-pill">● LIVE</span></div><div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div><h3>История ERUB / USDT · 7 последних дней</h3>${history(d.dailyHistory?.erubUsdt,"USDT")}<h3>История ERUB / RUB · 7 последних дней</h3>${history(d.dailyHistory?.erubRub,"RUB")}<p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>`;
@@ -123,5 +124,16 @@ async function load() {
   }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
-function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
+function calculate(){
+  const gross=Math.max(0,Number($("gross").value)||0);
+  const net=Math.max(0,(gross-3)/1.01);
+  const fee=gross-net;
+  $("net").textContent=`${net.toFixed(2)} USDT`;
+  $("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;
+  const m=$("minimum"),ok=gross+1e-9>=10;
+  m.textContent=ok
+    ?"Минимум 10 USDT до комиссии вывода достигнут"
+    :"Минимум 10 USDT до комиссии вывода не достигнут";
+  m.className=`minimum ${ok?"good":"bad"}`;
+}
 $("gross").addEventListener("input",calculate); calculate(); load(); setInterval(load,60000);

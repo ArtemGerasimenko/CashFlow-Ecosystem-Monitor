@@ -137,3 +137,5 @@ pre, code { max-width:100%; overflow-x:auto; }
   nav button { font-size: 13px; padding: 10px 11px; }
   .card, .source-detail { padding: 14px; }
 }
+
+.quote-unavailable{color:var(--red);font-size:12px}.ms-errors{margin:14px 0;color:var(--muted);font-size:13px}.ms-errors summary{cursor:pointer;color:var(--gold)}.ms-errors ul{padding-left:22px}.ms-errors li{margin:5px 0;overflow-wrap:anywhere}
