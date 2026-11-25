@@ -1,8 +1,14 @@
 {
   "name": "cashflow-ecosystem-monitor",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "CashFlow Ecosystem Monitor static site server",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=20" }
+  "type": "module",
+  "description": "CashFlow Ecosystem Monitor with server-side market data adapters",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

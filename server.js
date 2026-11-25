@@ -1,52 +1,43 @@
-const http = require("node:http");
-const fs = require("node:fs");
-const path = require("node:path");
+import http from "node:http";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { pathToFileURL } from "node:url";
+import { config } from "./src/config.js";
+import { startScheduler, getSnapshot, refreshAll } from "./src/monitor.js";
 
-const root = __dirname;
-const port = Number(process.env.PORT || 8080);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const publicDir = path.join(__dirname, "public");
+const mime = {".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".json":"application/json; charset=utf-8",".svg":"image/svg+xml"};
 
-const mimeTypes = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".webp": "image/webp",
-  ".ico": "image/x-icon"
-};
-
-const server = http.createServer((req, res) => {
-  let pathname;
-  try {
-    pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
-  } catch {
-    res.writeHead(400);
-    return res.end("Bad request");
-  }
-
-  const requestedPath = pathname === "/" ? "/index.html" : pathname;
-  const filePath = path.resolve(root, "." + requestedPath);
-
-  if (!filePath.startsWith(root + path.sep) && filePath !== path.join(root, "index.html")) {
-    res.writeHead(403);
-    return res.end("Forbidden");
-  }
-
-  fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) {
-      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      return res.end("Not found");
+function send(res, status, data, type="application/json; charset=utf-8") {
+  res.writeHead(status, {"Content-Type":type,"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"});
+  res.end(type.startsWith("application/json") ? JSON.stringify(data) : data);
+}
+async function handler(req,res) {
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  if (url.pathname.startsWith("/api/")) {
+    if (req.method !== "GET") return send(res,405,{error:"Method not allowed"});
+    if (url.pathname === "/api/health") return send(res,200,{ok:true,service:"CashFlow Ecosystem Monitor",pollIntervalMs:config.pollIntervalMs,now:new Date().toISOString()});
+    if (url.pathname === "/api/status") return send(res,200,getSnapshot());
+    if (url.pathname === "/api/refresh") {
+      try { await refreshAll(); return send(res,200,getSnapshot()); }
+      catch(e) { return send(res,502,{error:"Refresh failed",message:e.message}); }
     }
-
-    const contentType = mimeTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": contentType, "Cache-Control": "no-store" });
-    fs.createReadStream(filePath).pipe(res);
-  });
-});
-
-server.listen(port, "0.0.0.0", () => {
-  console.log(`CashFlow Ecosystem Monitor listening on port ${port}`);
-});
+    if (url.pathname === "/api/history") {
+      const snap = getSnapshot();
+      return send(res,200,{history:snap.history || []});
+    }
+    return send(res,404,{error:"API route not found"});
+  }
+  let pathname = decodeURIComponent(url.pathname);
+  if (pathname === "/") pathname = "/index.html";
+  const target = path.resolve(publicDir, "." + pathname);
+  if (!target.startsWith(publicDir + path.sep)) return send(res,403,"Forbidden","text/plain; charset=utf-8");
+  try {
+    const body = await fs.readFile(target);
+    send(res,200,body,mime[path.extname(target)] || "application/octet-stream");
+  } catch { send(res,404,"Not found","text/plain; charset=utf-8"); }
+}
+startScheduler();
+http.createServer((req,res)=>handler(req,res).catch(e=>send(res,500,{error:"Internal server error",message:e.message}))).listen(config.port,"0.0.0.0",()=>console.log(`CashFlow Monitor listening on ${config.port}`));
