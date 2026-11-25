@@ -38,6 +38,11 @@ function sideTable(levels,side) {
 }
 
 function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,midText="—"){
+  // Consistent precision across every exchange: price/quote total = 6, base quantity = 8.
+  const fixed=(value,digits)=>{
+    const n=Number(value);
+    return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
+  };
   const normalize=(rows)=> (Array.isArray(rows)?rows:[]).slice(0,10).map(r=>({
     price:r.rate??r.price??r[0],
     quantity:r.amountBase??r.quantity??r.qty??r[1],
@@ -48,13 +53,14 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
-    return `<div class="ub-row ${side}" style="--depth:${depth}%"><strong>${format(r.price)}</strong><span>${format(r.quantity)} ${baseLabel}</span><span>${format(r.total)} ${unit}</span>${orders?`<small>${r.orders==null?"—":format(r.orders)} орд.</small>`:""}</div>`;
+    const orderCount=r.orders==null?"—":(Number.isFinite(Number(r.orders))?Math.trunc(Number(r.orders)).toLocaleString("ru-RU"):"—");
+    return `<div class="ub-row ${side}" style="--depth:${depth}%"><strong>${fixed(r.price,6)}</strong><span>${fixed(r.quantity,8)} ${baseLabel}</span><span>${fixed(r.total,6)} ${unit}</span>${orders?`<small>${orderCount} орд.</small>`:""}</div>`;
   }).join("");
   return `<section class="unified-book">
     <div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">10 уровней · BUY / SELL</span></div>
     <div class="ub-head"><span>Цена (${unit})</span><span>Количество ${baseLabel}</span><span>Всего ${unit}</span><span>Ордеры</span></div>
     <div class="ub-side ub-asks">${sell.length?rows(sell,"ask"):'<p class="muted">Нет заявок на продажу</p>'}</div>
-    <div class="ub-mid"><span>ТЕКУЩАЯ ЦЕНА · ${midText}</span></div>
+    <div class="ub-mid"><span>ТЕКУЩАЯ ЦЕНА · ${fixed(midText,6)}</span></div>
     <div class="ub-side ub-bids">${buy.length?rows(buy,"bid"):'<p class="muted">Нет заявок на покупку</p>'}</div>
   </section>`;
 }
