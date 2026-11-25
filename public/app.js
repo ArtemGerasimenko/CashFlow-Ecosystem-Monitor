@@ -136,7 +136,6 @@ function erubView(source, winanceSource){
   const rate=(from,to)=> (d.rates||[]).find(x=>x.from===from&&x.to===to&&Number(x.rate)>0);
   const rubErub=rate("RUB","ERUB");
   const usdtErub=rate("USDT","ERUB");
-  const usdtRub=rate("USDT","RUB");
   const bounty=0.10;
   const effective=v=>v?Number(v.rate)*(1+bounty):null;
 
@@ -180,13 +179,7 @@ function erubView(source, winanceSource){
     return `<tr><td>${esc(m.merchant||"Платёжный канал")}</td><td>${esc(currencies)}</td><td>${esc(available(m.topup))}</td><td>${rubMention?"Канал упоминает RUB":"RUB не указан"}</td></tr>`;
   }).join("");
 
-  const routeRate=usdtRub&&rubErub?Number(usdtRub.rate)*Number(rubErub.rate):null;
-  const routeEff=routeRate===null?null:routeRate*1.1;
-  const directEff=effective(usdtErub);
-  const routeVerdict=routeEff&&directEff
-    ? (routeEff>directEff?`Маршрут через RUB выше на ${fmt((routeEff/directEff-1)*100,5)}%`:
-       routeEff<directEff?`Прямая покупка выше на ${fmt((directEff/routeEff-1)*100,5)}%`:"Одинаковый эффективный курс")
-    : "Недостаточно курсов для сравнения маршрутов";
+
 
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ САЙТА ERUB.SITE</div><h2>еРубль · Покупка ERUB</h2></div><span class="live-pill">● LIVE</span></div>
     <div class="erub-total"><span>Всего куплено ERUB по данным сайта</span><strong>${fmt(d.totalBought,4)} ERUB</strong></div>
@@ -195,14 +188,6 @@ function erubView(source, winanceSource){
     ${comparisonCard("USDT → ERUB",usdtErub,"USDT",winUsdt)}
     <h3>Покупка ERUB за рубли с карты</h3>
     ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}
-    <h3>Альтернативный маршрут покупки</h3>
-    <div class="erub-route-card">
-      <div><span>USDT → RUB</span><strong>${fmt(usdtRub?.rate)} RUB за 1 USDT</strong></div>
-      <div><span>Затем RUB → ERUB</span><strong>${fmt(rubErub?.rate)} ERUB за 1 RUB</strong></div>
-      <div><span>Итог без Bounty</span><strong>${fmt(routeRate)} ERUB за 1 USDT</strong></div>
-      <div><span>Итог с Bounty +10%</span><strong class="bonus-value">${fmt(routeEff)} ERUB за 1 USDT</strong></div>
-      <p class="erub-verdict ${routeEff&&directEff?(routeEff>directEff?"better":"worse"):"neutral"}">${routeVerdict}</p>
-    </div>
     <h3>Расчёт начисления Bounty</h3>
     <div class="erub-calculator">
       <label>Покупка за USDT<input id="erubBuyUsdt" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Например, 100"></label>

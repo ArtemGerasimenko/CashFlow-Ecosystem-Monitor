@@ -148,8 +148,7 @@ pre, code { max-width:100%; overflow-x:auto; }
 .erub-bounty-banner{display:flex;flex-direction:column;gap:6px;padding:15px 17px;margin:16px 0 22px;border:1px solid #286b58;border-radius:13px;background:linear-gradient(120deg,#123b35,#10243a)}
 .erub-bounty-banner strong{font-size:17px;color:#55dfad}
 .erub-bounty-banner span{color:#c8e8df;font-size:13px}
-.erub-compare-card,.erub-route-card{margin:12px 0 20px;padding:15px;border:1px solid var(--line);border-radius:14px;background:#101a2e}
-.erub-compare-title{font-weight:800;margin-bottom:12px}
+.erub-compare-card,.erub-compare-title{font-weight:800;margin-bottom:12px}
 .erub-compare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .erub-compare-columns>div,.erub-route-card>div{min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0b1426}
 .erub-compare-columns span,.erub-route-card span{display:block;color:var(--muted);font-size:11px}
@@ -160,8 +159,7 @@ pre, code { max-width:100%; overflow-x:auto; }
 .erub-verdict.better{background:#103c31;color:#63e4b3}
 .erub-verdict.worse{background:#44252b;color:#ff9a9f}
 .erub-verdict.neutral{background:#1a2941;color:#c3d0e9}
-.erub-route-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.erub-route-card .erub-verdict{grid-column:1/-1}
+
 .erub-calculator{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 22px}
 .erub-calculator label{display:block;color:var(--muted);font-size:13px}
 .erub-calculator input{display:block;width:100%;margin-top:7px;padding:12px;background:#0b1325;color:var(--text);border:1px solid #354568;border-radius:9px;font:inherit}
@@ -169,7 +167,7 @@ pre, code { max-width:100%; overflow-x:auto; }
 .erub-calc-result span{color:var(--muted);font-size:12px}
 .erub-calc-result strong{font-size:13px;text-align:right;overflow-wrap:anywhere}
 #erubData h3{margin-top:22px}
-@media(max-width:620px){.erub-compare-columns{grid-template-columns:1fr}.erub-route-card,.erub-calculator{grid-template-columns:1fr}.erub-route-card .erub-verdict{grid-column:auto}}
+@media(max-width:620px){.erub-compare-columns{grid-template-columns:1fr}.erub-calculator{grid-template-columns:1fr}}
 
 
 /* XT.COM ECR listing pending state */
