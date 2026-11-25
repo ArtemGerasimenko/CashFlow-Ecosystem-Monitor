@@ -16,7 +16,7 @@ async function api(path) {
   return payload;
 }
 function sourceCard(name,v) {
-  const labels={xt:"XT",blackbit:"BlackBit",moneyStorage:"Money Storage",winance:"Winance",erub:"eRub"};
+  const labels={xt:"XT",blackbit:"BlackBit",moneyStorage:"Money Storage",winance:"Winance",erub:"eRub",sberkassa:"Sber Kassa"};
   const status=v?.status||"нет статуса";
   return `<article class="card"><div class="source-name">${esc(labels[name]||name)}</div><div class="source-state ${v?.ok?"live":status==="error"?"error":""}">${esc(status)}</div><div class="muted">${esc(v?.message||(v?.ok?"Источник отвечает":"Нет данных"))}</div><div class="muted">${esc(v?.checkedAt||"")}</div></article>`;
 }
@@ -63,13 +63,32 @@ function market(xt) {
   <p class="market-updated">Последнее получение данных: ${esc(updated)}</p>`;
 }
 
+
+function blackbitView(source){
+  if(!source?.ok) return `<div class="source-detail"><div class="source-state error">${esc(source?.status||"нет данных")}</div><p>${esc(source?.message||"BlackBit пока не вернул данные")}</p><small>Проверка: ${esc(source?.checkedAt||"—")}</small></div>`;
+  const d=source.data||{};
+  const bids=Array.isArray(d.bids)?d.bids:[], asks=Array.isArray(d.asks)?d.asks:[];
+  const spread=Number(d.bestAsk)-Number(d.bestBid);
+  const spreadPct=Number(d.bestBid)>0?spread/Number(d.bestBid)*100:null;
+  const levels=(rows,side)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${num(r.rate)}</strong><span>${num(r.amountBase)} ECR</span><span>${num(r.amountQuoted)} USDT</span><small>${esc(r.orders??"—")} орд.</small></div>`).join("");
+  const side=(rows,cls,label)=>`<section><h3 class="${cls}">${label}</h3><div class="bb-level-head"><span>Цена (USDT)</span><span>Количество ECR</span><span>Всего USDT</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,cls):'<p class="muted">Нет уровней</p>'}</div></section>`;
+  const candles=(d.candles||[]).slice(-10).reverse();
+  const candleTable=candles.length?`<div class="table-wrap"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${num(c.open)}</td><td>${num(c.high)}</td><td>${num(c.low)}</td><td>${num(c.close)}</td><td>${num(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
+  <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
+  <p class="muted">ID пары: ${esc(d.pairId)} · Глубина стакана: до 100 уровней · Комиссия интерфейса: 0,10% (по скриншоту пользователя, не получена из API)</p>
+  <h3>Стакан заявок · первые 10 уровней</h3><div class="bb-book-grid">${side(bids,"bid-label","Покупки (BUY)")}${side(asks,"ask-label","Продажи (SELL)")}</div>
+  <h3>История ECR/USDT · 15 минут</h3>${candleTable}
+  <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")} · API: ${esc(d.apiResult||"—")} / ${esc(d.apiStatus||"—")}</p>`;
+}
+
 function winanceView(source){
   if(!source?.ok) return `<p>${esc(source?.message||"Winance пока не вернул данные")}</p>`;
   const d=source.data||{}, pairs=d.pairs||{};
   const fmt=v=>Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{maximumFractionDigits:8}):"—";
   const pairCard=(pair,label,unit)=>`<div class="winance-pair"><span>${label}</span><strong>${fmt(pair?.rate)} ${unit}</strong><small>Объём: ${fmt(pair?.volumeBase)} ERUB</small></div>`;
   const history=(rows,unit)=>`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${(rows||[]).slice(-7).reverse().map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`;
-  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>eRub Market</h2></div><span class="live-pill">● LIVE</span></div><div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div><h3>История ERUB / USDT · 7 последних дней</h3>${history(d.dailyHistory?.erubUsdt,"USDT")}<h3>История ERUB / RUB · 7 последних дней</h3>${history(d.dailyHistory?.erubRub,"RUB")}<p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>`;
+  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>Winance · ERUB Market</h2></div><span class="live-pill">● LIVE</span></div><div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div><h3>История ERUB / USDT · 7 последних дней</h3>${history(d.dailyHistory?.erubUsdt,"USDT")}<h3>История ERUB / RUB · 7 последних дней</h3>${history(d.dailyHistory?.erubRub,"RUB")}<p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>`;
 }
 
 function erubView(source){
@@ -79,7 +98,10 @@ function erubView(source){
   const rateCards=(d.rates||[]).map(r=>`<div class="erub-rate"><span>${esc(rateNames[`${r.fromId}-${r.toId}`]||`${esc(r.from)} → ${esc(r.to)}`)}</span><strong>${num(r.rate)}</strong><small>Версия курса: ${esc(r.version??"—")}</small></div>`).join("");
   const currencies=Array.isArray(d.currencies)?d.currencies.map(c=>`<span class="erub-chip">${esc(c.code??c.name??c.currency??JSON.stringify(c))}${c.id!=null?` · ID ${esc(c.id)}`:""}</span>`).join(""):"Формат списка валют не распознан; исходный ответ сохранён на сервере.";
   const cfg=d.merchantConfig||{};
-  const availability=Object.entries(cfg).filter(([k])=>/withdraw|deposit|buy|sell|payment|enabled|active/i.test(k)).map(([k,v])=>`<div class="erub-status"><span>${esc(k)}</span><strong>${esc(typeof v==="object"?JSON.stringify(v):v)}</strong></div>`).join("")||`<pre class="raw-json">${esc(JSON.stringify(cfg,null,2))}</pre>`;
+  const merchantRows=Array.isArray(cfg.merchant_cfg)?cfg.merchant_cfg:Array.isArray(cfg)?cfg:(Array.isArray(cfg.data)?cfg.data:[]);
+  const flag=v=>v===1||v===true||v==="1"?"Доступно":v===0||v===false||v==="0"?"Недоступно":String(v??"Не указано");
+  const requirement=v=>v===1||v===true||v==="1"?"Требуется":v===0||v===false||v==="0"?"Не требуется":String(v??"Не указано");
+  const availability=merchantRows.length?merchantRows.map(row=>`<div class="merchant-row"><strong>${esc(row.merchant||"Платёжный канал")}</strong><span>Валюты: ${esc((row.currency||[]).join?.(", ")||row.currency||"—")}</span><span>Пополнение: ${esc(flag(row.topup))}</span><span>Вывод: ${esc(flag(row.withdraw))}</span><span>Нужен адрес: ${esc(flag(row.need_address))}</span><span>Нужен email: ${esc(flag(row.need_email))}</span></div>`).join(""): `<div class="muted">Структура доступности операций пока не распознана. Сырые данные не показываем, чтобы не перегружать экран.</div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ ERUB.SITE</div><h2>ERUB Market</h2></div><span class="live-pill">● LIVE</span></div><div class="erub-total"><span>Всего куплено ERUB по данным сайта</span><strong>${num(d.totalBought)} ERUB</strong></div><h3>Курсы обмена</h3><div class="erub-rates">${rateCards||"Курсы не получены"}</div><h3>Доступность операций · merchant_config</h3><div class="erub-status-grid">${availability}</div><h3>Валюты из API</h3><div class="erub-chips">${currencies}</div><p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p><p class="muted">Источник: публичные endpoint сайта; официальная API-документация не подтверждена. Доступность операций отображается как получена из API, без предположений о значении неизвестных полей.</p>`;
 }
 
@@ -91,6 +113,8 @@ async function load() {
     $("sources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
     const xt=s.sources?.xt; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub);
     $("marketData").innerHTML=market(xt); $("xtData").innerHTML=market(xt);
+    const statusPanel=(key)=>{const v=s.sources?.[key]||{};return `<div class="source-detail"><div class="source-state ${v.ok?"live":v.status==="error"?"error":""}">${esc(v.status||"нет статуса")}</div><p>${esc(v.message|| (v.ok?"Источник отвечает":"Данные пока не получены"))}</p><small>Проверка: ${esc(v.checkedAt||"—")}</small></div>`;};
+    $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); $("moneyStorageData").innerHTML=statusPanel("moneyStorage"); $("sberkassaData").innerHTML=statusPanel("sberkassa");
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
