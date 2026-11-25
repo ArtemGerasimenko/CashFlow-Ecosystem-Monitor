@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>CashFlow Ecosystem Monitor</title>
+<style>
+:root{--bg:#090e1d;--panel:#111a30;--panel2:#17233d;--line:#293657;--text:#edf2ff;--muted:#9ba9c8;--purple:#a855f7;--blue:#4f8cff;--green:#31d39a;--red:#ff6b86;--gold:#f6c86b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#241044 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0b1020eF;border-bottom:1px solid var(--line);backdrop-filter:blur(16px);padding:14px 22px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.2px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#7135d7,#2279e8);display:grid;place-items:center;font-size:21px;box-shadow:0 8px 28px #5e32c955}.brand small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+.status{font-size:12px;color:var(--gold);border:1px solid #6e5931;border-radius:30px;padding:6px 10px}
+.layout{display:grid;grid-template-columns:245px minmax(0,1fr);max-width:1440px;margin:auto;min-height:calc(100vh - 69px)}
+aside{padding:22px 14px;border-right:1px solid var(--line)}.navlabel{font-size:10px;color:#7484a8;letter-spacing:1.5px;padding:8px 12px}
+nav button{width:100%;display:flex;align-items:center;gap:11px;text-align:left;background:transparent;border:0;color:#b9c5df;padding:12px;border-radius:11px;margin:2px 0;cursor:pointer;font:inherit}
+nav button:hover,nav button.active{background:linear-gradient(90deg,#7135d733,#2679e833);color:#fff}
+main{padding:28px;min-width:0}.page{display:none}.page.active{display:block}.eyebrow{color:#b48aff;font-size:12px;letter-spacing:1.3px;text-transform:uppercase;font-weight:700}
+h1{font-size:clamp(25px,4vw,34px);line-height:1.15;margin:7px 0 8px}h2{font-size:19px;margin:0 0 14px}.sub{color:var(--muted);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{background:linear-gradient(145deg,#17233ddd,#10182b);border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 12px 30px #0002}.metric{font-size:25px;font-weight:800;margin-top:7px}.muted{color:var(--muted);font-size:13px}.tag{font-size:11px;border-radius:20px;padding:4px 8px;background:#293655;color:#c5d2f1;display:inline-block}
+.notice{border:1px solid #705b31;background:#4a371b55;color:#f8d997;border-radius:12px;padding:12px 14px;font-size:13px;margin:16px 0}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.step{border:1px solid #4b4c91;background:#171638;border-radius:12px;padding:13px;position:relative}.step b{display:block;font-size:12px;color:#aebdff}.step strong{display:block;font-size:20px;margin:6px 0}.step small{color:var(--muted)}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.field input,.field select{width:100%;background:#0b1325;border:1px solid #354568;color:var(--text);padding:11px 12px;border-radius:10px;font:inherit;outline:none}.field input:focus{border-color:#a855f7}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:10px;padding:11px 15px;background:linear-gradient(100deg,#7135d7,#2878e8);color:white;font-weight:700;cursor:pointer}.btn.secondary{background:#263452;color:#d9e4ff}
+.result{margin-top:17px;padding:17px;border-radius:14px;border:1px solid #267b62;background:#10372d66}.result .big{font-size:30px;font-weight:850;color:var(--green)}.resultline{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff12;padding:7px 0}.resultline:last-child{border:0}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:11px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}
+.empty{padding:25px;text-align:center;border:1px dashed #425174;border-radius:14px;color:var(--muted)}
+footer{color:#7887a8;font-size:12px;padding:20px 28px;border-top:1px solid var(--line)}
+@media(max-width:850px){.layout{grid-template-columns:1fr}aside{border:0;border-bottom:1px solid var(--line);padding:8px 12px;overflow:auto}nav{display:flex;min-width:max-content}nav button{width:auto;padding:9px 12px;font-size:13px}.navlabel{display:none}main{padding:20px 14px}.grid{grid-template-columns:1fr 1fr}.flow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){header{padding:11px 14px}.status{font-size:10px}.grid,.formgrid{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.card{padding:15px}.step strong{font-size:17px}}
+</style></head>
+<body>
+<header><div class="brand"><div class="logo">⌁</div><div>CashFlow Ecosystem<small>MONITOR · ANALYTICS · CALCULATOR</small></div></div><div class="status">● ДЕМО · API НЕ ПОДКЛЮЧЕНЫ</div></header>
+<div class="layout">
+<aside><div class="navlabel">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav id="nav">
+<button class="active" data-page="dashboard">◈ Обзор</button>
+<button data-page="rates">↗ Курсы ECR / ECT / eRUB</button>
+<button data-page="book">▤ Стакан и история</button>
+<button data-page="erub">◉ Цена покупки eRUB</button>
+<button data-page="withdraw">⇄ Расчёт вывода</button>
+<button data-page="compare">⇆ Сравнение с биржей</button>
+<button data-page="xt">⬡ Статус XT</button>
+<button data-page="feedback">✉ Обратная связь</button>
+</nav></aside>
+<main>
+<section class="page active" id="dashboard"><div class="eyebrow">Панель управления</div><h1>CashFlow Monitor</h1><p class="sub">Мониторинг направлений, расчёты и контроль изменений в одном месте.</p>
+<div class="notice">Данные площадок пока не подключены. Карточки ниже не показывают live-курсы. Подключение реальных API выполняется после проверки официальных источников.</div>
+<div class="grid">
+<div class="card"><span class="muted">BlackBit</span><div class="metric">—</div><span class="tag">Ожидает API</span></div>
+<div class="card"><span class="muted">Money Storage</span><div class="metric">—</div><span class="tag">Ожидает API</span></div>
+<div class="card"><span class="muted">Winance / eRUB</span><div class="metric">—</div><span class="tag">Ожидает API</span></div>
+</div>
+<h2 style="margin-top:26px">Инструменты</h2><div class="grid">
+<div class="card"><b>📊 Мониторинг</b><p class="muted">Курсы, история, стакан и сигналы после подключения источников.</p></div>
+<div class="card"><b>🧮 Расчёты</b><p class="muted">Пошаговый расчёт Money Storage → BlackBit → вывод USDT.</p></div>
+<div class="card"><b>🔔 Уведомления</b><p class="muted">Пороговые оповещения будут доступны после серверной интеграции.</p></div></div></section>
+<section class="page" id="rates"><div class="eyebrow">Рынок</div><h1>Курсы ECR, ECT и eRUB</h1><p class="sub">Текущие значения и изменения по выбранным площадкам.</p><div class="notice">Live-данные отсутствуют: API ещё не настроены. Не используйте этот экран как источник актуального курса.</div><div class="empty">Нет подтверждённых котировок для отображения.</div></section>
+<section class="page" id="book"><div class="eyebrow">Рынок</div><h1>Стакан и история</h1><p class="sub">Глубина рынка, лучшие заявки и исторические значения.</p><div class="notice">Для реального стакана требуется подтверждённый API биржи. Исторические данные начнут накапливаться после подключения.</div><div class="grid"><div class="card"><span class="muted">Лучшая цена покупки</span><div class="metric">—</div></div><div class="card"><span class="muted">Лучшая цена продажи</span><div class="metric">—</div></div><div class="card"><span class="muted">Спред</span><div class="metric">—</div></div></div></section>
+<section class="page" id="erub"><div class="eyebrow">Поиск выгодного курса</div><h1>Где дешевле купить eRUB</h1><p class="sub">Сравнение площадок по цене покупки и дополнительным расходам.</p><div class="notice">Автоматический рейтинг появится после подключения подтверждённых котировок и комиссий.</div><div class="empty">Нет доступных подтверждённых предложений.</div></section>
+<section class="page" id="withdraw"><div class="eyebrow">Калькулятор</div><h1>Расчёт суммы на вывод</h1><p class="sub">Money Storage → покупка ECR → перевод в BB → продажа на BlackBit → вывод USDT.</p>
+<div class="notice">Начальные параметры взяты с присланного скриншота. Курс продажи и комиссия вывода должны быть проверены по фактическим условиям. Значения можно изменить.</div>
+<div class="card"><h2>Входные параметры</h2><div class="formgrid">
+<div class="field"><label>Сумма в Money Storage (EUR)</label><input id="amount" type="number" step="0.01" value="108"></div>
+<div class="field"><label>Курс сделки (EUR за 1 ECR)</label><input id="buyRate" type="number" step="0.0001" value="9.7"></div>
+<div class="field"><label>Комиссия покупки ECR (%)</label><input id="buyFee" type="number" step="0.01" value="0.5"></div>
+<div class="field"><label>Комиссия перевода в BB (%)</label><input id="transferFee" type="number" step="0.01" value="0.5"></div>
+<div class="field"><label>Курс продажи BlackBit (USDT за ECR)</label><input id="sellRate" type="number" step="0.000001" value="0.72110175"></div>
+<div class="field"><label>Комиссия продажи (%)</label><input id="sellFee" type="number" step="0.01" value="0.1"></div>
+<div class="field"><label>Комиссия вывода TRC-20 (USDT)</label><input id="withdrawFee" type="number" step="0.01" value="3.05"></div>
+<div class="field"><label>Минимум вывода (USDT)</label><input id="minimum" type="number" step="0.01" value="13.31"></div>
+</div><div class="actions"><button class="btn" id="calculate">Рассчитать вывод</button><button class="btn secondary" id="reset">Вернуть пример</button></div>
+<div class="result" id="result"><div class="muted">Ориентировочно на руки</div><div class="big" id="net">4.89 USDT</div><div class="resultline"><span>После покупки ECR</span><b id="afterBuy">—</b></div><div class="resultline"><span>После перевода в BB</span><b id="afterTransfer">—</b></div><div class="resultline"><span>После продажи на BlackBit</span><b id="afterSell">—</b></div><div class="resultline"><span>Комиссия вывода</span><b id="feeOut">—</b></div><div class="resultline"><span>Статус минимального вывода</span><b id="minStatus">—</b></div></div></div>
+<div class="flow"><div class="step"><b>1 · MONEY STORAGE</b><strong id="flow1">108 EUR</strong><small>Входная сумма</small></div><div class="step"><b>2 · ПОКУПКА ECR</b><strong id="flow2">—</strong><small>После комиссии покупки</small></div><div class="step"><b>3 · ПЕРЕВОД В BB</b><strong id="flow3">—</strong><small>После комиссии перевода</small></div><div class="step"><b>4 · ПРОДАЖА</b><strong id="flow4">—</strong><small>После комиссии продажи</small></div></div>
+</section>
+<section class="page" id="compare"><div class="eyebrow">Аналитика</div><h1>Сравнить курс с биржей</h1><p class="sub">Сопоставление курса сделки с рыночным курсом и комиссиями.</p><div class="card"><div class="formgrid"><div class="field"><label>Курс сделки</label><input id="dealRate" type="number" placeholder="Введите курс"></div><div class="field"><label>Курс биржи</label><input id="marketRate" type="number" placeholder="Введите курс"></div><div class="field"><label>Сумма</label><input id="compareAmount" type="number" placeholder="Введите сумму"></div><div class="field"><label>Комиссия (%)</label><input id="compareFee" type="number" value="0"></div></div><div class="actions"><button class="btn" id="compareBtn">Сравнить</button></div><div id="compareResult" class="result" hidden></div></div><div class="notice">Это ручное сравнение введённых значений. Автоматические курсы и точная логика оригинального бота требуют дополнительных экранов и API.</div></section>
+<section class="page" id="xt"><div class="eyebrow">Биржевой статус</div><h1>XT — торги, депозит и вывод</h1><p class="sub">Статус торговой пары и доступность операций.</p><div class="notice">Статусы не подключены. Здесь нельзя считать депозит или вывод доступными, пока биржа не вернёт подтверждённый статус через API.</div><div class="empty">Нет подтверждённого статуса XT.</div></section>
+<section class="page" id="feedback"><div class="eyebrow">Связь</div><h1>Пожелания и сообщения об ошибке</h1><p class="sub">Форма пока локальная — отправка на сервер не настроена.</p><div class="card"><div class="field"><label>Сообщение</label><textarea id="feedbackText" rows="5" style="width:100%;background:#0b1325;border:1px solid #354568;color:white;padding:12px;border-radius:10px;font:inherit" placeholder="Опишите пожелание или ошибку"></textarea></div><div class="actions"><button class="btn" id="copyFeedback">Скопировать сообщение</button></div></div></section>
+</main></div><footer>CashFlow Ecosystem Monitor · Отдельный модуль · Все рыночные данные требуют подключения подтверждённых источников.</footer>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('nav button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.page).classList.add('active');}));
+const fmt=(n,d=4)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:d}):'—';
+function calc(){
+ const v=id=>Number($(id).value);
+ const amount=v('amount'), rate=v('buyRate'), bf=v('buyFee')/100, tf=v('transferFee')/100, sr=v('sellRate'), sf=v('sellFee')/100, wf=v('withdrawFee'), min=v('minimum');
+ if([amount,rate,sr,wf,min,bf,tf,sf].some(x=>!Number.isFinite(x))||amount<=0||rate<=0||sr<=0||[bf,tf,sf].some(x=>x<0||x>=1)||wf<0||min<0){alert('Проверь входные значения и комиссии.');return;}
+ const afterBuy=amount/rate*(1-bf), afterTransfer=afterBuy*(1-tf), afterSell=afterTransfer*sr*(1-sf), net=afterSell-wf;
+ $('afterBuy').textContent=fmt(afterBuy,4)+' ECR';$('afterTransfer').textContent=fmt(afterTransfer,4)+' ECR';$('afterSell').textContent=fmt(afterSell,4)+' USDT';$('feeOut').textContent=fmt(wf,2)+' USDT';$('net').textContent=fmt(net,2)+' USDT';
+ $('minStatus').textContent=afterSell>=min?'Минимум достигнут':'Минимум не достигнут';$('minStatus').style.color=afterSell>=min?'#31d39a':'#f6c86b';
+ $('flow1').textContent=fmt(amount,2)+' EUR';$('flow2').textContent=fmt(afterBuy,4)+' ECR';$('flow3').textContent=fmt(afterTransfer,4)+' ECR';$('flow4').textContent=fmt(afterSell,4)+' USDT';
+}
+$('calculate').onclick=calc;$('reset').onclick=()=>{Object.entries({amount:108,buyRate:9.7,buyFee:.5,transferFee:.5,sellRate:.72110175,sellFee:.1,withdrawFee:3.05,minimum:13.31}).forEach(([k,v])=>$(k).value=v);calc();};calc();
+$('compareBtn').onclick=()=>{const d=+$('dealRate').value,m=+$('marketRate').value,a=+$('compareAmount').value,f=+$('compareFee').value/100;if(!(d>0&&m>0&&a>0&&f>=0&&f<1)){alert('Заполни положительные курсы и сумму.');return;}const diff=(d-m)/m*100, net=a*d*(1-f), market=a*m;const el=$('compareResult');el.hidden=false;el.innerHTML=`<b>Результат сравнения</b><div class="resultline"><span>Разница курсов</span><b>${fmt(diff,2)}%</b></div><div class="resultline"><span>По курсу сделки после комиссии</span><b>${fmt(net,2)}</b></div><div class="resultline"><span>По курсу биржи без комиссии</span><b>${fmt(market,2)}</b></div>`;};
+$('copyFeedback').onclick=()=>{const t=$('feedbackText').value;if(!t.trim())return alert('Сначала введи сообщение.');navigator.clipboard?.writeText(t).then(()=>alert('Сообщение скопировано.')).catch(()=>alert(t));};
+</script></body></html>
