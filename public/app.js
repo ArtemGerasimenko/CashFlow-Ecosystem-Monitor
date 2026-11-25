@@ -50,15 +50,7 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
     orders:r.orders??r.orderCount??r.count??null
   })).filter(r=>r.price!=null);
-  // Keep the 10 nearest sell levels, then show them from highest to lowest.
-  // Buy levels are shown from highest to lowest as well.
-  const sell=normalize(asks)
-    .sort((a,b)=>Number(a.price)-Number(b.price))
-    .slice(0,10)
-    .sort((a,b)=>Number(b.price)-Number(a.price));
-  const buy=normalize(bids)
-    .sort((a,b)=>Number(b.price)-Number(a.price))
-    .slice(0,10);
+  const sell=normalize(asks), buy=normalize(bids);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
@@ -105,6 +97,24 @@ function market(xt) {
 }
 
 
+const CANDLE_INTERVALS = [[60,"1м"],[300,"5м"],[900,"15м"],[1800,"30м"],[3600,"1ч"],[14400,"4ч"],[43200,"12ч"],[86400,"1д"]];
+function candleControls(source,pair,selected){
+  return `<div class="candle-controls" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${Number(selected)===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" style="padding:7px 10px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${Number(selected)===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
+}
+function candleRows(items,source){
+  const date = c => source==="blackbit" ? new Date(c.timestamp*1000).toLocaleString("ru-RU") : new Date(c.timestamp*1000).toLocaleDateString("ru-RU");
+  return `<div class="table-wrap history-table"><table><thead><tr><th>${source==="blackbit"?"Время":"Дата"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.slice(-30).reverse().map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+document.addEventListener("click",async event=>{
+  const button=event.target.closest("[data-candle-interval]"); if(!button) return;
+  const {candleSource:source,candlePair:pair,candleInterval:interval}=button.dataset;
+  const panel=button.closest("[data-candle-panel]"); if(!panel) return;
+  panel.querySelectorAll("[data-candle-interval]").forEach(b=>{b.classList.toggle("active",b===button);b.style.background=b===button?"rgba(99,102,241,.22)":"transparent";});
+  const table=panel.querySelector(".candle-results"); if(table) table.innerHTML='<p class="muted">Загрузка истории…</p>';
+  try{const result=await api(`/candles?source=${encodeURIComponent(source)}&pair=${encodeURIComponent(pair)}&interval=${encodeURIComponent(interval)}`); if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source):'<p class="muted">Для этого интервала история отсутствует</p>';}
+  catch(error){if(table)table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(error.message)}</p>`;}
+});
+
 function blackbitView(source){
   if(!source?.ok) return `<div class="source-detail"><div class="source-state error">${esc(source?.status||"нет данных")}</div><p>${esc(source?.message||"BlackBit пока не вернул данные")}</p><small>Проверка: ${esc(source?.checkedAt||"—")}</small></div>`;
   const d=source.data||{};
@@ -113,7 +123,7 @@ function blackbitView(source){
   const spreadPct=Number(d.bestBid)>0?spread/Number(d.bestBid)*100:null;
   const candles=(d.candles||[]).slice(-10).reverse();
   const candlePrice=v=>fixedDigits(v,6), candleVolume=v=>fixedDigits(v,8);
-  const candleTable=candles.length?`<div class="table-wrap history-table"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${candlePrice(c.open)}</td><td>${candlePrice(c.high)}</td><td>${candlePrice(c.low)}</td><td>${candlePrice(c.close)}</td><td>${candleVolume(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+  const candleTable=`<div data-candle-panel>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
   <p class="market-meta">Глубина стакана: до 100 уровней</p>
@@ -127,9 +137,9 @@ function winanceView(source){
   const d=source.data||{}, pairs=d.pairs||{}, books=d.orderBooks||{};
   const fmt=v=>v===null||v===undefined||v===""||!Number.isFinite(Number(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8});
   const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
-  const candles=(rows,unit)=> {
-    const items=(rows||[]).slice(-10).reverse();
-    return items.length?`<div class="table-wrap history-table"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fixedDigits(r.open,6)}</td><td>${fixedDigits(r.high,6)}</td><td>${fixedDigits(r.low,6)}</td><td>${fixedDigits(r.close,6)} ${unit}</td><td>${fixedDigits(r.volume,8)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+  const candles=(rows,unit,pairKey)=> {
+    const items=(rows||[]).slice(-30);
+    return `<div data-candle-panel>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -150,7 +160,7 @@ function winanceView(source){
       <p class="market-meta">${bookMeta}</p>
       ${book?.ok?unifiedBook(book.bids,book.asks,unit,"ERUB",fmt,true,pair?.rate):`<section class="unified-book"><div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">Нет данных</span></div><p class="muted">Стакан недоступен: ${esc(book?.message||"Публичный стакан пока не получен")}</p></section>`}
       <h3>История ${pairName} · дневные свечи</h3>
-      ${candles(d.dailyHistory?.[key],unit)}
+      ${candles(d.dailyHistory?.[key],unit,key)}
       <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>
     </section>`;
   };
