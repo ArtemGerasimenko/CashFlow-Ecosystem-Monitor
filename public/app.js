@@ -237,7 +237,7 @@ let refreshTimer = null;
 function scheduleRefresh(){
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = null;
-  if (!document.hidden) refreshTimer = setInterval(load,60000);
+  if (!document.hidden) refreshTimer = setInterval(load,10000);
 }
 document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden) load();});
 scheduleRefresh();
