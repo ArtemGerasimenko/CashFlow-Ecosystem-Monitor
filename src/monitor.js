@@ -39,8 +39,14 @@ export function startScheduler() {
   let stopped = false;
   const run = async () => {
     if (stopped) return;
+    const startedAt = Date.now();
     try { await refreshAll(); } catch (error) { console.error("Monitor refresh failed:", error); }
-    if (!stopped) { const timer = setTimeout(run, config.pollIntervalMs); timer.unref?.(); }
+    if (!stopped) {
+      // Keep a 10-second start-to-start cadence without overlapping refreshAll calls.
+      const delay = Math.max(0, config.pollIntervalMs - (Date.now() - startedAt));
+      const timer = setTimeout(run, delay);
+      timer.unref?.();
+    }
   };
   run();
   return () => { stopped = true; };
