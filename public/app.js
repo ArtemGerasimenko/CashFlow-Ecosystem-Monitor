@@ -98,21 +98,43 @@ function market(xt) {
 
 
 const CANDLE_INTERVALS = [[60,"1м"],[300,"5м"],[900,"15м"],[1800,"30м"],[3600,"1ч"],[14400,"4ч"],[43200,"12ч"],[86400,"1д"]];
-function candleControls(source,pair,selected){
-  return `<div class="candle-controls" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${Number(selected)===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" style="padding:7px 10px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${Number(selected)===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
+const candleSelections = new Map();
+const candleRequests = new WeakMap();
+const candleDataCache = new Map();
+const candleKey = (source,pair) => `${source}:${pair}`;
+function candleLabel(interval){return CANDLE_INTERVALS.find(([value])=>Number(value)===Number(interval))?.[1]||"интервал";}
+function candleControls(source,pair,defaultInterval){
+  const selected=Number(candleSelections.get(candleKey(source,pair))??defaultInterval);
+  return `<div class="candle-controls" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
 }
 function candleRows(items,source){
   const date = c => source==="blackbit" ? new Date(c.timestamp*1000).toLocaleString("ru-RU") : new Date(c.timestamp*1000).toLocaleDateString("ru-RU");
-  return `<div class="table-wrap history-table"><table><thead><tr><th>${source==="blackbit"?"Время":"Дата"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.slice(-30).reverse().map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
+  const sorted=(Array.isArray(items)?items:[]).filter(c=>Number.isFinite(Number(c.timestamp))).sort((a,b)=>Number(b.timestamp)-Number(a.timestamp)).slice(0,30);
+  return `<div class="table-wrap history-table"><table><thead><tr><th>${source==="blackbit"?"Время":"Дата"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 document.addEventListener("click",async event=>{
   const button=event.target.closest("[data-candle-interval]"); if(!button) return;
   const {candleSource:source,candlePair:pair,candleInterval:interval}=button.dataset;
   const panel=button.closest("[data-candle-panel]"); if(!panel) return;
-  panel.querySelectorAll("[data-candle-interval]").forEach(b=>{b.classList.toggle("active",b===button);b.style.background=b===button?"rgba(99,102,241,.22)":"transparent";});
+  const selected=Number(interval);
+  candleSelections.set(candleKey(source,pair),selected);
+  panel.querySelectorAll("[data-candle-interval]").forEach(b=>{
+    const active=Number(b.dataset.candleInterval)===selected;
+    b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
+    b.style.background=active?"rgba(99,102,241,.22)":"transparent";
+  });
+  const title=panel.querySelector("[data-candle-title]");
+  if(title) title.textContent=`История ${panel.dataset.candlePairName||""} · ${candleLabel(selected)}`;
   const table=panel.querySelector(".candle-results"); if(table) table.innerHTML='<p class="muted">Загрузка истории…</p>';
-  try{const result=await api(`/candles?source=${encodeURIComponent(source)}&pair=${encodeURIComponent(pair)}&interval=${encodeURIComponent(interval)}`); if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source):'<p class="muted">Для этого интервала история отсутствует</p>';}
-  catch(error){if(table)table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(error.message)}</p>`;}
+  const requestToken=(candleRequests.get(panel)||0)+1; candleRequests.set(panel,requestToken);
+  try{
+    const result=await api(`/candles?source=${encodeURIComponent(source)}&pair=${encodeURIComponent(pair)}&interval=${encodeURIComponent(selected)}`);
+    if(candleRequests.get(panel)!==requestToken) return;
+    candleDataCache.set(`${candleKey(source,pair)}:${selected}`,Array.isArray(result.candles)?result.candles:[]);
+    if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source):'<p class="muted">Для этого интервала история отсутствует</p>';
+  } catch(error){
+    if(candleRequests.get(panel)===requestToken&&table) table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(error.message)}</p>`;
+  }
 });
 
 function blackbitView(source){
@@ -121,14 +143,15 @@ function blackbitView(source){
   const bids=Array.isArray(d.bids)?d.bids:[], asks=Array.isArray(d.asks)?d.asks:[];
   const spread=Number(d.bestAsk)-Number(d.bestBid);
   const spreadPct=Number(d.bestBid)>0?spread/Number(d.bestBid)*100:null;
-  const candles=(d.candles||[]).slice(-10).reverse();
-  const candlePrice=v=>fixedDigits(v,6), candleVolume=v=>fixedDigits(v,8);
-  const candleTable=`<div data-candle-panel>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+  const selected=Number(candleSelections.get(candleKey("blackbit","ecrUsdt"))??900);
+  const cached=candleDataCache.get(`${candleKey("blackbit","ecrUsdt")}:${selected}`);
+  const candles=Array.isArray(cached)?cached:(selected===900&&Array.isArray(d.candles)?d.candles:[]);
+  const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
   <p class="market-meta">Глубина стакана: до 100 уровней</p>
   ${unifiedBook(bids,asks,"USDT","ECR",num,true,num(d.lastRate))}
-  <h3>История ECR/USDT · 15 минут</h3>${candleTable}
+  ${candleTable}
   <p class="market-updated">Обновлено: ${esc(d.receivedAt||source.checkedAt||"—")}</p>`;
 }
 
@@ -137,9 +160,11 @@ function winanceView(source){
   const d=source.data||{}, pairs=d.pairs||{}, books=d.orderBooks||{};
   const fmt=v=>v===null||v===undefined||v===""||!Number.isFinite(Number(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8});
   const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
-  const candles=(rows,unit,pairKey)=> {
-    const items=(rows||[]).slice(-30);
-    return `<div data-candle-panel>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+  const candles=(rows,unit,pairKey,pairName)=> {
+    const selected=Number(candleSelections.get(candleKey("winance",pairKey))??86400);
+    const cached=candleDataCache.get(`${candleKey("winance",pairKey)}:${selected}`);
+    const items=Array.isArray(cached)?cached:(selected===86400&&Array.isArray(rows)?rows:[]);
+    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -159,8 +184,7 @@ function winanceView(source){
       </div>
       <p class="market-meta">${bookMeta}</p>
       ${book?.ok?unifiedBook(book.bids,book.asks,unit,"ERUB",fmt,true,pair?.rate):`<section class="unified-book"><div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">Нет данных</span></div><p class="muted">Стакан недоступен: ${esc(book?.message||"Публичный стакан пока не получен")}</p></section>`}
-      <h3>История ${pairName} · дневные свечи</h3>
-      ${candles(d.dailyHistory?.[key],unit,key)}
+      ${candles(d.dailyHistory?.[key],unit,key,pairName)}
       <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>
     </section>`;
   };
