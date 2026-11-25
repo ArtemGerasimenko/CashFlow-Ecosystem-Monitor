@@ -44,12 +44,22 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     const n=Number(value);
     return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
   };
-  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).slice(0,10).map(r=>({
-    price:r.rate??r.price??r[0],
-    quantity:r.amountBase??r.quantity??r.qty??r[1],
-    total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
-    orders:r.orders??r.orderCount??r.count??null
-  })).filter(r=>r.price!=null);
+  // Sort each side independently by numeric price BEFORE limiting to 10 levels.
+  // SELL (asks): highest price first. BUY (bids): highest price first.
+  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).map(r=>{
+    const price=r.rate??r.price??r[0];
+    const quantity=r.amountBase??r.quantity??r.qty??r[1];
+    const rawTotal=r.amountQuoted??r.total;
+    return {
+      price,
+      priceNumber:Number(price),
+      quantity,
+      total:rawTotal??(Number(price)*Number(quantity)),
+      orders:r.orders??r.orderCount??r.count??null
+    };
+  }).filter(r=>r.price!=null&&Number.isFinite(r.priceNumber))
+    .sort((a,b)=>b.priceNumber-a.priceNumber)
+    .slice(0,10);
   const sell=normalize(asks), buy=normalize(bids);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
