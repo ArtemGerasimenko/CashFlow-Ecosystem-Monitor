@@ -60,3 +60,14 @@ XT подключается через три публичных endpoint без
 - `/v4/public/depth?symbol=btc_usdt&limit=100` — стакан заявок.
 
 Интерфейс использует именно эти отдельные ответы. Если у торговой пары нет активных заявок, соответствующая сторона стакана может быть пустой; это уже ответ биржи, а не ошибка отрисовки.
+
+
+## Winance public market data
+
+The monitor reads the public `GET /site/currency_pairs` response and daily candles from `/site/graph_data` for ERUB/USDT (pair id returned by the first endpoint) and ERUB/RUB. These endpoints were reachable without login during integration verification. They are public website endpoints, not a documented official developer API contract; response formats may change. No private account, trading, deposit or withdrawal functions are implemented. Treat rates as indicative exchange data and verify on the exchange before any transaction.
+
+## eRub public data adapter
+
+The `erub` source queries the public website endpoints `/site/total_bought`, `/site/rates`, `/site/merchant_config`, and `/site/currencies` on `https://erub.site`. It does not authenticate or access user accounts. These are website endpoints rather than a confirmed published/official API contract, so the adapter validates response status and may need maintenance if the site changes. Currency IDs currently mapped from observed public responses: `643 = RUB`, `2010 = ERUB`, `4840 = USDT`. Unknown IDs are shown as IDs rather than guessed.
+
+The UI includes a risk notice that eRub has been included by the Bank of Russia in its warning list for entities showing signs of a financial pyramid. This is a regulator warning, not an independent verification of every claim about the service. Always check the regulator's current list and the site's live operation settings before relying on availability.
