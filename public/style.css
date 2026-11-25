@@ -260,3 +260,117 @@ pre, code { max-width:100%; overflow-x:auto; }
  .book-section h3{font-size:16px}
  .winance-market-card{padding:16px 0 20px}
 }
+
+/* Mobile readability: larger order-book typography and compact two-line rows */
+@media (max-width: 650px) {
+  .bb-book-grid { gap: 20px; }
+  .book-scroll { overflow: visible; }
+  .book-table-inner { min-width: 0; }
+  .bb-level-head { display: none !important; }
+  .bb-levels { overflow: visible; border-radius: 10px; }
+  .bb-levels .book-row,
+  .winance-market-card .bb-levels .book-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px 12px;
+    align-items: center;
+    min-height: 0;
+    padding: 12px 11px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: normal;
+  }
+  .bb-levels .book-row strong,
+  .winance-market-card .bb-levels .book-row strong {
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .bb-levels .book-row span,
+  .winance-market-card .bb-levels .book-row span {
+    font-size: 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .bb-levels .book-row span:nth-of-type(1)::before {
+    content: "Количество: ";
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .bb-levels .book-row span:nth-of-type(2)::before {
+    content: "Всего: ";
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .bb-levels .book-row small {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .book-section h3,
+  .winance-market-card .book-section h3 { font-size: 19px; }
+  .history-table th { font-size: 14px; }
+  .history-table td { font-size: 14px; }
+  .history-table th, .history-table td { padding: 13px 12px; }
+}
+@media (max-width: 420px) {
+  .bb-levels .book-row,
+  .winance-market-card .bb-levels .book-row { font-size: 14px; padding: 11px 9px; }
+  .bb-levels .book-row span,
+  .winance-market-card .bb-levels .book-row span { font-size: 12.5px; }
+}
+
+
+/* Unified exchange-style order book */
+.unified-book{
+  margin:16px 0 24px;
+  padding:14px;
+  border:1px solid #dce3ed;
+  border-radius:16px;
+  background:#fff;
+  color:#182235;
+  box-shadow:0 5px 18px rgba(12,24,44,.08);
+  overflow:hidden;
+}
+.ub-toolbar{display:flex;align-items:center;gap:16px;min-height:42px;margin-bottom:12px}
+.ub-toolbar strong{font-size:19px;font-weight:750;color:#172033}
+.ub-count{margin-left:auto;color:#7b8798;font-size:12px;white-space:nowrap}
+.ub-head,.ub-row{display:grid;grid-template-columns:minmax(105px,.9fr) minmax(0,1.25fr) minmax(0,1fr);gap:10px;align-items:center}
+.ub-head{padding:9px 10px;background:#f3f6fa;color:#8792a2;font-size:13px;font-weight:650;border-radius:8px 8px 0 0}
+.ub-head span:nth-child(n+2),.ub-row span{text-align:right}
+.ub-side{overflow:hidden}
+.ub-row{position:relative;isolation:isolate;min-height:43px;padding:8px 10px;border-bottom:1px solid #edf0f4;font-size:14px;font-variant-numeric:tabular-nums}
+.ub-row::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;width:var(--depth);opacity:.14}
+.ub-row.ask::before{right:0;background:#ef7777}
+.ub-row.bid::before{right:0;background:#70c77b}
+.ub-row strong{font-size:15px;font-weight:750;white-space:nowrap}
+.ub-row span{white-space:nowrap}
+.ub-row.ask strong{color:#c94e4e}
+.ub-row.bid strong{color:#43a85c}
+.ub-row.ask{color:#343d4b}
+.ub-row.bid{color:#343d4b}
+.ub-row small{display:none}
+.ub-mid{display:flex;align-items:center;gap:10px;padding:9px 10px;background:#f7f9fc;color:#8390a2;font-size:10px;font-weight:750;letter-spacing:.08em}
+.ub-mid::before,.ub-mid::after{content:"";height:1px;flex:1;background:#e1e6ee}
+@media(max-width:650px){
+ .unified-book{padding:11px;margin:14px 0 20px;border-radius:13px}
+ .ub-toolbar strong{font-size:19px}
+ .ub-count{font-size:11px}
+ .ub-head,.ub-row{grid-template-columns:minmax(82px,.85fr) minmax(0,1.25fr) minmax(0,1fr);gap:6px}
+ .ub-head{padding:9px 7px;font-size:11px}
+ .ub-row{min-height:46px;padding:10px 7px;font-size:12px}
+ .ub-row strong{font-size:14px}
+ .ub-row span{font-size:11px}
+}
+@media(max-width:380px){
+ .ub-head,.ub-row{grid-template-columns:minmax(72px,.8fr) minmax(0,1.2fr) minmax(0,.95fr);gap:4px}
+ .ub-row{font-size:11px}
+ .ub-row strong{font-size:13px}
+ .ub-row span{font-size:10px}
+}
