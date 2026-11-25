@@ -1,13 +1,16 @@
 import { config } from "./config.js";
 import { readState, updateSource } from "./store.js";
 import { fetchXtMarket } from "./adapters/xt.js";
+import { fetchWinanceMarket } from "./adapters/winance.js";
+import { fetchErubMarket } from "./adapters/erub.js";
 import { unavailableAdapter } from "./adapters/unconfigured.js";
 
 const adapters = {
   xt: async()=>({ok:true,status:"live",data:await fetchXtMarket(),checkedAt:new Date().toISOString()}),
   blackbit: unavailableAdapter("blackbit","Официальная API-документация и endpoint не подтверждены. Подключение отключено."),
   moneyStorage: unavailableAdapter("moneyStorage","Нужны официальный API endpoint, документация и учётные данные поставщика."),
-  winance: unavailableAdapter("winance","Публичные адреса API требуют проверки владельцем сервиса; не включены как подтверждённый источник.")
+  winance: async()=>({ok:true,status:"live",data:await fetchWinanceMarket(),checkedAt:new Date().toISOString()}),
+  erub: async()=>({ok:true,status:"live",data:await fetchErubMarket(),checkedAt:new Date().toISOString()})
 };
 let running = false;
 export async function refreshAll() {
