@@ -26,11 +26,12 @@ function sourceCard(name,v) {
 }
 function pairRows(levels) {
   if (!Array.isArray(levels)) return [];
-  return levels.slice(0,10).map(level => {
+  return levels.map(level => {
     if (Array.isArray(level)) return {price:level[0],quantity:level[1]};
-    if (level && typeof level==="object") return {price:level.price??level.p??level[0],quantity:level.quantity??level.qty??level.amount??level.q??level[1]};
+    if (level && typeof level==="object") return {price:level.price??level.rate??level.p??level[0],quantity:level.quantity??level.qty??level.amount??level.q??level[1]};
     return {price:null,quantity:null};
-  }).filter(x=>x.price!=null);
+  }).filter(x=>x.price!=null && Number.isFinite(Number(x.price)))
+    .sort((a,b)=>Number(b.price)-Number(a.price)).slice(0,10);
 }
 function sideTable(levels,side) {
   const rows=pairRows(levels);
@@ -44,22 +45,15 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     const n=Number(value);
     return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
   };
-  // Sort each side independently by numeric price BEFORE limiting to 10 levels.
-  // SELL (asks): highest price first. BUY (bids): highest price first.
-  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).map(r=>{
-    const price=r.rate??r.price??r[0];
-    const quantity=r.amountBase??r.quantity??r.qty??r[1];
-    const rawTotal=r.amountQuoted??r.total;
-    return {
-      price,
-      priceNumber:Number(price),
-      quantity,
-      total:rawTotal??(Number(price)*Number(quantity)),
-      orders:r.orders??r.orderCount??r.count??null
-    };
-  }).filter(r=>r.price!=null&&Number.isFinite(r.priceNumber))
-    .sort((a,b)=>b.priceNumber-a.priceNumber)
-    .slice(0,10);
+  // Always sort the complete API depth before taking the visible 10 levels.
+  // Both sides are shown from the highest price down, as requested.
+  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).map(r=>({
+    price:r.rate??r.price??r[0],
+    quantity:r.amountBase??r.quantity??r.qty??r[1],
+    total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
+    orders:r.orders??r.orderCount??r.count??null
+  })).filter(r=>r.price!=null && Number.isFinite(Number(r.price)))
+    .sort((a,b)=>Number(b.price)-Number(a.price)).slice(0,10);
   const sell=normalize(asks), buy=normalize(bids);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
@@ -118,19 +112,16 @@ function candleControls(source,pair,defaultInterval){
   return `<div class="candle-controls" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
 }
 function candleRows(items,source,interval=86400){
-  const isDaily=Number(interval)===86400;
   const date = c => {
     const raw=Number(c.timestamp);
     const stamp=raw>1e12?raw:raw*1000;
     const d=new Date(stamp);
     if(!Number.isFinite(d.getTime())) return "—";
-    // Daily candles show their calendar date; intraday candles show the exact candle start time.
-    return isDaily
-      ? d.toLocaleDateString("ru-RU")
-      : `${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",hour12:false})}`;
+    // Show the exact candle timestamp for every timeframe, including daily candles.
+    return `${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",hour12:false})}`;
   };
   const sorted=(Array.isArray(items)?items:[]).filter(c=>Number.isFinite(Number(c.timestamp))).sort((a,b)=>Number(b.timestamp)-Number(a.timestamp)).slice(0,30);
-  return `<div class="table-wrap history-table"><table><thead><tr><th>${isDaily?"Дата":"Дата и время"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-wrap history-table"><table><thead><tr><th>Дата и время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 document.addEventListener("click",async event=>{
   const button=event.target.closest("[data-candle-interval]"); if(!button) return;
@@ -282,9 +273,15 @@ async function load() {
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
+    const preserveScroll = element => ({top:element.scrollTop,left:element.scrollLeft});
+    const restoreScroll = (element,pos) => { if(element&&pos){element.scrollTop=pos.top;element.scrollLeft=pos.left;} };
+    const winanceScroll=preserveScroll($("winanceData"));
+    const blackbitScroll=preserveScroll($("blackbitData"));
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
     $("marketData").innerHTML=xtNotice; $("xtData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
+    restoreScroll($("winanceData"),winanceScroll);
+    restoreScroll($("blackbitData"),blackbitScroll);
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
