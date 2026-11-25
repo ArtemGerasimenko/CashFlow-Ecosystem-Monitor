@@ -35,11 +35,6 @@
 .winance-pair small{color:var(--muted)}
 #winanceData h3{margin-top:22px}
 @media(max-width:520px){.winance-pairs{grid-template-columns:1fr}}
-.erub-total{background:#0d1729;border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}.erub-total span{display:block;color:var(--muted);font-size:12px}.erub-total strong{display:block;font-size:clamp(22px,5vw,30px);margin-top:7px;overflow-wrap:anywhere}.erub-rates,.erub-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 20px}.erub-rate,.erub-status{background:#0d1729;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.erub-rate span,.erub-status span{display:block;color:var(--muted);font-size:11px}.erub-rate strong,.erub-status strong{display:block;margin:7px 0;overflow-wrap:anywhere}.erub-rate small{color:var(--muted)}.erub-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.erub-chip{border:1px solid var(--line);background:#0d1729;border-radius:20px;padding:7px 10px;font-size:12px}.risk-notice{border-color:#8a6330;background:#2a2114;color:#f3d6a0}.raw-json{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;color:var(--muted)}
-@media(max-width:600px){.erub-rates,.erub-status-grid{grid-template-columns:1fr}}
-/* Source status and normalized eRub merchant availability */
-.source-detail{background:#0d1729;border:1px solid var(--line);border-radius:12px;padding:15px}.source-detail p{margin:8px 0;color:var(--muted)}.source-detail small{color:var(--muted)}.merchant-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;background:#0d1729;border:1px solid var(--line);border-radius:11px;padding:13px;margin:9px 0;font-size:13px}.merchant-row strong{grid-column:1/-1;color:#d7c5ff}.merchant-row span{overflow-wrap:anywhere;color:var(--muted)}.risk-notice a{color:#ffe1a1;text-decoration:underline}@media(max-width:520px){.merchant-row{grid-template-columns:1fr}.merchant-row strong{grid-column:auto}}
-
 /* BlackBit ECR/USDT market */
 .bb-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
 .bb-summary>div{background:#0d1729;border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}
@@ -62,8 +57,8 @@
 html, body { width:100%; max-width:100%; overflow-x:hidden; }
 .layout { width:100%; max-width:1400px; min-width:0; }
 aside, main, .page, .card, .grid, .formgrid, .source-detail,
-#blackbitData, #xtData, #winanceData, #erubData,
-#moneyStorageData, #sberkassaData { min-width:0; max-width:100%; }
+#blackbitData, #xtData, #winanceData,
+
 main { overflow-x:hidden; }
 .topbar { min-width:0; max-width:100%; flex-wrap:wrap; }
 .brand { min-width:0; max-width:100%; }
@@ -139,33 +134,6 @@ pre, code { max-width:100%; overflow-x:auto; }
 }
 
 
-/* Money Storage best-offer monitor */
-.ms-best-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 20px}
-.ms-best-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d);min-width:0}
-.ms-best-card>span{font-size:.88rem;color:var(--muted,#9aa8c2)}
-.ms-best-card>strong{font-size:clamp(1.15rem,3vw,1.65rem);overflow-wrap:anywhere}
-.ms-best-card>small{color:var(--muted,#9aa8c2);overflow-wrap:anywhere}
-.ms-table td small{display:block;color:var(--muted,#9aa8c2);font-size:.78rem;margin-top:4px}
-@media(max-width:700px){.ms-best-grid{grid-template-columns:1fr}.ms-table{min-width:760px}}
-
-
-/* Money Storage order-book style, aligned with BlackBit market panel */
-.ms-book-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 22px}
-.ms-stat{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d);min-width:0}
-.ms-stat>span{color:var(--muted,#9aa8c2);font-size:.9rem}
-.ms-stat>strong{font-size:clamp(1.1rem,3vw,1.55rem);overflow-wrap:anywhere}
-.ms-stat>small{color:var(--muted,#9aa8c2);overflow-wrap:anywhere}
-.ms-book-side{margin:14px 0 28px}
-.ms-book-side h3{margin:0 0 12px}
-.ms-book-side .table-wrap{overflow-x:auto;border:1px solid var(--line,#29344c);border-radius:12px}
-.ms-book-table{width:100%;min-width:590px;border-collapse:collapse;font-size:.88rem}
-.ms-book-table th,.ms-book-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line,#29344c);white-space:nowrap}
-.ms-book-table thead th{background:rgba(8,14,29,.55);color:var(--muted,#9aa8c2);font-weight:500}
-.ms-book-table tfoot th{background:rgba(8,14,29,.35);font-weight:600}
-.ms-book-side.buy h3,.ms-book-side.buy tbody td:first-child{color:#4bd3a5}
-.ms-book-side.sell h3,.ms-book-side.sell tbody td:first-child{color:#ff858c}
-@media(max-width:700px){.ms-book-stats{grid-template-columns:1fr 1fr}.ms-book-table{min-width:590px}}
-@media(max-width:420px){.ms-book-stats{grid-template-columns:1fr}}
 
 
 /* Winance order-book panels share the BlackBit visual language */
@@ -174,3 +142,37 @@ pre, code { max-width:100%; overflow-x:auto; }
 .winance-market-card .bb-book-grid{margin-top:12px}
 .winance-market-card .market-updated{margin-top:16px}
 .winance-market-card .source-detail{padding:12px;border:1px solid var(--line,#29344c);border-radius:10px}
+
+
+/* eRub purchase monitor and Bounty-adjusted comparison */
+.erub-bounty-banner{display:flex;flex-direction:column;gap:6px;padding:15px 17px;margin:16px 0 22px;border:1px solid #286b58;border-radius:13px;background:linear-gradient(120deg,#123b35,#10243a)}
+.erub-bounty-banner strong{font-size:17px;color:#55dfad}
+.erub-bounty-banner span{color:#c8e8df;font-size:13px}
+.erub-compare-card,.erub-route-card{margin:12px 0 20px;padding:15px;border:1px solid var(--line);border-radius:14px;background:#101a2e}
+.erub-compare-title{font-weight:800;margin-bottom:12px}
+.erub-compare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.erub-compare-columns>div,.erub-route-card>div{min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0b1426}
+.erub-compare-columns span,.erub-route-card span{display:block;color:var(--muted);font-size:11px}
+.erub-compare-columns strong,.erub-route-card strong{display:block;margin:6px 0;font-size:clamp(15px,2.7vw,20px);overflow-wrap:anywhere}
+.erub-compare-columns small{color:var(--muted)}
+.bonus-value{color:#55dfad!important}
+.erub-verdict{padding:11px 13px;margin-top:12px;border-radius:9px;font-size:13px;font-weight:700}
+.erub-verdict.better{background:#103c31;color:#63e4b3}
+.erub-verdict.worse{background:#44252b;color:#ff9a9f}
+.erub-verdict.neutral{background:#1a2941;color:#c3d0e9}
+.erub-route-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.erub-route-card .erub-verdict{grid-column:1/-1}
+.erub-calculator{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 22px}
+.erub-calculator label{display:block;color:var(--muted);font-size:13px}
+.erub-calculator input{display:block;width:100%;margin-top:7px;padding:12px;background:#0b1325;color:var(--text);border:1px solid #354568;border-radius:9px;font:inherit}
+.erub-calc-result{display:grid;grid-template-columns:1fr auto;gap:7px;padding:13px;background:#0d1729;border:1px solid var(--line);border-radius:11px}
+.erub-calc-result span{color:var(--muted);font-size:12px}
+.erub-calc-result strong{font-size:13px;text-align:right;overflow-wrap:anywhere}
+#erubData h3{margin-top:22px}
+@media(max-width:620px){.erub-compare-columns{grid-template-columns:1fr}.erub-route-card,.erub-calculator{grid-template-columns:1fr}.erub-route-card .erub-verdict{grid-column:auto}}
+
+
+/* XT.COM ECR listing pending state */
+.xt-listing-notice{padding:18px 20px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d)}
+.xt-listing-notice strong{display:block;font-size:1.1rem;margin-bottom:8px}
+.xt-listing-notice p{margin:6px 0;color:var(--muted,#9aa8c2);line-height:1.55}
