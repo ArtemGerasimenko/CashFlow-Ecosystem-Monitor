@@ -51,12 +51,24 @@ export async function loadStore() {
     state={
       updatedAt:parsed.updatedAt??null,
       sources:parsed.sources&&typeof parsed.sources==="object"?parsed.sources:{},
-      history:Array.isArray(parsed.history)?parsed.history.slice(-MAX_HISTORY):[]
+      history:Array.isArray(parsed.history)?pruneHistory(parsed.history).slice(-MAX_HISTORY):[]
     };
   } catch(error) {
     if(error.code!=="ENOENT") console.error("History file is invalid; starting empty:",error.message);
     await persist();
   }
+}
+function pruneHistory(items){
+  if (!configRetentionDays()) return items;
+  const cutoff = Date.now() - configRetentionDays() * 86400000;
+  return items.filter(item => {
+    const time = Date.parse(item?.at || "");
+    return Number.isFinite(time) && time >= cutoff;
+  });
+}
+function configRetentionDays(){
+  const value = Number(process.env.HISTORY_RETENTION_DAYS || 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 export function readState(){return structuredClone(state);}
 export async function updateSource(name,value){
@@ -65,13 +77,13 @@ export async function updateSource(name,value){
   if(value?.ok&&value.data){
     const data=(name==="xt"||name==="blackbit")?compactForHistory(value.data):value.data;
     state.history.push({source:name,at:state.updatedAt,data});
-    state.history=state.history.slice(-MAX_HISTORY);
+    state.history=pruneHistory(state.history).slice(-MAX_HISTORY);
   }
   await persist();
 }
 function persist(){
   // Serialize writes: refreshAll updates multiple sources concurrently.
-  persistQueue = persistQueue.then(async()=>{
+  persistQueue = persistQueue.catch(() => {}).then(async()=>{
     await fs.mkdir(dir,{recursive:true});
     const temp=`${file}.${process.pid}.${++persistSequence}.tmp`;
     await fs.writeFile(temp,JSON.stringify(state),"utf8");
