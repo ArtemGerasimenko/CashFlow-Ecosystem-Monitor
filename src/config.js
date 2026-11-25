@@ -6,5 +6,6 @@ export const config = {
   xtBaseUrl: process.env.XT_BASE_URL || "https://sapi.xt.com",
   xtSymbol: (process.env.XT_SYMBOL || "btc_usdt").toLowerCase(),
   winanceBaseUrl: process.env.WINANCE_BASE_URL || "https://winance.exchange",
-  blackbitBaseUrl: process.env.BLACKBIT_BASE_URL || "https://blackbit.exchange"
+  blackbitBaseUrl: process.env.BLACKBIT_BASE_URL || "https://blackbit.exchange",
+  moneyStorageBaseUrl: process.env.MONEY_STORAGE_BASE_URL || "https://storage.money"
 };
