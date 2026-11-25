@@ -3,7 +3,8 @@ const BASE = "https://erub.site";
 async function get(path) {
   const response = await fetch(`${BASE}${path}`, {
     headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(12000)
+    signal: AbortSignal.timeout(12000),
+    cache: "no-store"
   });
   if (!response.ok) throw new Error(`eRub ${path}: HTTP ${response.status}`);
   const json = await response.json();
