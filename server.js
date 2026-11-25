@@ -30,10 +30,12 @@ async function handler(req,res) {
     }
     return send(res,404,{error:"API route not found"});
   }
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try { pathname = decodeURIComponent(url.pathname); } catch { return send(res,400,"Bad URL","text/plain; charset=utf-8"); }
   if (pathname === "/") pathname = "/index.html";
   const target = path.resolve(publicDir, "." + pathname);
-  if (!target.startsWith(publicDir + path.sep)) return send(res,403,"Forbidden","text/plain; charset=utf-8");
+  const relative = path.relative(publicDir, target);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) return send(res,403,"Forbidden","text/plain; charset=utf-8");
   try {
     const body = await fs.readFile(target);
     send(res,200,body,mime[path.extname(target)] || "application/octet-stream");
