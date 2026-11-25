@@ -6,7 +6,7 @@ async function get(path) {
   const response=await fetch(base+path,{headers:{accept:"application/json"},signal:AbortSignal.timeout(12000)});
   if(!response.ok) throw new Error(`Winance ${path}: HTTP ${response.status}`);
   const json=await response.json();
-  if(json.status!==200 || json.result!=="ok") throw new Error(`Winance API returned unexpected response for ${path}`);
+  if(Number(json.status)!==200 || json.result!=="ok") throw new Error(`Winance API returned unexpected response for ${path}`);
   return json;
 }
 

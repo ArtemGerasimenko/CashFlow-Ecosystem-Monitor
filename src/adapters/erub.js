@@ -7,7 +7,7 @@ async function get(path) {
   });
   if (!response.ok) throw new Error(`eRub ${path}: HTTP ${response.status}`);
   const json = await response.json();
-  if (json?.status !== 200 || json?.result !== "ok") {
+  if (Number(json?.status) !== 200 || json?.result !== "ok") {
     throw new Error(`eRub API returned an unexpected response for ${path}`);
   }
   return json;
@@ -30,9 +30,9 @@ export async function fetchErubMarket() {
     from: CURRENCY[item.from] || `ID ${item.from}`,
     toId: item.to,
     to: CURRENCY[item.to] || `ID ${item.to}`,
-    rate: Number(item.rate),
+    rate: item.rate === null || item.rate === undefined || item.rate === "" ? null : Number(item.rate),
     version: item.version ?? null
-  })).filter(item => Number.isFinite(item.rate));
+  })).filter(item => Number.isFinite(item.rate) && item.rate > 0);
 
   const currencies = currenciesResponse.currencies ?? currenciesResponse.data ?? currenciesResponse;
   return {

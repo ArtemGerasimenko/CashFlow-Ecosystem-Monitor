@@ -2,7 +2,6 @@ import { config } from "../config.js";
 
 const base = config.blackbitBaseUrl.replace(/\/$/, "");
 const PAIR_NAME = "ECR/USDT";
-const DEFAULT_PAIR_ID = "6";
 
 async function get(path) {
   const response = await fetch(`${base}${path}`, {
@@ -35,15 +34,16 @@ function collectObjects(value, out = []) {
 
 function normalizeLevels(value) {
   if (!Array.isArray(value)) return [];
+  const numberOrNull = value => value === null || value === undefined || value === "" ? null : Number(value);
   return value.map(level => ({
-    rate: Number(level?.rate),
-    amountBase: Number(level?.amount_base),
-    amountQuoted: Number(level?.amount_quoted),
-    orders: Number(level?.orders)
+    rate: numberOrNull(level?.rate),
+    amountBase: numberOrNull(level?.amount_base),
+    amountQuoted: numberOrNull(level?.amount_quoted),
+    orders: numberOrNull(level?.orders)
   })).filter(level =>
-    Number.isFinite(level.rate) &&
-    Number.isFinite(level.amountBase) &&
-    Number.isFinite(level.amountQuoted)
+    Number.isFinite(level.rate) && level.rate > 0 &&
+    Number.isFinite(level.amountBase) && level.amountBase >= 0 &&
+    Number.isFinite(level.amountQuoted) && level.amountQuoted >= 0
   );
 }
 
@@ -56,7 +56,7 @@ export async function fetchBlackBitMarket() {
   );
   if (!pair) throw new Error("BlackBit: ECR/USDT was not found in currency_pairs");
 
-  const pairId = String(pair.id ?? DEFAULT_PAIR_ID);
+  const pairId = String(pair.id ?? "");
   if (!/^[0-9]+$/.test(pairId)) throw new Error("BlackBit: invalid ECR/USDT pair ID");
 
   const now = Math.floor(Date.now() / 1000);
@@ -67,13 +67,14 @@ export async function fetchBlackBitMarket() {
 
   const book = bookResponse?.data && !bookResponse.levels_buy ? bookResponse.data : bookResponse;
   const candlesRaw = Array.isArray(candlesResponse?.data) ? candlesResponse.data : [];
+  const safeNumber = value => value === null || value === undefined || value === "" ? null : Number(value);
   const candles = candlesRaw.map(candle => ({
-    timestamp: Number(candle.timestamp),
-    open: Number(candle.open),
-    high: Number(candle.high),
-    low: Number(candle.low),
-    close: Number(candle.close),
-    volume: Number(candle.volume)
+    timestamp: safeNumber(candle.timestamp),
+    open: safeNumber(candle.open),
+    high: safeNumber(candle.high),
+    low: safeNumber(candle.low),
+    close: safeNumber(candle.close),
+    volume: safeNumber(candle.volume)
   })).filter(candle =>
     Number.isFinite(candle.timestamp) &&
     [candle.open, candle.high, candle.low, candle.close, candle.volume].every(Number.isFinite)
@@ -85,6 +86,7 @@ export async function fetchBlackBitMarket() {
     throw new Error("BlackBit: стакан не содержит обе стороны levels_buy и levels_sell");
   }
 
+  const optionalNumber = value => value === null || value === undefined || value === "" ? null : (Number.isFinite(Number(value)) ? Number(value) : null);
   return {
     source: "blackbit.exchange public website endpoints",
     symbol: PAIR_NAME,
@@ -95,19 +97,19 @@ export async function fetchBlackBitMarket() {
       baseId: pair.base_id,
       quoteCurrency: pair.quoted_currency,
       quoteId: pair.quoted_id,
-      minimumAmount: Number(pair.minimum_amount),
-      rate: Number(pair.rate),
-      volumeBase: Number(pair.volume_base),
-      volumeQuoted: Number(pair.volume_quoted)
+      minimumAmount: optionalNumber(pair.minimum_amount),
+      rate: optionalNumber(pair.rate),
+      volumeBase: optionalNumber(pair.volume_base),
+      volumeQuoted: optionalNumber(pair.volume_quoted)
     },
-    lastRate: Number(book.last_rate ?? pair.rate),
+    lastRate: optionalNumber(book.last_rate ?? pair.rate),
     bestBid: bids[0].rate,
     bestAsk: asks[0].rate,
     bids,
     asks,
     candles,
     receivedAt: new Date().toISOString(),
-    apiStatus: Number(book.status ?? bookResponse.status ?? 200),
+    apiStatus: optionalNumber(book.status ?? bookResponse.status ?? 200),
     apiResult: book.result ?? bookResponse.result ?? "ok",
     bookVersion: book.version ?? null
   };
