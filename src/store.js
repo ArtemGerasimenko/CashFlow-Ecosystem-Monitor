@@ -50,8 +50,8 @@ export async function loadStore() {
     const parsed=JSON.parse(await fs.readFile(file,"utf8"));
     state={
       updatedAt:parsed.updatedAt??null,
-      sources:parsed.sources&&typeof parsed.sources==="object"?parsed.sources:{},
-      history:Array.isArray(parsed.history)?parsed.history.slice(-MAX_HISTORY):[]
+      sources:parsed.sources&&typeof parsed.sources==="object"?Object.fromEntries(Object.entries(parsed.sources).filter(([name])=>name!=="xt")):{},
+      history:Array.isArray(parsed.history)?parsed.history.filter(item=>item?.source!=="xt").slice(-MAX_HISTORY):[]
     };
   } catch(error) {
     if(error.code!=="ENOENT") console.error("History file is invalid; starting empty:",error.message);
