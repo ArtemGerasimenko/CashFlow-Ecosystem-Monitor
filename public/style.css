@@ -553,19 +553,3 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
-/* Mobile candle history: convert wide six-column tables into readable cards. */
-@media (max-width: 600px) {
-  .history-table { overflow: visible; border: 0; background: transparent; }
-  .history-table table { display: block; width: 100%; min-width: 0 !important; table-layout: fixed; border-collapse: separate; border-spacing: 0 10px; }
-  .history-table thead { display: none; }
-  .history-table tbody { display: grid; gap: 10px; }
-  .history-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, #14213b, #10192c); }
-  .history-table td { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 9px 2px; border: 0; border-bottom: 1px solid rgba(90,112,151,.18); white-space: normal; overflow-wrap: anywhere; text-align: left; font-size: 13px; }
-  .history-table td::before { content: attr(data-label); margin-bottom: 3px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .02em; }
-  .history-table td:last-child, .history-table td:nth-last-child(2) { border-bottom: 0; }
-  .history-table td:first-child { grid-column: 1 / -1; color: var(--text); font-weight: 700; border-bottom: 1px solid var(--line); }
-}
-@media (max-width: 360px) {
-  .history-table tr { gap: 0 8px; padding-inline: 9px; }
-  .history-table td { font-size: 12px; }
-}
