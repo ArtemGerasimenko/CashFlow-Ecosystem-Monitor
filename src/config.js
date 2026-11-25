@@ -1,12 +1,8 @@
-const boundedNumber = (name, fallback, min, max) => {
-  const parsed = Number(process.env[name] ?? fallback);
-  return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
-};
+import "node:process";
 export const config = {
-  port: boundedNumber("PORT", 8080, 1, 65535),
-  pollIntervalMs: boundedNumber("POLL_INTERVAL_MS", 60000, 15000, 3600000),
-  retentionDays: boundedNumber("HISTORY_RETENTION_DAYS", 30, 0, 3650),
-  maxHistoryItems: boundedNumber("MAX_HISTORY_ITEMS", 500, 20, 10000),
+  port: Number(process.env.PORT || 8080),
+  pollIntervalMs: Math.min(3600000, Math.max(15000, Number(process.env.POLL_INTERVAL_MS || 60000))),
+  retentionDays: Math.max(0, Number(process.env.HISTORY_RETENTION_DAYS || 0)),
   xtBaseUrl: process.env.XT_BASE_URL || "https://sapi.xt.com",
   xtSymbol: (process.env.XT_SYMBOL || "btc_usdt").toLowerCase(),
   winanceBaseUrl: process.env.WINANCE_BASE_URL || "https://winance.exchange",
