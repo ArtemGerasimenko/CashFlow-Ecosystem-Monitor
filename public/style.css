@@ -138,4 +138,39 @@ pre, code { max-width:100%; overflow-x:auto; }
   .card, .source-detail { padding: 14px; }
 }
 
-.quote-unavailable{color:var(--red);font-size:12px}.ms-errors{margin:14px 0;color:var(--muted);font-size:13px}.ms-errors summary{cursor:pointer;color:var(--gold)}.ms-errors ul{padding-left:22px}.ms-errors li{margin:5px 0;overflow-wrap:anywhere}
+
+/* Money Storage best-offer monitor */
+.ms-best-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 20px}
+.ms-best-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d);min-width:0}
+.ms-best-card>span{font-size:.88rem;color:var(--muted,#9aa8c2)}
+.ms-best-card>strong{font-size:clamp(1.15rem,3vw,1.65rem);overflow-wrap:anywhere}
+.ms-best-card>small{color:var(--muted,#9aa8c2);overflow-wrap:anywhere}
+.ms-table td small{display:block;color:var(--muted,#9aa8c2);font-size:.78rem;margin-top:4px}
+@media(max-width:700px){.ms-best-grid{grid-template-columns:1fr}.ms-table{min-width:760px}}
+
+
+/* Money Storage order-book style, aligned with BlackBit market panel */
+.ms-book-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 22px}
+.ms-stat{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d);min-width:0}
+.ms-stat>span{color:var(--muted,#9aa8c2);font-size:.9rem}
+.ms-stat>strong{font-size:clamp(1.1rem,3vw,1.55rem);overflow-wrap:anywhere}
+.ms-stat>small{color:var(--muted,#9aa8c2);overflow-wrap:anywhere}
+.ms-book-side{margin:14px 0 28px}
+.ms-book-side h3{margin:0 0 12px}
+.ms-book-side .table-wrap{overflow-x:auto;border:1px solid var(--line,#29344c);border-radius:12px}
+.ms-book-table{width:100%;min-width:590px;border-collapse:collapse;font-size:.88rem}
+.ms-book-table th,.ms-book-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line,#29344c);white-space:nowrap}
+.ms-book-table thead th{background:rgba(8,14,29,.55);color:var(--muted,#9aa8c2);font-weight:500}
+.ms-book-table tfoot th{background:rgba(8,14,29,.35);font-weight:600}
+.ms-book-side.buy h3,.ms-book-side.buy tbody td:first-child{color:#4bd3a5}
+.ms-book-side.sell h3,.ms-book-side.sell tbody td:first-child{color:#ff858c}
+@media(max-width:700px){.ms-book-stats{grid-template-columns:1fr 1fr}.ms-book-table{min-width:590px}}
+@media(max-width:420px){.ms-book-stats{grid-template-columns:1fr}}
+
+
+/* Winance order-book panels share the BlackBit visual language */
+.winance-market-card{margin:22px 0;padding:16px;border:1px solid var(--line,#29344c);border-radius:16px;background:rgba(18,28,49,.55)}
+.winance-market-card .bb-summary{margin-top:14px}
+.winance-market-card .bb-book-grid{margin-top:12px}
+.winance-market-card .market-updated{margin-top:16px}
+.winance-market-card .source-detail{padding:12px;border:1px solid var(--line,#29344c);border-radius:10px}

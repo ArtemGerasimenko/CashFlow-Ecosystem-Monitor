@@ -3,7 +3,6 @@ const $ = id => document.getElementById(id);
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const num = value => {
-  if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:8}) : "—";
 };
@@ -30,10 +29,10 @@ function pairRows(levels) {
     return {price:null,quantity:null};
   }).filter(x=>x.price!=null);
 }
-function sideTable(levels,side,baseAsset="BTC") {
+function sideTable(levels,side) {
   const rows=pairRows(levels);
   if (!rows.length) return `<div class="empty-side">Нет уровней стакана</div>`;
-  return `<div class="book-table ${side}"><div class="book-head"><span>Цена (USDT)</span><span>Объём (${esc(baseAsset)})</span></div>${rows.map(row=>`<div class="book-row"><strong>${num(row.price)}</strong><span>${num(row.quantity)}</span></div>`).join("")}</div>`;
+  return `<div class="book-table ${side}"><div class="book-head"><span>Цена (USDT)</span><span>Объём (BTC)</span></div>${rows.map(row=>`<div class="book-row"><strong>${num(row.price)}</strong><span>${num(row.quantity)}</span></div>`).join("")}</div>`;
 }
 function market(xt) {
   if (!xt?.ok) return `<p>${esc(xt?.message||"XT пока не вернул данные")}</p>`;
@@ -61,7 +60,7 @@ function market(xt) {
     <div><span>Минимум 24ч</span><strong>${num(ticker.l??ticker.lowPrice)}</strong></div>
   </div>
   <h3 class="book-title">Стакан заявок · первые 10 уровней</h3>
-  <div class="book-grid"><section><h4 class="bid-label">Покупки (BID)</h4>${sideTable(book.bids,"bid",(d.symbol||ticker.s||"BTC_USDT").split("_")[0].toUpperCase())}</section><section><h4 class="ask-label">Продажи (ASK)</h4>${sideTable(book.asks,"ask",(d.symbol||ticker.s||"BTC_USDT").split("_")[0].toUpperCase())}</section></div>
+  <div class="book-grid"><section><h4 class="bid-label">Покупки (BID)</h4>${sideTable(book.bids,"bid")}</section><section><h4 class="ask-label">Продажи (ASK)</h4>${sideTable(book.asks,"ask")}</section></div>
   <p class="market-updated">Последнее получение данных: ${esc(updated)}</p>`;
 }
 
@@ -85,12 +84,47 @@ function blackbitView(source){
 }
 
 function winanceView(source){
-  if(!source?.ok) return `<p>${esc(source?.message||"Winance пока не вернул данные")}</p>`;
-  const d=source.data||{}, pairs=d.pairs||{};
-  const fmt=v=>v===null||v===undefined||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("en-US",{maximumFractionDigits:8}):"—";
-  const pairCard=(pair,label,unit)=>`<div class="winance-pair"><span>${label}</span><strong>${fmt(pair?.rate)} ${unit}</strong><small>Объём: ${fmt(pair?.volumeBase)} ERUB</small></div>`;
-  const history=(rows,unit)=>`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${(rows||[]).slice(-7).reverse().map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`;
-  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>Winance · ERUB Market</h2></div><span class="live-pill">● LIVE</span></div><div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div><h3>История ERUB / USDT · 7 последних дней</h3>${history(d.dailyHistory?.erubUsdt,"USDT")}<h3>История ERUB / RUB · 7 последних дней</h3>${history(d.dailyHistory?.erubRub,"RUB")}<p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>`;
+  if(!source?.ok) return `<div class="source-detail"><div class="source-state error">${esc(source?.status||"нет данных")}</div><p>${esc(source?.message||"Winance пока не вернул данные")}</p><small>Проверка: ${esc(source?.checkedAt||"—")}</small></div>`;
+  const d=source.data||{}, pairs=d.pairs||{}, books=d.orderBooks||{};
+  const fmt=v=>v===null||v===undefined||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8}):"—";
+  const pairCard=(pair,label,unit)=>`<div class="winance-pair"><span>${label}</span><strong>${fmt(pair?.rate)} ${unit}</strong><small>Объём за 24ч/API: ${fmt(pair?.volumeBase)} ERUB</small><small>Эквивалент: ${fmt(pair?.volumeQuoted)} ${unit}</small></div>`;
+  const history=(rows,unit)=>`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${(rows||[]).slice(-10).reverse().map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`;
+  const levels=(rows)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${r.quoteCurrency}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
+  const bookSection=(book,label,unit,side)=> {
+    const bids=Array.isArray(book?.bids)?book.bids.map(x=>({...x,quoteCurrency:unit})):[];
+    const asks=Array.isArray(book?.asks)?book.asks.map(x=>({...x,quoteCurrency:unit})):[];
+    const rows=side==="bid"?bids:asks;
+    const title=side==="bid"?"Покупки (BUY)":"Продажи (SELL)";
+    const cls=side==="bid"?"bid-label":"ask-label";
+    return `<section><h4 class="${cls}">${title}</h4>${book?.ok
+      ? `<div class="bb-level-head"><span>Цена (${unit})</span><span>Количество ERUB</span><span>Всего ${unit}</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows):'<p class="muted">Нет уровней</p>'}</div>`
+      : `<div class="source-detail"><span class="quote-unavailable">Стакан недоступен</span><p>${esc(book?.message||"Публичный endpoint стакана не подтвердил ответ")}</p></div>`}</section>`;
+  };
+  const marketCard=(key,label,unit)=> {
+    const book=books[key]||{};
+    const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
+    const spread=book.ok?Number(book.bestAsk)-Number(book.bestBid):null;
+    const spreadPct=spread!==null&&Number(book.bestBid)>0?spread/Number(book.bestBid)*100:null;
+    return `<section class="winance-market-card"><div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>${label}</h2></div><span class="${book.ok?"live-pill":"source-state"}">${book.ok?"● LIVE": "СТАКАН НЕ ПОДТВЕРЖДЁН"}</span></div>
+      <div class="bb-summary">
+        <div><span>Последняя цена</span><strong>${fmt(pair?.rate)} ${unit}</strong></div>
+        <div><span>Лучшая покупка</span><strong class="bid-label">${book.ok?fmt(book.bestBid):"—"} ${unit}</strong></div>
+        <div><span>Лучшая продажа</span><strong class="ask-label">${book.ok?fmt(book.bestAsk):"—"} ${unit}</strong></div>
+        <div><span>Спред</span><strong>${spread===null?"—":fmt(spread)} ${unit}</strong><small>${spreadPct===null?"—":fmt(spreadPct)}%</small></div>
+        <div><span>Объём пары (API)</span><strong>${fmt(pair?.volumeBase)} ERUB</strong><small>${fmt(pair?.volumeQuoted)} ${unit}</small></div>
+        <div><span>Минимум сделки</span><strong>${fmt(pair?.minimumAmount)} ERUB</strong></div>
+      </div>
+      <p class="muted">ID пары: ${esc(pair?.id??"—")} · Глубина: до 100 уровней, если публичный стакан доступен.</p>
+      <h3>Стакан заявок · первые 10 уровней</h3><div class="bb-book-grid">${bookSection(book,label,unit,"bid")}${bookSection(book,label,unit,"ask")}</div>
+      <h3>История ${label} · дневные свечи</h3>${history(d.dailyHistory?.[key],unit)}
+    </section>`;
+  };
+  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>Winance · ERUB Market</h2></div><span class="live-pill">● API LIVE</span></div>
+    <div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div>
+    ${marketCard("erubUsdt","ERUB / USDT","USDT")}
+    ${marketCard("erubRub","ERUB / RUB","RUB")}
+    <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>
+    <p class="muted">Котировки, объёмы и свечи получаются из публичных endpoint Winance. Получение стакана выполняется отдельным необязательным запросом; если он не поддерживается сервером, котировки и история продолжают отображаться, а стакан отмечается недоступным. Торговля и доступ к аккаунту не подключены.</p>`;
 }
 
 function erubView(source){
@@ -124,16 +158,5 @@ async function load() {
   }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
-function calculate(){
-  const gross=Math.max(0,Number($("gross").value)||0);
-  const net=Math.max(0,(gross-3)/1.01);
-  const fee=gross-net;
-  $("net").textContent=`${net.toFixed(2)} USDT`;
-  $("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;
-  const m=$("minimum"),ok=gross+1e-9>=10;
-  m.textContent=ok
-    ?"Минимум 10 USDT до комиссии вывода достигнут"
-    :"Минимум 10 USDT до комиссии вывода не достигнут";
-  m.className=`minimum ${ok?"good":"bad"}`;
-}
+function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
 $("gross").addEventListener("input",calculate); calculate(); load(); setInterval(load,60000);
