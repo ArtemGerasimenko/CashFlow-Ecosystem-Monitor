@@ -112,3 +112,16 @@ export async function fetchBlackBitMarket() {
     bookVersion: book.version ?? null
   };
 }
+
+export async function fetchBlackBitCandles(interval = 900) {
+  const pairsResponse = await get("/site/currency_pairs");
+  const matches = collectObjects(pairsResponse);
+  const pair = matches.find(item => String(item.base_currency).toUpperCase() === "ECR" && String(item.quoted_currency).toUpperCase() === "USDT");
+  if (!pair) throw new Error("BlackBit: ECR/USDT was not found");
+  const pairId = String(pair.id ?? DEFAULT_PAIR_ID);
+  const now = Math.floor(Date.now() / 1000);
+  const response = await get(`/site/graph_data?currency_pair=${encodeURIComponent(pairId)}&values=500&interval=${interval}&end_time=${now}`);
+  const raw = Array.isArray(response?.data) ? response.data : [];
+  return raw.map(c => ({ timestamp:Number(c.timestamp), open:Number(c.open), high:Number(c.high), low:Number(c.low), close:Number(c.close), volume:Number(c.volume) }))
+    .filter(c => Number.isFinite(c.timestamp) && [c.open,c.high,c.low,c.close,c.volume].every(Number.isFinite));
+}

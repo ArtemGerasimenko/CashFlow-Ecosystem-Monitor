@@ -123,3 +123,15 @@ export async function fetchWinanceMarket() {
     source: "Winance public website endpoints; order-book endpoint is an unverified optional endpoint; no account/private trading access"
   };
 }
+
+export async function fetchWinanceCandles(pairKey = "erubUsdt", interval = 86400) {
+  const response = await get("/site/currency_pairs");
+  const pairs = response.currency_pairs;
+  if (!Array.isArray(pairs)) throw new Error("Winance: currency_pairs list missing");
+  const name = pairKey === "erubRub" ? "ERUB/RUB" : "ERUB/USDT";
+  const pair = pairs.find(x => x.name === name);
+  if (!pair) throw new Error(`Winance: ${name} not found`);
+  const history = await get(`/site/graph_data?currency_pair=${encodeURIComponent(pair.id)}&interval=${interval}`);
+  return (Array.isArray(history.data) ? history.data : []).map(c => ({ timestamp:Number(c.timestamp), open:Number(c.open), high:Number(c.high), low:Number(c.low), close:Number(c.close), volume:Number(c.volume) }))
+    .filter(c => Number.isFinite(c.timestamp) && [c.open,c.high,c.low,c.close,c.volume].every(Number.isFinite)).slice(-500);
+}
