@@ -38,8 +38,8 @@ function market(xt) {
   const d=xt.data||{}, ticker=Array.isArray(d.ticker)?d.ticker[0]:d.ticker||{};
   const book=d.orderBook?.result??d.orderBook??{};
   const bids=pairRows(book.bids), asks=pairRows(book.asks);
-  const bestBid=book.bids?.[0]?.[0]??book.bids?.[0]?.price??ticker.bp??ticker.bidPrice;
-  const bestAsk=book.asks?.[0]?.[0]??book.asks?.[0]?.price??ticker.ap??ticker.askPrice;
+  const bestBid=d.bestBid??book.bids?.[0]?.[0]??book.bids?.[0]?.price??ticker.bp??ticker.bidPrice;
+  const bestAsk=d.bestAsk??book.asks?.[0]?.[0]??book.asks?.[0]?.price??ticker.ap??ticker.askPrice;
   const spread=(Number(bestBid)>0&&Number(bestAsk)>0)?Number(bestAsk)-Number(bestBid):null;
   const spreadPct=spread!==null?spread/Number(bestBid)*100:null;
   const change=ticker.cr??ticker.changeRate??ticker.changePercent;
