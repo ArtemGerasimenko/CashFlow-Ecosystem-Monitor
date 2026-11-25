@@ -74,15 +74,15 @@ function blackbitView(source){
   const spread=Number(d.bestAsk)-Number(d.bestBid);
   const spreadPct=Number(d.bestBid)>0?spread/Number(d.bestBid)*100:null;
   const levels=(rows,side)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${num(r.rate)}</strong><span>${num(r.amountBase)} ECR</span><span>${num(r.amountQuoted)} USDT</span><small>${esc(r.orders??"—")} орд.</small></div>`).join("");
-  const side=(rows,cls,label)=>`<section><h3 class="${cls}">${label}</h3><div class="bb-level-head"><span>Цена (USDT)</span><span>Количество ECR</span><span>Всего USDT</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,cls):'<p class="muted">Нет уровней</p>'}</div></section>`;
+  const side=(rows,cls,label)=>`<section class="book-section"><h3 class="${cls}">${label}</h3><div class="book-scroll"><div class="book-table-inner"><div class="bb-level-head"><span>Цена (USDT)</span><span>Количество ECR</span><span>Всего USDT</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,cls):'<p class="muted">Нет уровней</p>'}</div></div></div></section>`;
   const candles=(d.candles||[]).slice(-10).reverse();
-  const candleTable=candles.length?`<div class="table-wrap"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${num(c.open)}</td><td>${num(c.high)}</td><td>${num(c.low)}</td><td>${num(c.close)}</td><td>${num(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+  const candleTable=candles.length?`<div class="table-wrap history-table"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${num(c.open)}</td><td>${num(c.high)}</td><td>${num(c.low)}</td><td>${num(c.close)}</td><td>${num(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
-  <p class="muted">ID пары: ${esc(d.pairId)} · Глубина стакана: до 100 уровней · Комиссия интерфейса: 0,10% (по скриншоту пользователя, не получена из API)</p>
+  <p class="market-meta">Глубина стакана: до 100 уровней</p>
   <h3>Стакан заявок · первые 10 уровней</h3><div class="bb-book-grid">${side(bids,"bid-label","Покупки (BUY)")}${side(asks,"ask-label","Продажи (SELL)")}</div>
   <h3>История ECR/USDT · 15 минут</h3>${candleTable}
-  <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")} · API: ${esc(d.apiResult||"—")} / ${esc(d.apiStatus||"—")}</p>`;
+  <p class="market-updated">Обновлено: ${esc(d.receivedAt||source.checkedAt||"—")}</p>`;
 }
 
 function winanceView(source){
@@ -92,12 +92,12 @@ function winanceView(source){
   const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
   const candles=(rows,unit)=> {
     const items=(rows||[]).slice(-10).reverse();
-    return items.length?`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+    return items.length?`<div class="table-wrap history-table"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
   };
   const side=(book,which,unit,label,cls)=>{
     const rows=Array.isArray(book?.[which])?book[which]:[];
-    return `<section><h3 class="${cls}">${label}</h3>${book?.ok
-      ? `<div class="bb-level-head"><span>Цена (${unit})</span><span>Количество ERUB</span><span>Всего ${unit}</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,unit):'<p class="muted">Нет уровней</p>'}</div>`
+    return `<section class="book-section"><h3 class="${cls}">${label}</h3>${book?.ok
+      ? `<div class="book-scroll"><div class="book-table-inner"><div class="bb-level-head"><span>Цена (${unit})</span><span>Количество ERUB</span><span>Всего ${unit}</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,unit):'<p class="muted">Нет уровней</p>'}</div></div></div>`
       : `<div class="source-detail"><span class="quote-unavailable">Стакан недоступен</span><p>${esc(book?.message||"Публичный стакан пока не получен")}</p></div>`}</section>`;
   };
   const market=(key,pairName,unit)=>{
@@ -116,7 +116,7 @@ function winanceView(source){
         <div><span>Объём пары (API)</span><strong>${fmt(pair?.volumeBase)} ERUB</strong><small>${fmt(pair?.volumeQuoted)} ${unit}</small></div>
         <div><span>Минимум сделки</span><strong>${fmt(pair?.minimumAmount)} ERUB</strong></div>
       </div>
-      <p class="muted">ID пары: ${esc(pair?.id??"—")} · ${bookMeta}</p>
+      <p class="market-meta">${bookMeta}</p>
       <h3>Стакан заявок · первые 10 уровней</h3>
       <div class="bb-book-grid">${side(book,"bids",unit,"Покупки (BUY)","bid-label")}${side(book,"asks",unit,"Продажи (SELL)","ask-label")}</div>
       <h3>История ${pairName} · дневные свечи</h3>
