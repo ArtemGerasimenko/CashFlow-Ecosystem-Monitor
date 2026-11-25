@@ -1,31 +1,50 @@
-# Money Storage: all deal pairs
+# CashFlow Ecosystem Monitor
 
-## Что добавлено
-- Проверка всех направлений между ECR, USDT, ERUB, EUR, GBP, CNY, PLN и KGS.
-- 56 направленных пар (каждая валюта против каждой другой).
-- До 20 последних сделок на пару.
-- Пары без сделок не показываются в таблице, но учитываются как проверенные.
-- Отображаются `src_amount`, `src_currency`, `dst_amount`, `dst_currency`, `rate`, `back_rate`, `commission`, `commission_currency`, `create_time`, `request_id`.
-- Комиссия показывается отдельно. `dst_amount` не уменьшается на комиссию.
-- Обновление по расписанию приложения (по умолчанию 60 секунд).
+Node.js 20+ application for read-only monitoring of public market/source endpoints.
 
-## Важно
-Валюта RUB не включена в запросы Money Storage: ранее пользователь подтвердил, что RUB отсутствует в Money Storage и относится к отдельному источнику Sber Kassa. Никакие тарифы/курсы для неё не подставляются.
+## Included
+- XT public ticker and order-book adapter.
+- BlackBit ECR/USDT public website endpoint adapter.
+- Money Storage public deals monitor: 8 currencies, 56 directed pairs, up to 20 recent deals per pair, concurrency-limited requests.
+- Winance and eRub public website endpoint adapters.
+- Sber Kassa remains explicitly disabled until its own endpoint and API contract are verified.
+- Server-side scheduler with single-flight protection (no overlapping refresh cycles).
+- Source payload validation and explicit `live`, `partial`, `error`, and `not_configured` states.
+- Persistent history with configurable retention and item cap.
+- Money Storage deal table integrated into the main application.
+- Withdrawal calculator minimum checked against the post-BlackBit amount before withdrawal fee.
 
-Публичный endpoint и параметры подтверждены для ECR→USDT и USDT→ECR:
-`GET /public_deals/fetch?offset=0&limit=20&from=ECR&to=USDT`
-`GET /public_deals/fetch?offset=0&limit=20&from=USDT&to=ECR`
+## Important limitations
+- Public website endpoints are not necessarily stable or officially documented APIs. A successful HTTP response is not proof that a source is authoritative or suitable for financial decisions.
+- Adapters can still show `error` or `partial` when providers change endpoints, block requests, or return unsupported pairs.
+- Sber Kassa is not connected. Do not copy rates or commissions from another platform.
+- No account login, private balances, trading, or withdrawals are performed.
+- The calculator applies only the configured withdrawal formula: 3 USDT + 1% of the amount received. It does not invent tariffs for other route stages.
 
-Для EUR, GBP, CNY, PLN и KGS используется тот же подтверждённый endpoint и формат параметров, но доступность каждой конкретной пары заранее не гарантируется. Ошибки/неподдерживаемые направления не ломают общий мониторинг.
+## Install / run
+Requires Node.js 20 or newer. No third-party npm packages are required.
 
-## Установка
-1. Скопировать `src/adapters/money-storage.js` в `src/adapters/`.
-2. Заменить `src/config.js` файлом из архива.
-3. Заменить `src/monitor.js` файлом из архива.
-4. Добавить CSS и JS-файлы из `public/`.
-5. Вставить секцию из `public/money-storage-section.html` в `public/index.html`.
-6. Подключить `money-storage.css` в `<head>` и `money-storage-boot.js` после основного приложения.
-7. На Render добавить переменную `MONEY_STORAGE_BASE_URL=https://storage.money` только если это базовый домен, используемый в проверенном URL.
+```bash
+npm start
+```
+Open `http://localhost:8080`.
 
-## Ограничения
-API не является публично документированным официальным контрактом. Запросы выполняются только к публичному endpoint; аккаунт, логины, пароли, приватные операции и торговля не подключаются.
+## Environment variables
+- `PORT` (default `8080`)
+- `POLL_INTERVAL_MS` (default `60000`, minimum `15000`)
+- `HISTORY_RETENTION_DAYS` (default `30`; set `0` to disable age-based pruning)
+- `MAX_HISTORY_ITEMS` (default `500`)
+- `DATA_DIR` (default `./data`)
+- `XT_BASE_URL`, `XT_SYMBOL`
+- `BLACKBIT_BASE_URL`
+- `WINANCE_BASE_URL`
+- `MONEY_STORAGE_BASE_URL`
+
+## API
+- `GET /api/health`
+- `GET /api/status`
+- `GET /api/history`
+- `POST /api/refresh` (legacy GET remains accepted)
+
+## Render
+The included `render.yaml` configures a persistent disk mounted at `/opt/render/project/src/data`.

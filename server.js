@@ -17,7 +17,11 @@ function send(res, status, data, type="application/json; charset=utf-8") {
 async function handler(req,res) {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   if (url.pathname.startsWith("/api/")) {
-    if (req.method !== "GET") return send(res,405,{error:"Method not allowed"});
+    const isRefresh = url.pathname === "/api/refresh";
+    if (isRefresh ? !["POST", "GET"].includes(req.method) : req.method !== "GET") {
+      res.setHeader("Allow", isRefresh ? "GET, POST" : "GET");
+      return send(res,405,{error:"Method not allowed"});
+    }
     if (url.pathname === "/api/health") return send(res,200,{ok:true,service:"CashFlow Ecosystem Monitor",pollIntervalMs:config.pollIntervalMs,now:new Date().toISOString()});
     if (url.pathname === "/api/status") return send(res,200,getSnapshot());
     if (url.pathname === "/api/refresh") {
@@ -42,4 +46,8 @@ async function handler(req,res) {
   } catch { send(res,404,"Not found","text/plain; charset=utf-8"); }
 }
 startScheduler();
-http.createServer((req,res)=>handler(req,res).catch(e=>send(res,500,{error:"Internal server error",message:e.message}))).listen(config.port,"0.0.0.0",()=>console.log(`CashFlow Monitor listening on ${config.port}`));
+http.createServer((req,res)=>handler(req,res).catch(e=>{
+  console.error("Request failed:", e);
+  if (!res.headersSent) send(res,500,{error:"Internal server error",message:"Request could not be completed"});
+  else res.destroy();
+})).listen(config.port,"0.0.0.0",()=>console.log(`CashFlow Monitor listening on ${config.port}`));

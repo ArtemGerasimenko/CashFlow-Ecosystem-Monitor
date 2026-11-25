@@ -17,7 +17,9 @@ services:
       - key: POLL_INTERVAL_MS
         value: 60000
       - key: HISTORY_RETENTION_DAYS
-        value: 0
+        value: 30
+      - key: MAX_HISTORY_ITEMS
+        value: 500
       - key: XT_SYMBOL
         value: btc_usdt
       - key: DATA_DIR
