@@ -137,11 +137,3 @@ pre, code { max-width:100%; overflow-x:auto; }
   nav button { font-size: 13px; padding: 10px 11px; }
   .card, .source-detail { padding: 14px; }
 }
-
-/* Audit fixes: explicit partial state and readable history records */
-.source-state.partial { color: #a66b00; }
-.history-item { display:grid; grid-template-columns:minmax(100px, 1fr) auto; gap:6px 14px; padding:12px 0; border-bottom:1px solid var(--line, #263047); }
-.history-item small { grid-column:1 / -1; overflow-wrap:anywhere; color:var(--muted, #9aa4b7); }
-.ms-errors { margin-top:14px; }
-.ms-errors summary { cursor:pointer; font-weight:600; }
-.ms-errors li { overflow-wrap:anywhere; margin:6px 0; }
