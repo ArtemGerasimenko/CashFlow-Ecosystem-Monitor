@@ -25,7 +25,7 @@ export async function fetchErubMarket() {
   if (total.amount == null) throw new Error("eRub: total_bought amount is missing");
   if (!Array.isArray(ratesResponse.rates)) throw new Error("eRub: rates list is missing");
 
-  const rates = ratesResponse.rates.map(item => ({
+  const rates = ratesResponse.rates.filter(item => item && item.rate != null && item.rate !== "").map(item => ({
     fromId: item.from,
     from: CURRENCY[item.from] || `ID ${item.from}`,
     toId: item.to,

@@ -10,6 +10,7 @@ const CURRENCIES = ["ECR", "USDT", "ERUB", "EUR", "GBP", "CNY", "PLN", "KGS"];
 const CONCURRENCY = 6;
 
 function finite(value) {
+  if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -33,7 +34,7 @@ async function fetchPair(from, to) {
     cache: "no-store"
   });
   if (!response.ok) {
-    return { from, to, ok: false, status: response.status, trades: [] };
+    return { from, to, ok: false, status: response.status, message: `HTTP ${response.status}`, trades: [] };
   }
 
   let json;
@@ -50,6 +51,7 @@ async function fetchPair(from, to) {
   }
 
   const trades = json.data.map((row, index) => {
+    row = row && typeof row === "object" ? row : {};
     const srcAmount = finite(row.src_amount);
     const dstAmount = finite(row.dst_amount);
     const commission = finite(row.commission);
@@ -72,7 +74,8 @@ async function fetchPair(from, to) {
       commission,
       commissionCurrency: commissionCurrency || null,
       createTime: timestamp,
-      createdAt: timestamp == null ? null : new Date(timestamp * 1000).toISOString()
+      createdAt: timestamp == null || !Number.isFinite(new Date(timestamp * 1000).getTime())
+        ? null : new Date(timestamp * 1000).toISOString()
     };
   });
 
@@ -113,6 +116,7 @@ export async function fetchMoneyStorageMarket() {
 
   const results = await mapLimit(pairs, CONCURRENCY, ({ from, to }) => fetchPair(from, to));
   const available = results.filter(pair => pair.ok && pair.trades.length > 0);
+  const failed = results.filter(pair => !pair.ok);
   const totalTrades = available.reduce((sum, pair) => sum + pair.trades.length, 0);
 
   return {
@@ -123,11 +127,13 @@ export async function fetchMoneyStorageMarket() {
     pairsChecked: results.length,
     pairsWithDeals: available.length,
     totalTrades,
+    failedPairs: failed.length,
+    successfulPairs: results.length - failed.length,
     limitPerPair: LIMIT,
     commissionRule: "Commission is charged additionally; dst_amount is shown as returned and is not reduced by commission.",
     pairs: available,
     unavailablePairs: results
       .filter(pair => !pair.ok)
-      .map(({ from, to, status }) => ({ from, to, status }))
+      .map(({ from, to, status, message }) => ({ from, to, status, message: message || null }))
   };
 }
