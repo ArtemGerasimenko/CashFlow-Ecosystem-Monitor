@@ -7,6 +7,8 @@ import { createGzip } from "node:zlib";
 import { createHash } from "node:crypto";
 import { config } from "./src/config.js";
 import { startScheduler, getSnapshot, refreshAll } from "./src/monitor.js";
+import { fetchBlackBitCandles } from "./src/adapters/blackbit.js";
+import { fetchWinanceCandles } from "./src/adapters/winance.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
@@ -34,6 +36,17 @@ async function handler(req,res) {
     }
     if (url.pathname === "/api/health") return send(res,200,{ok:true,service:"CashFlow Ecosystem Monitor",pollIntervalMs:config.pollIntervalMs,now:new Date().toISOString()});
     if (url.pathname === "/api/status") return send(res,200,getSnapshot());
+    if (url.pathname === "/api/candles") {
+      const source = url.searchParams.get("source");
+      const pair = url.searchParams.get("pair") || "erubUsdt";
+      const interval = Number(url.searchParams.get("interval"));
+      const allowed = new Set([60,300,900,1800,3600,14400,43200,86400]);
+      if (!allowed.has(interval) || !["blackbit","winance"].includes(source) || (source === "winance" && !["erubUsdt","erubRub"].includes(pair))) return send(res,400,{error:"Invalid candle query"});
+      try {
+        const candles = source === "blackbit" ? await fetchBlackBitCandles(interval) : await fetchWinanceCandles(pair,interval);
+        return send(res,200,{source,pair,interval,candles,receivedAt:new Date().toISOString()});
+      } catch (error) { return send(res,502,{error:"Candle history unavailable",message:error.message}); }
+    }
     if (url.pathname === "/api/refresh") {
       try { await refreshAll(); return send(res,200,getSnapshot()); }
       catch(e) { return send(res,502,{error:"Refresh failed",message:e.message}); }
