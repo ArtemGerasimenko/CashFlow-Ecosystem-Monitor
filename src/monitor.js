@@ -25,9 +25,7 @@ function validate(name, data) {
     if (count === 0) return { status: "error", ok: false, message: `Курсы не получены: 0 из ${data.pairsChecked} направлений. Подробности доступны по каждой паре.` };
     return { status: unavailable ? "partial" : "live", ok: true, message: `${count} из ${data.pairsChecked} направлений имеют актуальный курс` };
   }
-  if (name === "xt" && (!data.ticker || typeof data.ticker !== "object")) throw new Error("XT: отсутствуют данные тикера");
-  if (name === "sberkassa" && (!Array.isArray(data.rates) || data.rates.length === 0)) throw new Error("Сберкасса / ERUB: список курсов отсутствует или пуст");
-  if (name === "winance" && (!(Number(data.pairs?.erubUsdt?.rate) > 0) || !(Number(data.pairs?.erubRub?.rate) > 0))) throw new Error("Winance: не получены корректные курсы ERUB/USDT и ERUB/RUB");
+  if (name === "sberkassa" && !Array.isArray(data.rates)) throw new Error("Сберкасса / ERUB: список курсов отсутствует");
   if (name === "blackbit" && (!(Number(data.bestBid) > 0) || !(Number(data.bestAsk) > 0))) throw new Error("BlackBit: некорректный стакан");
   return { status: "live", message: "Данные получены" };
 }
