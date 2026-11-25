@@ -44,15 +44,21 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     const n=Number(value);
     return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
   };
-  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).map(r=>({
+  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).slice(0,10).map(r=>({
     price:r.rate??r.price??r[0],
     quantity:r.amountBase??r.quantity??r.qty??r[1],
     total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
     orders:r.orders??r.orderCount??r.count??null
   })).filter(r=>r.price!=null);
-  // Both sides are displayed from the highest price to the lowest, matching the reference order-book layout.
-  const byPriceDesc=(a,b)=>Number(b.price)-Number(a.price);
-  const sell=normalize(asks).sort(byPriceDesc).slice(0,10), buy=normalize(bids).sort(byPriceDesc).slice(0,10);
+  // Keep the 10 nearest sell levels, then show them from highest to lowest.
+  // Buy levels are shown from highest to lowest as well.
+  const sell=normalize(asks)
+    .sort((a,b)=>Number(a.price)-Number(b.price))
+    .slice(0,10)
+    .sort((a,b)=>Number(b.price)-Number(a.price));
+  const buy=normalize(bids)
+    .sort((a,b)=>Number(b.price)-Number(a.price))
+    .slice(0,10);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
