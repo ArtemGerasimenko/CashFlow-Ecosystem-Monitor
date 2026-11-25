@@ -5,6 +5,7 @@ const num = value => {
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:8}) : "—";
 };
+const fixedDigits = (value,digits) => { const n=Number(value); return value===null||value===undefined||value===""||!Number.isFinite(n)?"—":n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}); };
 const navigation=document.querySelector("nav");
 if(navigation) navigation.scrollLeft=0;
 document.querySelectorAll("nav button[data-page]").forEach(button => button.addEventListener("click", () => {
@@ -103,7 +104,8 @@ function blackbitView(source){
   const spread=Number(d.bestAsk)-Number(d.bestBid);
   const spreadPct=Number(d.bestBid)>0?spread/Number(d.bestBid)*100:null;
   const candles=(d.candles||[]).slice(-10).reverse();
-  const candleTable=candles.length?`<div class="table-wrap history-table"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${num(c.open)}</td><td>${num(c.high)}</td><td>${num(c.low)}</td><td>${num(c.close)}</td><td>${num(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+  const candlePrice=v=>fixedDigits(v,6), candleVolume=v=>fixedDigits(v,8);
+  const candleTable=candles.length?`<div class="table-wrap history-table"><table><thead><tr><th>Время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём ECR</th></tr></thead><tbody>${candles.map(c=>`<tr><td>${new Date(c.timestamp*1000).toLocaleString("ru-RU")}</td><td>${candlePrice(c.open)}</td><td>${candlePrice(c.high)}</td><td>${candlePrice(c.low)}</td><td>${candlePrice(c.close)}</td><td>${candleVolume(c.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
   <p class="market-meta">Глубина стакана: до 100 уровней</p>
@@ -119,7 +121,7 @@ function winanceView(source){
   const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
   const candles=(rows,unit)=> {
     const items=(rows||[]).slice(-10).reverse();
-    return items.length?`<div class="table-wrap history-table"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
+    return items.length?`<div class="table-wrap history-table"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fixedDigits(r.open,6)}</td><td>${fixedDigits(r.high,6)}</td><td>${fixedDigits(r.low,6)}</td><td>${fixedDigits(r.close,6)} ${unit}</td><td>${fixedDigits(r.volume,8)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -209,7 +211,10 @@ function erubView(source, winanceSource){
 }
 
 
+let loadInProgress = false;
 async function load() {
+  if (loadInProgress || document.hidden) return;
+  loadInProgress = true;
   try {
     const s=await api("/status");
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
@@ -222,11 +227,20 @@ async function load() {
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
     $("sources").innerHTML=`<div class="card"><strong>Не удалось получить данные API</strong><p>${esc(e.message)}</p><p class="muted">Откройте приложение через запущенный Node.js сервер.</p></div>`;
-  }
+  } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
 function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
-$("gross").addEventListener("input",calculate); calculate(); load(); setInterval(load,60000);
+$("gross").addEventListener("input",calculate); calculate();
+load();
+let refreshTimer = null;
+function scheduleRefresh(){
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = null;
+  if (!document.hidden) refreshTimer = setInterval(load,60000);
+}
+document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden) load();});
+scheduleRefresh();
 function updateErubBounty(inputId,rate,baseId,bonusId,totalId){
   const input=$(inputId); if(!input) return;
   const amount=Math.max(0,Number(input.value)||0);
