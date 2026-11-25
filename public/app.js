@@ -42,17 +42,17 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     price:r.rate??r.price??r[0],
     quantity:r.amountBase??r.quantity??r.qty??r[1],
     total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
-    orders:r.orders
+    orders:r.orders??r.orderCount??r.count??null
   })).filter(r=>r.price!=null);
   const sell=normalize(asks), buy=normalize(bids);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
-    return `<div class="ub-row ${side}" style="--depth:${depth}%"><strong>${format(r.price)}</strong><span>${format(r.quantity)} ${baseLabel}</span><span>${format(r.total)} ${unit}</span>${orders?`<small>${format(r.orders)} орд.</small>`:""}</div>`;
+    return `<div class="ub-row ${side}" style="--depth:${depth}%"><strong>${format(r.price)}</strong><span>${format(r.quantity)} ${baseLabel}</span><span>${format(r.total)} ${unit}</span>${orders?`<small>${r.orders==null?"—":format(r.orders)} орд.</small>`:""}</div>`;
   }).join("");
   return `<section class="unified-book">
     <div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">10 уровней · BUY / SELL</span></div>
-    <div class="ub-head"><span>Цена (${unit})</span><span>Количество ${baseLabel}</span><span>Всего ${unit}</span></div>
+    <div class="ub-head"><span>Цена (${unit})</span><span>Количество ${baseLabel}</span><span>Всего ${unit}</span><span>Ордеры</span></div>
     <div class="ub-side ub-asks">${sell.length?rows(sell,"ask"):'<p class="muted">Нет заявок на продажу</p>'}</div>
     <div class="ub-mid"><span>ТЕКУЩАЯ ЦЕНА · ${midText}</span></div>
     <div class="ub-side ub-bids">${buy.length?rows(buy,"bid"):'<p class="muted">Нет заявок на покупку</p>'}</div>
