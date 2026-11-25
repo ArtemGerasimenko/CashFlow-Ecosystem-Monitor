@@ -1,7 +1,9 @@
+import { renderMoneyStorage, bindMoneyStorageFilter } from "./money-storage-view.js";
 const $ = id => document.getElementById(id);
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const num = value => {
+  if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:8}) : "—";
 };
@@ -9,8 +11,8 @@ document.querySelectorAll("nav button[data-page]").forEach(button => button.addE
   document.querySelectorAll("nav button").forEach(item => item.classList.toggle("active",item===button));
   document.querySelectorAll(".page").forEach(page => page.classList.toggle("active",page.id===button.dataset.page));
 }));
-async function api(path) {
-  const response = await fetch(`${API_BASE}${path}`,{headers:{accept:"application/json"},cache:"no-store"});
+async function api(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`,{headers:{accept:"application/json",...(options.method ? {"Content-Type":"application/json"} : {})},cache:"no-store",...options});
   const payload = await response.json().catch(()=>({}));
   if (!response.ok) throw new Error(payload.message||payload.error||`HTTP ${response.status}`);
   return payload;
@@ -18,7 +20,7 @@ async function api(path) {
 function sourceCard(name,v) {
   const labels={xt:"XT",blackbit:"BlackBit",moneyStorage:"Money Storage",winance:"Winance",erub:"eRub",sberkassa:"Sber Kassa"};
   const status=v?.status||"нет статуса";
-  return `<article class="card"><div class="source-name">${esc(labels[name]||name)}</div><div class="source-state ${v?.ok?"live":status==="error"?"error":""}">${esc(status)}</div><div class="muted">${esc(v?.message||(v?.ok?"Источник отвечает":"Нет данных"))}</div><div class="muted">${esc(v?.checkedAt||"")}</div></article>`;
+  return `<article class="card"><div class="source-name">${esc(labels[name]||name)}</div><div class="source-state ${v?.status==="live"?"live":v?.status==="partial"?"partial":v?.status==="error"?"error":""}">${esc(status)}</div><div class="muted">${esc(v?.message||(v?.ok?"Источник отвечает":"Нет данных"))}</div><div class="muted">${esc(v?.checkedAt||"")}</div></article>`;
 }
 function pairRows(levels) {
   if (!Array.isArray(levels)) return [];
@@ -113,14 +115,29 @@ async function load() {
     $("sources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
     const xt=s.sources?.xt; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub);
     $("marketData").innerHTML=market(xt); $("xtData").innerHTML=market(xt);
-    const statusPanel=(key)=>{const v=s.sources?.[key]||{};return `<div class="source-detail"><div class="source-state ${v.ok?"live":v.status==="error"?"error":""}">${esc(v.status||"нет статуса")}</div><p>${esc(v.message|| (v.ok?"Источник отвечает":"Данные пока не получены"))}</p><small>Проверка: ${esc(v.checkedAt||"—")}</small></div>`;};
-    $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); $("moneyStorageData").innerHTML=statusPanel("moneyStorage"); $("sberkassaData").innerHTML=statusPanel("sberkassa");
-    $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
+    const statusPanel=(key)=>{const v=s.sources?.[key]||{};return `<div class="source-detail"><div class="source-state ${v.status==="live"?"live":v.status==="partial"?"partial":v.status==="error"?"error":""}">${esc(v.status||"нет статуса")}</div><p>${esc(v.message|| (v.ok?"Источник отвечает":"Данные пока не получены"))}</p><small>Проверка: ${esc(v.checkedAt||"—")}</small></div>`;};
+    $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit);
+    $("moneyStorageData").innerHTML=renderMoneyStorage(s.sources?.moneyStorage); bindMoneyStorageFilter();
+    $("sberkassaData").innerHTML=statusPanel("sberkassa");
+    $("historyData").innerHTML=(s.history||[]).slice(-100).reverse().map(x=>`<article class="history-item"><strong>${esc(x.source)}</strong><span>${esc(new Date(x.at).toLocaleString("ru-RU"))}</span><small>${esc(JSON.stringify(x.data||{}))}</small></article>`).join("")||"История пока пуста";
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
     $("sources").innerHTML=`<div class="card"><strong>Не удалось получить данные API</strong><p>${esc(e.message)}</p><p class="muted">Откройте приложение через запущенный Node.js сервер.</p></div>`;
   }
 }
-$("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
-function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
+let refreshInProgress=false;
+$("refresh").addEventListener("click",async()=>{
+  if(refreshInProgress)return;
+  const b=$("refresh");refreshInProgress=true;b.disabled=true;b.textContent="Обновление…";
+  try{await api("/refresh",{method:"POST"});await load();}
+  catch(e){alert(e.message);}
+  finally{refreshInProgress=false;b.disabled=false;b.textContent="Обновить сейчас";}
+});
+function calculate(){
+  const gross=Math.max(0,Number($("gross").value)||0), net=Math.max(0,(gross-3)/1.01), fee=gross-net;
+  $("net").textContent=`${net.toFixed(2)} USDT`; $("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;
+  const m=$("minimum"),ok=gross+1e-9>=10;
+  m.textContent=ok?"Минимум 10 USDT до комиссии достигнут":"Минимум 10 USDT до комиссии не достигнут";
+  m.className=`minimum ${ok?"good":"bad"}`;
+}
 $("gross").addEventListener("input",calculate); calculate(); load(); setInterval(load,60000);

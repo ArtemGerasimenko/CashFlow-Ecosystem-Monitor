@@ -3,6 +3,7 @@ const escMS = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[ch]));
 const numMS = value => {
+  if (value === null || value === undefined || value === "") return "—";
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("ru-RU",{maximumFractionDigits:10}) : "—";
 };
@@ -36,6 +37,7 @@ export function renderMoneyStorage(source) {
     <div><span>Проверено пар</span><strong>${numMS(d.pairsChecked)}</strong></div>
     <div><span>Пары со сделками</span><strong>${numMS(d.pairsWithDeals)}</strong></div>
     <div><span>Всего сделок</span><strong>${numMS(d.totalTrades)}</strong></div>
+    <div><span>Ошибок пар</span><strong>${numMS(d.failedPairs || 0)}</strong></div>
     <div><span>Лимит на пару</span><strong>${numMS(d.limitPerPair)}</strong></div>
   </div>
   <p class="muted">Пары со сделками отображаются автоматически. EUR, GBP, CNY, PLN, KGS, ERUB, ECR и USDT проверяются во всех направлениях. RUB не включён: по ранее подтверждённым данным его нет в Money Storage.</p>
@@ -48,6 +50,7 @@ export function renderMoneyStorage(source) {
   </table></div>
   <p class="muted">Комиссия показывается отдельно и не вычитается из «Получено»: API-поле dst_amount отображается без повторного уменьшения.</p>
   <p class="market-updated">Последнее обновление: ${dateMS(d.receivedAt)}</p>
+  ${(d.unavailablePairs || []).length ? `<details class="ms-errors"><summary>Показать ошибки направлений (${d.unavailablePairs.length})</summary><ul>${d.unavailablePairs.map(p => `<li>${escMS(p.from)} → ${escMS(p.to)}: ${escMS(p.message || p.status)}</li>`).join("")}</ul></details>` : ""}
 `;
 }
 
