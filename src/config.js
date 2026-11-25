@@ -5,5 +5,6 @@ export const config = {
   retentionDays: Math.max(0, Number(process.env.HISTORY_RETENTION_DAYS || 0)),
   xtBaseUrl: process.env.XT_BASE_URL || "https://sapi.xt.com",
   xtSymbol: (process.env.XT_SYMBOL || "btc_usdt").toLowerCase(),
-  winanceBaseUrl: process.env.WINANCE_BASE_URL || "https://winance.exchange"
+  winanceBaseUrl: process.env.WINANCE_BASE_URL || "https://winance.exchange",
+  blackbitBaseUrl: process.env.BLACKBIT_BASE_URL || "https://blackbit.exchange"
 };

@@ -3,12 +3,14 @@ import { readState, updateSource } from "./store.js";
 import { fetchXtMarket } from "./adapters/xt.js";
 import { fetchWinanceMarket } from "./adapters/winance.js";
 import { fetchErubMarket } from "./adapters/erub.js";
+import { fetchBlackBitMarket } from "./adapters/blackbit.js";
 import { unavailableAdapter } from "./adapters/unconfigured.js";
 
 const adapters = {
   xt: async()=>({ok:true,status:"live",data:await fetchXtMarket(),checkedAt:new Date().toISOString()}),
-  blackbit: unavailableAdapter("blackbit","Официальная API-документация и endpoint не подтверждены. Подключение отключено."),
-  moneyStorage: unavailableAdapter("moneyStorage","Нужны официальный API endpoint, документация и учётные данные поставщика."),
+  blackbit: async()=>({ok:true,status:"live",data:await fetchBlackBitMarket(),checkedAt:new Date().toISOString()}),
+  moneyStorage: unavailableAdapter("moneyStorage","Публичный API endpoint и документация Money Storage не подтверждены. Не используем выдуманные адреса API и не запрашиваем пароль от личного кабинета."),
+  sberkassa: unavailableAdapter("sberkassa","Публичный API endpoint и документация Sber Kassa не подтверждены. Данные Money Storage не копируются; требуется отдельная проверка источника."),
   winance: async()=>({ok:true,status:"live",data:await fetchWinanceMarket(),checkedAt:new Date().toISOString()}),
   erub: async()=>({ok:true,status:"live",data:await fetchErubMarket(),checkedAt:new Date().toISOString()})
 };
