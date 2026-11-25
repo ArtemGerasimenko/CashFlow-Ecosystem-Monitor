@@ -5,6 +5,8 @@ const num = value => {
   const n = Number(value);
   return Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:8}) : "—";
 };
+const navigation=document.querySelector("nav");
+if(navigation) navigation.scrollLeft=0;
 document.querySelectorAll("nav button[data-page]").forEach(button => button.addEventListener("click", () => {
   document.querySelectorAll("nav button").forEach(item => item.classList.toggle("active",item===button));
   document.querySelectorAll(".page").forEach(page => page.classList.toggle("active",page.id===button.dataset.page));
@@ -86,26 +88,26 @@ function blackbitView(source){
 function winanceView(source){
   if(!source?.ok) return `<div class="source-detail"><div class="source-state error">${esc(source?.status||"нет данных")}</div><p>${esc(source?.message||"Winance пока не вернул данные")}</p><small>Проверка: ${esc(source?.checkedAt||"—")}</small></div>`;
   const d=source.data||{}, pairs=d.pairs||{}, books=d.orderBooks||{};
-  const fmt=v=>v===null||v===undefined||v===""?"—":Number.isFinite(Number(v))?Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8}):"—";
-  const pairCard=(pair,label,unit)=>`<div class="winance-pair"><span>${label}</span><strong>${fmt(pair?.rate)} ${unit}</strong><small>Объём за 24ч/API: ${fmt(pair?.volumeBase)} ERUB</small><small>Эквивалент: ${fmt(pair?.volumeQuoted)} ${unit}</small></div>`;
-  const history=(rows,unit)=>`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${(rows||[]).slice(-10).reverse().map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`;
-  const levels=(rows)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${r.quoteCurrency}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
-  const bookSection=(book,label,unit,side)=> {
-    const bids=Array.isArray(book?.bids)?book.bids.map(x=>({...x,quoteCurrency:unit})):[];
-    const asks=Array.isArray(book?.asks)?book.asks.map(x=>({...x,quoteCurrency:unit})):[];
-    const rows=side==="bid"?bids:asks;
-    const title=side==="bid"?"Покупки (BUY)":"Продажи (SELL)";
-    const cls=side==="bid"?"bid-label":"ask-label";
-    return `<section><h4 class="${cls}">${title}</h4>${book?.ok
-      ? `<div class="bb-level-head"><span>Цена (${unit})</span><span>Количество ERUB</span><span>Всего ${unit}</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows):'<p class="muted">Нет уровней</p>'}</div>`
-      : `<div class="source-detail"><span class="quote-unavailable">Стакан недоступен</span><p>${esc(book?.message||"Публичный endpoint стакана не подтвердил ответ")}</p></div>`}</section>`;
+  const fmt=v=>v===null||v===undefined||v===""||!Number.isFinite(Number(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8});
+  const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
+  const candles=(rows,unit)=> {
+    const items=(rows||[]).slice(-10).reverse();
+    return items.length?`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${items.map(r=>`<tr><td>${new Date(Number(r.timestamp)*1000).toLocaleDateString("ru-RU")}</td><td>${fmt(r.open)}</td><td>${fmt(r.high)}</td><td>${fmt(r.low)}</td><td>${fmt(r.close)} ${unit}</td><td>${fmt(r.volume)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="muted">История свечей пока отсутствует</p>';
   };
-  const marketCard=(key,label,unit)=> {
-    const book=books[key]||{};
+  const side=(book,which,unit,label,cls)=>{
+    const rows=Array.isArray(book?.[which])?book[which]:[];
+    return `<section><h3 class="${cls}">${label}</h3>${book?.ok
+      ? `<div class="bb-level-head"><span>Цена (${unit})</span><span>Количество ERUB</span><span>Всего ${unit}</span><span>Ордеры</span></div><div class="bb-levels ${cls}">${rows.length?levels(rows,unit):'<p class="muted">Нет уровней</p>'}</div>`
+      : `<div class="source-detail"><span class="quote-unavailable">Стакан недоступен</span><p>${esc(book?.message||"Публичный стакан пока не получен")}</p></div>`}</section>`;
+  };
+  const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
+    const book=books[key]||{};
     const spread=book.ok?Number(book.bestAsk)-Number(book.bestBid):null;
     const spreadPct=spread!==null&&Number(book.bestBid)>0?spread/Number(book.bestBid)*100:null;
-    return `<section class="winance-market-card"><div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>${label}</h2></div><span class="${book.ok?"live-pill":"source-state"}">${book.ok?"● LIVE": "СТАКАН НЕ ПОДТВЕРЖДЁН"}</span></div>
+    const bookMeta=book.ok?"Глубина стакана: до 100 уровней":"Стакан не получен; котировки пары и объёмы API отображаются отдельно";
+    return `<section class="winance-market-card">
+      <div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>${pairName}</h2></div><span class="live-pill">● LIVE</span></div>
       <div class="bb-summary">
         <div><span>Последняя цена</span><strong>${fmt(pair?.rate)} ${unit}</strong></div>
         <div><span>Лучшая покупка</span><strong class="bid-label">${book.ok?fmt(book.bestBid):"—"} ${unit}</strong></div>
@@ -114,19 +116,17 @@ function winanceView(source){
         <div><span>Объём пары (API)</span><strong>${fmt(pair?.volumeBase)} ERUB</strong><small>${fmt(pair?.volumeQuoted)} ${unit}</small></div>
         <div><span>Минимум сделки</span><strong>${fmt(pair?.minimumAmount)} ERUB</strong></div>
       </div>
-      <p class="muted">ID пары: ${esc(pair?.id??"—")} · Глубина: до 100 уровней, если публичный стакан доступен.</p>
-      <h3>Стакан заявок · первые 10 уровней</h3><div class="bb-book-grid">${bookSection(book,label,unit,"bid")}${bookSection(book,label,unit,"ask")}</div>
-      <h3>История ${label} · дневные свечи</h3>${history(d.dailyHistory?.[key],unit)}
+      <p class="muted">ID пары: ${esc(pair?.id??"—")} · ${bookMeta}</p>
+      <h3>Стакан заявок · первые 10 уровней</h3>
+      <div class="bb-book-grid">${side(book,"bids",unit,"Покупки (BUY)","bid-label")}${side(book,"asks",unit,"Продажи (SELL)","ask-label")}</div>
+      <h3>История ${pairName} · дневные свечи</h3>
+      ${candles(d.dailyHistory?.[key],unit)}
+      <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>
     </section>`;
   };
-  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ WINANCE</div><h2>Winance · ERUB Market</h2></div><span class="live-pill">● API LIVE</span></div>
-    <div class="winance-pairs">${pairCard(pairs.erubUsdt,"ERUB / USDT","USDT")}${pairCard(pairs.erubRub,"ERUB / RUB","RUB")}</div>
-    ${marketCard("erubUsdt","ERUB / USDT","USDT")}
-    ${marketCard("erubRub","ERUB / RUB","RUB")}
-    <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")}</p>
-    <p class="muted">Котировки, объёмы и свечи получаются из публичных endpoint Winance. Получение стакана выполняется отдельным необязательным запросом; если он не поддерживается сервером, котировки и история продолжают отображаться, а стакан отмечается недоступным. Торговля и доступ к аккаунту не подключены.</p>`;
+  return `${market("erubUsdt","ERUB / USDT","USDT")}${market("erubRub","ERUB / RUB","RUB")}
+    <p class="muted">Котировки, объёмы и дневные свечи получаются из публичных данных Winance. Торговля и доступ к аккаунту не подключены.</p>`;
 }
-
 
 function erubView(source, winanceSource){
   if(!source?.ok) return `<div class="source-detail"><div class="source-state error">${esc(source?.status||"нет данных")}</div><p>${esc(source?.message||"eRub пока не вернул данные")}</p><small>Проверка: ${esc(source?.checkedAt||"—")}</small></div>`;
@@ -169,35 +169,21 @@ function erubView(source, winanceSource){
     </div>`;
   };
 
-  const methods=Array.isArray(d.merchantConfig?.merchant_cfg)?d.merchantConfig.merchant_cfg:
-    Array.isArray(d.merchantConfig)?d.merchantConfig:
-    Array.isArray(d.merchantConfig?.data)?d.merchantConfig.data:[];
-  const methodRows=methods.map(m=>{
-    const currencies=Array.isArray(m.currency)?m.currency.join(", "):String(m.currency??"—");
-    const rubMention=/RUB|RUR|643|руб/i.test(currencies+" "+(m.merchant||""));
-    const available=v=>v===1||v===true||v==="1"?"Доступно":v===0||v===false||v==="0"?"Недоступно":String(v??"Не указано");
-    return `<tr><td>${esc(m.merchant||"Платёжный канал")}</td><td>${esc(currencies)}</td><td>${esc(available(m.topup))}</td><td>${rubMention?"Канал упоминает RUB":"RUB не указан"}</td></tr>`;
-  }).join("");
 
 
-
-  return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ САЙТА ERUB.SITE</div><h2>еРубль · Покупка ERUB</h2></div><span class="live-pill">● LIVE</span></div>
-    <div class="erub-total"><span>Всего куплено ERUB по данным сайта</span><strong>${fmt(d.totalBought,4)} ERUB</strong></div>
-    <div class="erub-bounty-banner"><strong>Программа Bounty · +10%</strong><span>За каждую покупку к балансу добавляется дополнительно 10% ERUB. Бонус учитывается в эффективном курсе и сравнении с Winance.</span></div>
-    <h3>Покупка ERUB за USDT</h3>
-    ${comparisonCard("USDT → ERUB",usdtErub,"USDT",winUsdt)}
-    <h3>Покупка ERUB за рубли с карты</h3>
-    ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}
-    <h3>Расчёт начисления Bounty</h3>
+  return `<div class="erub-overview"><div class="erub-total"><div><span class="eyebrow">ДАННЫЕ ERUB.SITE</span><strong>Всего куплено</strong></div><b>${fmt(d.totalBought,4)} <small>ERUB</small></b><span class="live-pill">● LIVE</span></div>
+    <div class="erub-bounty-banner"><div class="erub-bounty-mark">+10%</div><div><strong>Bounty за каждую покупку</strong><span>Дополнительные ERUB начисляются к балансу. Бонус уже учтён в эффективном курсе ниже.</span></div></div></div>
+    <section class="erub-purchase-section"><div class="erub-section-heading"><span>01</span><div><h3>Покупка за USDT</h3><p>Сравнение с парой ERUB/USDT на Winance</p></div></div>
+    ${comparisonCard("USDT → ERUB",usdtErub,"USDT",winUsdt)}</section>
+    <section class="erub-purchase-section"><div class="erub-section-heading"><span>02</span><div><h3>Покупка за RUB</h3><p>Оплата рублями с карты · сравнение с ERUB/RUB на Winance</p></div></div>
+    ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}</section>
+    <details class="erub-calculator-details"><summary>Калькулятор начисления Bounty</summary>
     <div class="erub-calculator">
       <label>Покупка за USDT<input id="erubBuyUsdt" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Например, 100"></label>
       <div class="erub-calc-result"><span>Базовое начисление</span><strong id="erubBaseUsdt">— ERUB</strong><span>Бонус +10%</span><strong id="erubBonusUsdt" class="bonus-value">— ERUB</strong><span>Всего на баланс</span><strong id="erubTotalUsdt">— ERUB</strong></div>
       <label>Покупка за RUB<input id="erubBuyRub" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Например, 10000"></label>
       <div class="erub-calc-result"><span>Базовое начисление</span><strong id="erubBaseRub">— ERUB</strong><span>Бонус +10%</span><strong id="erubBonusRub" class="bonus-value">— ERUB</strong><span>Всего на баланс</span><strong id="erubTotalRub">— ERUB</strong></div>
-    </div>
-    <h3>Платёжные каналы из merchant_config</h3>
-    <div class="table-wrap"><table><thead><tr><th>Канал</th><th>Валюты</th><th>Пополнение</th><th>RUB</th></tr></thead><tbody>${methodRows||'<tr><td colspan="4">Список каналов не получен</td></tr>'}</tbody></table></div>
-    <p class="muted">Курс покупки за RUB отображается отдельно от подтверждения способа оплаты: наличие курса RUB → ERUB само по себе не доказывает, что доступна именно банковская карта. Способ оплаты проверяется по merchant_config.</p>
+    </div></details>
     <p class="market-updated">Последнее получение: ${esc(d.receivedAt||source.checkedAt||"")} · Версия курса: ${esc((d.rates||[]).map(x=>x.version).filter(Boolean).sort().at(-1)??"—")}</p>
     <p class="muted">Bounty рассчитывается как 10% от суммы ERUB, полученной по базовому курсу: итоговое зачисление = базовое начисление × 1,10. Фактические правила начисления и ограничения программы должны соответствовать условиям сайта.</p>`;
 }

@@ -28,13 +28,8 @@
 .market-updated{color:var(--muted);font-size:11px;margin-top:15px}
 @media(max-width:520px){.quote-grid{gap:8px}.quote-box{padding:11px}.market-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.book-grid{grid-template-columns:1fr}.book-head,.book-row{font-size:12px}}
 
-.winance-pairs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 22px}
-.winance-pair{background:#0d1729;border:1px solid var(--line);border-radius:12px;padding:15px;min-width:0}
-.winance-pair span{display:block;color:#b48aff;font-size:11px;font-weight:800}
-.winance-pair strong{display:block;font-size:clamp(20px,4vw,28px);margin:7px 0;overflow-wrap:anywhere}
-.winance-pair small{color:var(--muted)}
 #winanceData h3{margin-top:22px}
-@media(max-width:520px){.winance-pairs{grid-template-columns:1fr}}
+@media(max-width:520px){}
 /* BlackBit ECR/USDT market */
 .bb-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
 .bb-summary>div{background:#0d1729;border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}
@@ -136,12 +131,25 @@ pre, code { max-width:100%; overflow-x:auto; }
 
 
 
-/* Winance order-book panels share the BlackBit visual language */
-.winance-market-card{margin:22px 0;padding:16px;border:1px solid var(--line,#29344c);border-radius:16px;background:rgba(18,28,49,.55)}
-.winance-market-card .bb-summary{margin-top:14px}
-.winance-market-card .bb-book-grid{margin-top:12px}
+/* Winance: the same market layout, typography, colors and responsive grids as BlackBit */
+.winance-market-card{margin:22px 0;padding:0;border:0;background:transparent;min-width:0}
+.winance-market-card + .winance-market-card{border-top:1px solid var(--line);padding-top:22px}
+.winance-market-card .market-head{margin-bottom:2px}
+.winance-market-card .market-head h2{font-size:25px;margin:5px 0 14px}
+.winance-market-card .bb-summary{margin:14px 0}
+.winance-market-card .bb-summary>div{background:#0d1729;border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}
+.winance-market-card .bb-book-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.winance-market-card .bb-book-grid section{min-width:0}
+.winance-market-card .bb-level-head,.winance-market-card .bb-levels .book-row{display:grid;grid-template-columns:1.05fr 1.2fr 1.1fr .6fr;gap:5px;padding:8px 6px;font-size:10px;font-variant-numeric:tabular-nums}
+.winance-market-card .bb-level-head{background:#0b1325;color:var(--muted);border:1px solid var(--line);border-radius:9px 9px 0 0}
+.winance-market-card .bb-levels{border:1px solid var(--line);border-top:0;border-radius:0 0 9px 9px;overflow:hidden}
+.winance-market-card .bb-levels .book-row{border-top:1px solid #263450}
+.winance-market-card .bb-levels.bid-label .book-row strong{color:var(--green)}
+.winance-market-card .bb-levels.ask-label .book-row strong{color:var(--red)}
 .winance-market-card .market-updated{margin-top:16px}
-.winance-market-card .source-detail{padding:12px;border:1px solid var(--line,#29344c);border-radius:10px}
+.winance-market-card .source-detail{padding:12px;border:1px solid var(--line);border-radius:10px}
+@media(max-width:650px){.winance-market-card .bb-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.winance-market-card .bb-book-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.winance-market-card .bb-level-head,.winance-market-card .bb-levels .book-row{grid-template-columns:minmax(0,.9fr) minmax(0,1.15fr) minmax(0,1.05fr) minmax(0,.55fr);gap:3px;padding:7px 4px;font-size:9px}.winance-market-card .bb-level-head>*,.winance-market-card .bb-levels .book-row>*{min-width:0;overflow-wrap:anywhere}}
 
 
 /* eRub purchase monitor and Bounty-adjusted comparison */
@@ -174,3 +182,44 @@ pre, code { max-width:100%; overflow-x:auto; }
 .xt-listing-notice{padding:18px 20px;border:1px solid var(--line,#29344c);border-radius:14px;background:var(--panel,#111a2d)}
 .xt-listing-notice strong{display:block;font-size:1.1rem;margin-bottom:8px}
 .xt-listing-notice p{margin:6px 0;color:var(--muted,#9aa8c2);line-height:1.55}
+
+/* eRub: clean mobile-first hierarchy without nested cards or repeated titles */
+#erub main { min-width:0; }
+#erubData.erub-dashboard { display:block; min-width:0; }
+.erub-overview { display:grid; gap:12px; margin:18px 0 24px; }
+.erub-total { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:17px 18px; border:1px solid var(--line); border-radius:15px; background:linear-gradient(120deg,#172642,#111b30); }
+.erub-total>div { display:grid; gap:4px; }
+.erub-total>div strong { font-size:16px; }
+.erub-total>b { font-size:clamp(18px,4vw,25px); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.erub-total>b small { color:var(--muted); font-size:12px; }
+.erub-total .live-pill { margin-left:auto; }
+.erub-bounty-banner { display:flex; flex-direction:row; align-items:center; gap:14px; margin:0; padding:14px 16px; }
+.erub-bounty-mark { flex:none; display:grid; place-items:center; width:58px; height:58px; border-radius:14px; background:#1b5848; color:#65e5b7; font-size:19px; font-weight:900; }
+.erub-bounty-banner strong { display:block; font-size:16px; }
+.erub-bounty-banner span { display:block; font-size:13px; line-height:1.45; }
+.erub-purchase-section { margin:24px 0; padding:17px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(145deg,#121e34,#0e1729); }
+.erub-section-heading { display:flex; align-items:center; gap:12px; margin-bottom:15px; }
+.erub-section-heading>span { display:grid; place-items:center; flex:none; width:34px; height:34px; border-radius:10px; background:#34205a; color:#c8a8ff; font-weight:800; }
+.erub-section-heading h3 { margin:0; font-size:19px; }
+.erub-section-heading p { margin:3px 0 0; color:var(--muted); font-size:12px; }
+.erub-compare-card { margin:0; padding:0; }
+.erub-compare-title { display:none; }
+.erub-compare-columns { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.erub-calculator-details { margin:22px 0; border:1px solid var(--line); border-radius:14px; background:#101a2d; }
+.erub-calculator-details summary { padding:15px 17px; cursor:pointer; font-weight:750; }
+.erub-calculator-details[open] { padding-bottom:12px; }
+.erub-calculator-details .erub-calculator { padding:0 14px; }
+#erubData .market-updated { margin-top:18px; }
+@media(max-width:620px) {
+ .erub-total { align-items:flex-start; }
+ .erub-total>b { width:100%; order:3; font-size:20px; }
+ .erub-total .live-pill { margin-left:auto; }
+ .erub-bounty-banner { align-items:flex-start; padding:13px; }
+ .erub-bounty-mark { width:48px; height:48px; font-size:17px; }
+ .erub-purchase-section { padding:13px; margin:18px 0; }
+ .erub-compare-columns { grid-template-columns:1fr; gap:8px; }
+ .erub-compare-columns>div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 10px; padding:11px; }
+ .erub-compare-columns span { grid-column:1; }
+ .erub-compare-columns strong { grid-column:2; grid-row:1 / span 2; text-align:right; font-size:16px; }
+ .erub-compare-columns small { grid-column:1; }
+}
