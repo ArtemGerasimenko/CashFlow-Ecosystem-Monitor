@@ -101,33 +101,26 @@ const CANDLE_INTERVALS = [[60,"1м"],[300,"5м"],[900,"15м"],[1800,"30м"],[360
 const candleSelections = new Map();
 const candleRequests = new WeakMap();
 const candleDataCache = new Map();
-const candleUnsupported = new Set();
-const CANDLE_UNSUPPORTED_STORAGE = "cashflow.candle.unsupported.v1";
-try {
-  const saved = JSON.parse(localStorage.getItem(CANDLE_UNSUPPORTED_STORAGE) || "[]");
-  saved.forEach(key => candleUnsupported.add(key));
-} catch {}
 const candleKey = (source,pair) => `${source}:${pair}`;
-const candleIntervalKey = (source,pair,interval) => `${candleKey(source,pair)}:${Number(interval)}`;
 function candleLabel(interval){return CANDLE_INTERVALS.find(([value])=>Number(value)===Number(interval))?.[1]||"интервал";}
-function rememberUnsupportedCandle(source,pair,interval){
-  candleUnsupported.add(candleIntervalKey(source,pair,interval));
-  try { localStorage.setItem(CANDLE_UNSUPPORTED_STORAGE,JSON.stringify([...candleUnsupported])); } catch {}
-}
 function candleControls(source,pair,defaultInterval){
-  const key=candleKey(source,pair);
-  const available=CANDLE_INTERVALS.filter(([value])=>!candleUnsupported.has(candleIntervalKey(source,pair,value)));
-  let selected=Number(candleSelections.get(key)??defaultInterval);
-  if(!available.some(([value])=>value===selected)) {
-    selected=available.some(([value])=>value===defaultInterval)?defaultInterval:(available[0]?.[0]??defaultInterval);
-    candleSelections.set(key,selected);
-  }
-  return `<div class="candle-controls" data-candle-controls="${source}:${pair}" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${available.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
+  const selected=Number(candleSelections.get(candleKey(source,pair))??defaultInterval);
+  return `<div class="candle-controls" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
 }
-function candleRows(items,source){
-  const date = c => source==="blackbit" ? new Date(c.timestamp*1000).toLocaleString("ru-RU") : new Date(c.timestamp*1000).toLocaleDateString("ru-RU");
+function candleRows(items,source,interval=86400){
+  const isDaily=Number(interval)===86400;
+  const date = c => {
+    const raw=Number(c.timestamp);
+    const stamp=raw>1e12?raw:raw*1000;
+    const d=new Date(stamp);
+    if(!Number.isFinite(d.getTime())) return "—";
+    // Daily candles show their calendar date; intraday candles show the exact candle start time.
+    return isDaily
+      ? d.toLocaleDateString("ru-RU")
+      : `${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",hour12:false})}`;
+  };
   const sorted=(Array.isArray(items)?items:[]).filter(c=>Number.isFinite(Number(c.timestamp))).sort((a,b)=>Number(b.timestamp)-Number(a.timestamp)).slice(0,30);
-  return `<div class="table-wrap history-table"><table><thead><tr><th>${source==="blackbit"?"Время":"Дата"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-wrap history-table"><table><thead><tr><th>${isDaily?"Дата":"Дата и время"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 document.addEventListener("click",async event=>{
   const button=event.target.closest("[data-candle-interval]"); if(!button) return;
@@ -147,22 +140,10 @@ document.addEventListener("click",async event=>{
   try{
     const result=await api(`/candles?source=${encodeURIComponent(source)}&pair=${encodeURIComponent(pair)}&interval=${encodeURIComponent(selected)}`);
     if(candleRequests.get(panel)!==requestToken) return;
-    candleDataCache.set(candleIntervalKey(source,pair,selected),Array.isArray(result.candles)?result.candles:[]);
-    if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source):'<p class="muted">Для этого интервала история отсутствует</p>';
+    candleDataCache.set(`${candleKey(source,pair)}:${selected}`,Array.isArray(result.candles)?result.candles:[]);
+    if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source,selected):'<p class="muted">Для этого интервала история отсутствует</p>';
   } catch(error){
-    if(candleRequests.get(panel)!==requestToken) return;
-    const message=String(error?.message||"");
-    if(/\bHTTP\s*400\b|\bHTTP\s*404\b|unsupported|invalid interval/i.test(message)){
-      rememberUnsupportedCandle(source,pair,selected);
-      const defaultInterval=source==="blackbit"?900:86400;
-      const remaining=CANDLE_INTERVALS.filter(([value])=>!candleUnsupported.has(candleIntervalKey(source,pair,value)));
-      const fallback=remaining.some(([value])=>value===defaultInterval)?defaultInterval:(remaining[0]?.[0]??defaultInterval);
-      candleSelections.set(candleKey(source,pair),fallback);
-      const controls=panel.querySelector(".candle-controls");
-      if(controls) controls.outerHTML=candleControls(source,pair,fallback);
-      if(title) title.textContent=`История ${panel.dataset.candlePairName||""} · ${candleLabel(fallback)}`;
-      if(table) table.innerHTML='<p class="muted">Этот интервал не поддерживается источником и скрыт. Выбери другой интервал.</p>';
-    } else if(table) table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(message)}</p>`;
+    if(candleRequests.get(panel)===requestToken&&table) table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(error.message)}</p>`;
   }
 });
 
@@ -175,7 +156,7 @@ function blackbitView(source){
   const selected=Number(candleSelections.get(candleKey("blackbit","ecrUsdt"))??900);
   const cached=candleDataCache.get(`${candleKey("blackbit","ecrUsdt")}:${selected}`);
   const candles=Array.isArray(cached)?cached:(selected===900&&Array.isArray(d.candles)?d.candles:[]);
-  const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+  const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
   <p class="market-meta">Глубина стакана: до 100 уровней</p>
@@ -193,7 +174,7 @@ function winanceView(source){
     const selected=Number(candleSelections.get(candleKey("winance",pairKey))??86400);
     const cached=candleDataCache.get(`${candleKey("winance",pairKey)}:${selected}`);
     const items=Array.isArray(cached)?cached:(selected===86400&&Array.isArray(rows)?rows:[]);
-    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance"):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -282,31 +263,11 @@ function erubView(source, winanceSource){
 }
 
 
-function captureMonitorScroll(){
-  const controls={};
-  document.querySelectorAll(".candle-controls[data-candle-controls]").forEach(el=>controls[el.dataset.candleControls]=el.scrollLeft);
-  const tables=[...document.querySelectorAll(".table-wrap")].map(el=>el.scrollLeft);
-  return {x:window.scrollX,y:window.scrollY,controls,tables};
-}
-function restoreMonitorScroll(snapshot){
-  if(!snapshot) return;
-  requestAnimationFrame(()=>{
-    Object.entries(snapshot.controls||{}).forEach(([key,left])=>{
-      const el=document.querySelector(`.candle-controls[data-candle-controls="${key}"]`);
-      if(el) el.scrollLeft=left;
-    });
-    document.querySelectorAll(".table-wrap").forEach((el,index)=>{
-      if(snapshot.tables?.[index]!=null) el.scrollLeft=snapshot.tables[index];
-    });
-    window.scrollTo(snapshot.x||0,snapshot.y||0);
-  });
-}
 let loadInProgress = false;
 async function load() {
   if (loadInProgress || document.hidden) return;
   loadInProgress = true;
   try {
-    const scrollSnapshot=captureMonitorScroll();
     const s=await api("/status");
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
@@ -314,7 +275,6 @@ async function load() {
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
     $("marketData").innerHTML=xtNotice; $("xtData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
-    restoreMonitorScroll(scrollSnapshot);
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
