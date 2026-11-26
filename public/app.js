@@ -10,24 +10,34 @@ const navigation=document.querySelector("nav");
 const pageButtons=[...document.querySelectorAll("nav button[data-page]")];
 const pages=[...document.querySelectorAll(".page")];
 const validPages=new Set(pages.map(page=>page.id));
-function activatePage(pageId, persist=false){
+function pageFromHash(){
+  const match=String(location.hash||"").match(/^#page=([a-z0-9_-]+)$/i);
+  return match&&validPages.has(match[1])?match[1]:null;
+}
+function activatePage(pageId,persist=false){
   if(!validPages.has(pageId)) pageId="dashboard";
   pageButtons.forEach(button=>button.classList.toggle("active",button.dataset.page===pageId));
   pages.forEach(page=>page.classList.toggle("active",page.id===pageId));
   if(persist){
     try{localStorage.setItem("cashflow-monitor-active-page",pageId);}catch(_){}
+    // Keep the selected tab in the URL as a reliable refresh-safe fallback.
+    if(location.hash!==`#page=${pageId}`) history.replaceState(null,"",`#page=${pageId}`);
   }
 }
-let savedPage="dashboard";
+let savedPage=pageFromHash()||"dashboard";
 try{
   const storedPage=localStorage.getItem("cashflow-monitor-active-page");
-  if(storedPage&&validPages.has(storedPage)) savedPage=storedPage;
+  if(!pageFromHash()&&storedPage&&validPages.has(storedPage)) savedPage=storedPage;
 }catch(_){}
 activatePage(savedPage);
 if(navigation) navigation.scrollLeft=0;
 pageButtons.forEach(button=>button.addEventListener("click",()=>{
   activatePage(button.dataset.page,true);
 }));
+window.addEventListener("hashchange",()=>{
+  const page=pageFromHash();
+  if(page) activatePage(page,false);
+});
 async function api(path) {
   const response = await fetch(`${API_BASE}${path}`,{headers:{accept:"application/json"},cache:"no-store"});
   const payload = await response.json().catch(()=>({}));
