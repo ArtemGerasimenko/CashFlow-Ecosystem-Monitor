@@ -398,7 +398,7 @@ async function load() {
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
-    $("marketData").innerHTML=xtNotice; $("xtData").innerHTML=xtNotice;
+    $("marketData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
     $("winanceData").querySelectorAll("[data-candle-panel]").forEach(panel=>{
       const source=panel.querySelector('[data-candle-source="winance"][data-candle-interval="900"]');
