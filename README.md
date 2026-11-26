@@ -30,3 +30,14 @@ Open `http://localhost:8080`.
 - It then displays those selected levels in the requested visual order: red SELL descending; green BUY ascending.
 - Best bid/ask are calculated from the full normalized book, not from the display slice.
 - BlackBit last price is selected from available API values that fall within the current best-bid/best-ask spread; the UI shows which field supplied the price and whether it falls inside the spread.
+
+
+## XT.COM Listing Monitor
+
+The XT.COM listing monitor reads public official Help Center announcement sections:
+- Spot token and trading-pair listings (`900000084163`)
+- USDT-M futures new listings (`10722464177561`)
+- Spot trading-pair delistings (`10528395637017`)
+- Futures contract delistings (`50094030973721`)
+
+The server checks up to five pages of 100 articles per section and caches the result for 60 seconds. It extracts explicit trading pairs and scheduled dates from announcement content, highlights ECR-related notices, and reports partial-source failures or pagination limits instead of silently presenting incomplete coverage as complete. Browser notifications require the user to grant permission and the monitor page to remain open.
