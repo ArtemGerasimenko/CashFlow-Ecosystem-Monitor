@@ -22,9 +22,9 @@ function decodeHtml(value){
     .replace(/\s+/g," ").trim();
 }
 function parseSchedule(text){
+  const tradingMarker=text.match(/(?:交易时间|开始交易时间|开盘时间|trading\s*time|trading\s*opens|launch\s*schedule|listing\s*schedule|trading\s*schedule)\s*[:：]?/i);
+  const source=tradingMarker?text.slice(tradingMarker.index+tradingMarker[0].length):text;
   const months={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
-  const marker=text.search(/launch schedule|listing schedule|trading schedule|schedule of trading/i);
-  const source=marker>=0?text.slice(marker):text;
   const candidates=[];
   const monthRe=new RegExp(`\\b(${Object.keys(months).join("|")})\\s+(\\d{1,2}),?\\s+(20\\d{2})(?:,?\\s+(\\d{1,2}):(\\d{2}))?\\s*(?:\\(\\s*UTC\\s*\\)|UTC)?`,"gi");
   for(const m of source.matchAll(monthRe)){
@@ -34,6 +34,15 @@ function parseSchedule(text){
   const isoRe=/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/g;
   for(const m of source.matchAll(isoRe)){
     const t=Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0));
+    if(Number.isFinite(t)) candidates.push(t);
+  }
+  // XT announcements frequently publish Chinese dates with an explicit UTC+8 offset.
+  const cnRe=/\b(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日(?:\s*(\d{1,2}):(\d{2}))?\s*(?:\(\s*UTC\s*([+-]\d{1,2})(?::?(\d{2}))?\s*\)|UTC\s*([+-]\d{1,2})(?::?(\d{2})?))?/gi;
+  for(const m of source.matchAll(cnRe)){
+    const hour=+(m[4]||0),minute=+(m[5]||0);
+    const offsetHours=+(m[6]||m[8]||0),offsetMinutes=+(m[7]||m[9]||0);
+    const offset=(offsetHours*60+Math.sign(offsetHours||1)*offsetMinutes)*60000;
+    const t=Date.UTC(+m[1],+m[2]-1,+m[3],hour,minute)-offset;
     if(Number.isFinite(t)) candidates.push(t);
   }
   if(!candidates.length) return null;
@@ -121,9 +130,23 @@ export async function fetchXtListings(force=false){
       if(!previous||item.status==="delisted"||item.status==="postponed") byId.set(id,item);
     }
   }
-  const items=[...byId.values()].sort((a,b)=>{
+  const pairMap=new Map();
+  const statusPriority={upcoming:5,postponed:4,delisted:3,launched:2,announcement:1};
+  for(const notice of byId.values()){
+    if(!notice.pairs?.length) continue;
+    for(const pair of notice.pairs){
+      const key=`${notice.kind}:${pair}`;
+      const record={...notice,id:key,title:pair,pairs:[pair],sourceTitle:notice.title,notices:[notice.id]};
+      const previous=pairMap.get(key);
+      const newer=previous&&new Date(previous.updatedAt||previous.publishedAt||0)>new Date(record.updatedAt||record.publishedAt||0);
+      if(!previous||(!newer&&(statusPriority[record.status]||0)>=(statusPriority[previous.status]||0))||(!newer&&new Date(record.updatedAt||record.publishedAt||0)>=new Date(previous.updatedAt||previous.publishedAt||0))){
+        pairMap.set(key,record);
+      } else if(previous) previous.notices.push(notice.id);
+    }
+  }
+  const items=[...pairMap.values()].sort((a,b)=>{
     const rank=x=>x.isEcr?0:x.status==="upcoming"?1:x.status==="delisted"?2:3;
-    return rank(a)-rank(b)||new Date(b.publishedAt||0)-new Date(a.publishedAt||0);
+    return rank(a)-rank(b)||new Date(a.scheduledAt||a.publishedAt||0)-new Date(b.scheduledAt||b.publishedAt||0);
   });
   const sectionCounts=sections.map(({section,articles,error,truncated})=>({section:section.label,count:articles.length,error:error||null,truncated:!!truncated}));
   const data={ok:true,source:"XT.COM Official Help Center",checkedAt:new Date().toISOString(),sections:sectionCounts,warnings:sectionCounts.filter(x=>x.error||x.truncated),items};
