@@ -83,7 +83,7 @@ export async function fetchBlackBitMarket() {
   // BUY (green): minimum at top -> maximum at bottom.
   // SELL (red): maximum at top -> minimum at bottom.
   // Sort the complete book before the UI limits it to 10 levels.
-  const bids = normalizeLevels(book?.levels_buy).sort((a, b) => a.rate - b.rate);
+  const bids = normalizeLevels(book?.levels_buy).sort((a, b) => b.rate - a.rate);
   const asks = normalizeLevels(book?.levels_sell).sort((a, b) => b.rate - a.rate);
   if (!bids.length || !asks.length) {
     throw new Error("BlackBit: стакан не содержит обе стороны levels_buy и levels_sell");

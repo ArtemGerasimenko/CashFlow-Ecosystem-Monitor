@@ -37,8 +37,8 @@ async function fetchOrderBook(pair) {
   try {
     const response = await get(`/site/v2/orders/book?currency_pair=${encodeURIComponent(pair.id)}&depth=100`);
     const book = response?.data && !response.levels_buy ? response.data : response;
-    // BUY (green): ascending for display. SELL (red): descending for display.
-    const bids = normalizeLevels(book?.levels_buy ?? book?.bids).sort((a, b) => a.rate - b.rate);
+    // BUY (green): descending for display. SELL (red): descending for display.
+    const bids = normalizeLevels(book?.levels_buy ?? book?.bids).sort((a, b) => b.rate - a.rate);
     const asks = normalizeLevels(book?.levels_sell ?? book?.asks).sort((a, b) => b.rate - a.rate);
     if (!bids.length || !asks.length) {
       return {
