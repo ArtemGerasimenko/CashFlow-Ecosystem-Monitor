@@ -265,11 +265,58 @@ function erubView(source, winanceSource){
 
 
 let loadInProgress = false;
+// Preserve the user's reading position when the 10-second market refresh rerenders cards.
+function captureScrollPositions(){
+  const page={x:window.scrollX,y:window.scrollY};
+  const elements=[];
+  const counters=new Map();
+  document.querySelectorAll("body *").forEach(el=>{
+    let key;
+    if(el.id) key=`#${el.id}`;
+    else if(el.dataset.candleSource&&el.dataset.candlePair) key=`candle:${el.dataset.candleSource}:${el.dataset.candlePair}:${el.className}`;
+    else if(el.dataset.candlePanel) key=`panel:${el.dataset.candlePairName||""}:${el.className}`;
+    else {
+      const cls=typeof el.className==="string"?el.className.trim().split(/\\s+/).filter(Boolean).sort().join("."):"";
+      const base=`.${cls||el.tagName.toLowerCase()}`;
+      const n=counters.get(base)||0; counters.set(base,n+1); key=`${base}:${n}`;
+    }
+    const canScrollY=el.scrollHeight>el.clientHeight+2;
+    const canScrollX=el.scrollWidth>el.clientWidth+2;
+    if(canScrollY||canScrollX) elements.push({key,x:el.scrollLeft,y:el.scrollTop});
+  });
+  return {page,elements};
+}
+function restoreScrollPositions(saved){
+  if(!saved) return;
+  const elements=[];
+  const counters=new Map();
+  document.querySelectorAll("body *").forEach(el=>{
+    let key;
+    if(el.id) key=`#${el.id}`;
+    else if(el.dataset.candleSource&&el.dataset.candlePair) key=`candle:${el.dataset.candleSource}:${el.dataset.candlePair}:${el.className}`;
+    else if(el.dataset.candlePanel) key=`panel:${el.dataset.candlePairName||""}:${el.className}`;
+    else {
+      const cls=typeof el.className==="string"?el.className.trim().split(/\\s+/).filter(Boolean).sort().join("."):"";
+      const base=`.${cls||el.tagName.toLowerCase()}`;
+      const n=counters.get(base)||0; counters.set(base,n+1); key=`${base}:${n}`;
+    }
+    elements.push({key,el});
+  });
+  const byKey=new Map(elements.map(x=>[x.key,x.el]));
+  for(const item of saved.elements){
+    const el=byKey.get(item.key);
+    if(el){el.scrollLeft=item.x;el.scrollTop=item.y;}
+  }
+  window.scrollTo(saved.page.x,saved.page.y);
+}
+
 async function load() {
   if (loadInProgress || document.hidden) return;
   loadInProgress = true;
+  let savedScroll=null;
   try {
     const s=await api("/status");
+    savedScroll=captureScrollPositions();
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
@@ -277,6 +324,7 @@ async function load() {
     $("marketData").innerHTML=xtNotice; $("xtData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
+    requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
     $("sources").innerHTML=`<div class="card"><strong>Не удалось получить данные API</strong><p>${esc(e.message)}</p><p class="muted">Откройте приложение через запущенный Node.js сервер.</p></div>`;
