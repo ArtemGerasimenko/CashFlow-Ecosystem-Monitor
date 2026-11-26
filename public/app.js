@@ -252,6 +252,16 @@ function erubView(source, winanceSource){
     ${comparisonCard("USDT → ERUB",usdtErub,"USDT",winUsdt)}</section>
     <section class="erub-purchase-section"><div class="erub-section-heading"><span>02</span><div><h3>Покупка за RUB</h3><p>Оплата рублями с карты · сравнение с ERUB/RUB на Winance</p></div></div>
     ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}</section>
+    <section class="erub-purchase-section erub-converter-section">
+      <div class="erub-section-heading"><span>03</span><div><h3>Конвертер ERUB</h3><p>Введи количество ERUB — монитор рассчитает эквивалент в USDT и RUB по актуальным курсам eRub.site</p></div></div>
+      <div class="erub-calculator">
+        <label>Сумма ERUB<input id="erubConvertAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Например, 1000"></label>
+        <div class="erub-calc-result">
+          <span>Эквивалент в USDT</span><strong id="erubConvertUsdt">— USDT</strong>
+          <span>Эквивалент в RUB</span><strong id="erubConvertRub">— RUB</strong>
+        </div>
+      </div>
+    </section>
     <details class="erub-calculator-details"><summary>Калькулятор начисления Bounty</summary>
     <div class="erub-calculator">
       <label>Покупка за USDT<input id="erubBuyUsdt" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Например, 100"></label>
@@ -404,8 +414,20 @@ function bindErubCalculator(){
   const rub=rates.find(x=>x.from==="RUB"&&x.to==="ERUB")?.rate;
   updateErubBounty("erubBuyUsdt",usdt,"erubBaseUsdt","erubBonusUsdt","erubTotalUsdt");
   updateErubBounty("erubBuyRub",rub,"erubBaseRub","erubBonusRub","erubTotalRub");
+  updateErubConverter(usdt,rub);
+}
+function updateErubConverter(usdtRate,rubRate){
+  const input=$("erubConvertAmount");
+  if(!input) return;
+  const amount=Math.max(0,Number(input.value)||0);
+  const usdt=Number(usdtRate)>0?amount/Number(usdtRate):null;
+  const rub=Number(rubRate)>0?amount/Number(rubRate):null;
+  const show=(value,unit)=>value===null?"— "+unit:`${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} ${unit}`;
+  $("erubConvertUsdt").textContent=show(usdt,"USDT");
+  $("erubConvertRub").textContent=show(rub,"RUB");
 }
 document.addEventListener("input",event=>{
   if(event.target?.id==="erubBuyUsdt") bindErubCalculator();
   if(event.target?.id==="erubBuyRub") bindErubCalculator();
+  if(event.target?.id==="erubConvertAmount") bindErubCalculator();
 });
