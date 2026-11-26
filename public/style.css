@@ -564,3 +564,47 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .erub-converter-line.bonus span{color:#a4e9d0}
 .erub-converter-line.bonus strong{color:#63e4b3}
 @media(max-width:420px){.erub-converter-line{align-items:flex-start;flex-direction:column;gap:5px}.erub-converter-line strong{text-align:left}}
+
+
+/* Converter result rows: prevent labels and amounts from colliding on narrow screens */
+.erub-converter-results{
+  display:flex!important;
+  flex-direction:column;
+  align-items:stretch;
+  gap:9px;
+  width:100%;
+  box-sizing:border-box;
+}
+.erub-converter-results .erub-converter-line{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.erub-converter-results .erub-converter-line span{
+  min-width:0;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+.erub-converter-results .erub-converter-line strong{
+  min-width:0;
+  max-width:100%;
+  text-align:right;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+@media(max-width:480px){
+  .erub-converter-results .erub-converter-line{
+    grid-template-columns:minmax(0,1fr);
+    gap:5px;
+    padding:12px;
+  }
+  .erub-converter-results .erub-converter-line strong{
+    text-align:left;
+    font-size:15px;
+  }
+}
