@@ -63,7 +63,7 @@ export async function updateSource(name,value){
   state.sources[name]=value;
   state.updatedAt=new Date().toISOString();
   if(value?.ok&&value.data){
-    const data=(name==="xt"||name==="blackbit")?compactForHistory(value.data):value.data;
+    const data=(name==="blackbit")?compactForHistory(value.data):value.data;
     state.history.push({source:name,at:state.updatedAt,data});
     state.history=state.history.slice(-MAX_HISTORY);
   }
