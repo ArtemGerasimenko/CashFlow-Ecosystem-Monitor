@@ -20,7 +20,5 @@ services:
         value: 30
       - key: MAX_HISTORY_ITEMS
         value: 500
-      - key: XT_SYMBOL
-        value: btc_usdt
       - key: DATA_DIR
         value: /opt/render/project/src/data

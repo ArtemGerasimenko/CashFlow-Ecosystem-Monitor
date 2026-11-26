@@ -9,7 +9,6 @@ import { config } from "./src/config.js";
 import { startScheduler, getSnapshot, refreshAll } from "./src/monitor.js";
 import { fetchBlackBitCandles } from "./src/adapters/blackbit.js";
 import { fetchWinanceCandles } from "./src/adapters/winance.js";
-import { fetchXtListings } from "./src/adapters/xt-listings.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
@@ -37,10 +36,6 @@ async function handler(req,res) {
     }
     if (url.pathname === "/api/health") return send(res,200,{ok:true,service:"CashFlow Ecosystem Monitor",pollIntervalMs:config.pollIntervalMs,now:new Date().toISOString()});
     if (url.pathname === "/api/status") return send(res,200,getSnapshot());
-    if (url.pathname === "/api/xt-listings") {
-      try { return send(res,200,await fetchXtListings(url.searchParams.get("force")==="1")); }
-      catch (error) { return send(res,502,{ok:false,error:"XT announcements unavailable",message:error.message}); }
-    }
     if (url.pathname === "/api/candles") {
       const source = url.searchParams.get("source");
       const pair = url.searchParams.get("pair") || "erubUsdt";
