@@ -39,22 +39,22 @@ function sideTable(levels,side) {
 }
 
 function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,midText="—"){
-  // Consistent precision across every exchange: price/quote total = 6, base quantity = 8.
+  // Keep the 10 best market levels, then apply the requested visual order.
+  // SELL/ASK: choose the 10 lowest asks (closest to market), display descending.
+  // BUY/BID: choose the 10 highest bids (closest to market), display ascending.
   const fixed=(value,digits)=>{
     const n=Number(value);
     return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
   };
-  // Sort the full API book before limiting to 10 levels.
-  // SELL/ASK (red): highest price at top, lowest at bottom.
-  // BUY/BID (green): lowest price at top, highest at bottom.
-  const normalize=(rows, direction)=> (Array.isArray(rows)?rows:[]).map(r=>({
+  const normalize=(rows)=> (Array.isArray(rows)?rows:[]).map(r=>({
     price:r.rate??r.price??r[0],
     quantity:r.amountBase??r.quantity??r.qty??r[1],
     total:r.amountQuoted??r.total??(Number(r.rate??r.price??r[0])*Number(r.amountBase??r.quantity??r.qty??r[1])),
     orders:r.orders??r.orderCount??r.count??null
-  })).filter(r=>r.price!=null && Number.isFinite(Number(r.price)))
-    .sort((a,b)=>direction*(Number(a.price)-Number(b.price))).slice(0,10);
-  const sell=normalize(asks,-1), buy=normalize(bids,1);
+  })).filter(r=>Number.isFinite(Number(r.price))&&Number(r.price)>0);
+  const allSell=normalize(asks), allBuy=normalize(bids);
+  const sell=allSell.slice().sort((a,b)=>Number(a.price)-Number(b.price)).slice(0,10).sort((a,b)=>Number(b.price)-Number(a.price));
+  const buy=allBuy.slice().sort((a,b)=>Number(b.price)-Number(a.price)).slice(0,10).sort((a,b)=>Number(a.price)-Number(b.price));
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
@@ -62,7 +62,7 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
     return `<div class="ub-row ${side}" style="--depth:${depth}%"><strong>${fixed(r.price,6)}</strong><span>${fixed(r.quantity,8)} ${baseLabel}</span><span>${fixed(r.total,6)} ${unit}</span>${orders?`<small>${orderCount} орд.</small>`:""}</div>`;
   }).join("");
   return `<section class="unified-book">
-    <div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">10 уровней · BUY / SELL</span></div>
+    <div class="ub-toolbar"><strong>Стакан заявок</strong><span class="ub-count">10 лучших уровней · BUY / SELL</span></div>
     <div class="ub-head"><span>Цена (${unit})</span><span>Количество ${baseLabel}</span><span>Всего ${unit}</span><span>Ордеры</span></div>
     <div class="ub-side ub-asks">${sell.length?rows(sell,"ask"):'<p class="muted">Нет заявок на продажу</p>'}</div>
     <div class="ub-mid"><span>ТЕКУЩАЯ ЦЕНА · ${fixed(midText,6)}</span></div>
@@ -160,7 +160,7 @@ function blackbitView(source){
   const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
-  <p class="market-meta">Глубина стакана: до 100 уровней</p>
+  <p class="market-meta">Глубина стакана: до 100 уровней · Цена: ${esc(d.priceSource||"API")} · ${d.priceInsideSpread===false?"Цена вне текущего спреда — требуется проверка":"Цена согласуется со спредом"}</p>
   ${unifiedBook(bids,asks,"USDT","ECR",num,true,num(d.lastRate))}
   ${candleTable}
   <p class="market-updated">Обновлено: ${esc(d.receivedAt||source.checkedAt||"—")}</p>`;
