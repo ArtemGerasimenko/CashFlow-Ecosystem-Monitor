@@ -172,10 +172,10 @@ function winanceView(source){
   const fmt=v=>v===null||v===undefined||v===""||!Number.isFinite(Number(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:8});
   const levels=(rows,unit)=>rows.slice(0,10).map(r=>`<div class="book-row"><strong>${fmt(r.rate)}</strong><span>${fmt(r.amountBase)} ERUB</span><span>${fmt(r.amountQuoted)} ${unit}</span><small>${fmt(r.orders)} орд.</small></div>`).join("");
   const candles=(rows,unit,pairKey,pairName)=> {
-    const selected=Number(candleSelections.get(candleKey("winance",pairKey))??86400);
+    const selected=Number(candleSelections.get(candleKey("winance",pairKey))??900);
     const cached=candleDataCache.get(`${candleKey("winance",pairKey)}:${selected}`);
-    const items=Array.isArray(cached)?cached:(selected===86400&&Array.isArray(rows)?rows:[]);
-    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,86400)}<div class="candle-results">${items.length?candleRows(items,"winance",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+    const items=Array.isArray(cached)?cached:[];
+    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,900)}<div class="candle-results">${items.length?candleRows(items,"winance",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -323,6 +323,12 @@ async function load() {
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
     $("marketData").innerHTML=xtNotice; $("xtData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
+    $("winanceData").querySelectorAll("[data-candle-panel]").forEach(panel=>{
+      const source=panel.querySelector('[data-candle-source="winance"][data-candle-interval="900"]');
+      const pair=panel.dataset.candlePairName;
+      const pairKey=pair==="ERUB/USDT"?"erubUsdt":"erubRub";
+      if(source&&!candleSelections.has(candleKey("winance",pairKey))) source.click();
+    });
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
     requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
