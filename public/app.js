@@ -58,6 +58,45 @@ function sourceCard(name,v) {
   const status=v?.status||"нет статуса";
   return `<article class="card"><div class="source-name">${esc(labels[name]||name)}</div><div class="source-state ${v?.ok?"live":status==="error"?"error":""}">${esc(status)}</div><div class="muted">${esc(v?.message||(v?.ok?"Источник отвечает":"Нет данных"))}</div><div class="muted">${esc(v?.checkedAt||"")}</div></article>`;
 }
+function renderRatesSources(snapshot){
+  const root=$("ratesSources");
+  if(!root) return;
+  const sources=snapshot?.sources||{};
+  const format=(value,unit="")=>{
+    const n=Number(value);
+    return Number.isFinite(n)&&n>0
+      ? `${n.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:8})}${unit?` ${unit}`:""}`
+      : "Курс пока недоступен";
+  };
+  const card=(title,source,rows)=>{
+    if(!source?.ok){
+      return `<article class="card rate-source-card"><div class="source-name">${esc(title)}</div><div class="source-state error">Нет актуальных данных</div><p class="muted">${esc(source?.message||"Источник пока не вернул котировки")}</p><small class="muted">Последняя проверка: ${esc(source?.checkedAt||"—")}</small></article>`;
+    }
+    return `<article class="card rate-source-card"><div class="source-name">${esc(title)}</div><div class="source-state live">● LIVE</div><div class="rate-rows">${rows.length?rows.map(row=>`<div class="rate-row"><span>${esc(row.label)}</span><strong>${esc(format(row.value,row.unit))}</strong></div>`).join(""):'<p class="muted">Котировки не найдены в ответе источника</p>'}</div><small class="muted">Обновлено: ${esc(source.data?.receivedAt||source.checkedAt||"—")}</small></article>`;
+  };
+  const bb=sources.blackbit, win=sources.winance, erub=sources.erub;
+  const bbRows=bb?.data?[
+    {label:"ECR/USDT · последняя цена",value:bb.data.lastRate??bb.data.pair?.rate,unit:"USDT"},
+    {label:"Лучшая покупка",value:bb.data.bestBid,unit:"USDT"},
+    {label:"Лучшая продажа",value:bb.data.bestAsk,unit:"USDT"}
+  ]:[];
+  const pairs=win?.data?.pairs||{};
+  const winRows=[
+    {label:"ERUB/USDT",value:pairs.erubUsdt?.rate,unit:"USDT за ERUB"},
+    {label:"ERUB/RUB",value:pairs.erubRub?.rate,unit:"RUB за ERUB"}
+  ];
+  const erubRows=(erub?.data?.rates||[]).map(item=>({
+    label:`${item.from} → ${item.to}`,
+    value:item.rate,
+    unit:`${item.to} за 1 ${item.from}`
+  }));
+  root.innerHTML=[
+    card("BlackBit",bb,bbRows),
+    card("Winance",win,winRows),
+    card("еРубль",erub,erubRows)
+  ].join("");
+}
+
 function pairRows(levels) {
   if (!Array.isArray(levels)) return [];
   return levels.slice(0,10).map(level => {
@@ -401,11 +440,13 @@ async function load() {
   const savedInteractive=captureInteractiveState();
   try {
     const s=await api("/status");
+    // Render the dedicated rates page immediately from the same live snapshot.
+    renderRatesSources(s);
     savedScroll=captureScrollPositions();
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
-    if($("ratesSources")) $("ratesSources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Курсы пока недоступны</div>';
+    // Rates are rendered above with actual quotes, not source-status placeholders.
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
     $("marketData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();

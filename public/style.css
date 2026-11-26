@@ -654,3 +654,12 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .xt-no-date{margin:12px 0;padding:11px 13px;border-radius:10px;background:rgba(125,139,165,.12);color:#b9c7d8}
 .xt-listing-card .xt-listing-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .xt-listing-card .xt-listing-meta a{color:#70dcb5}
+
+
+/* Dedicated live quote cards */
+.rate-source-card{display:flex;flex-direction:column;gap:12px}
+.rate-rows{display:grid;gap:8px}
+.rate-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 12px;border:1px solid var(--line,rgba(148,163,184,.18));border-radius:12px;background:rgba(7,14,30,.28)}
+.rate-row span{color:var(--muted,#aab5cc);min-width:0}
+.rate-row strong{text-align:right;overflow-wrap:anywhere;color:var(--text,#eef3ff)}
+.rate-source-card small{margin-top:auto}
