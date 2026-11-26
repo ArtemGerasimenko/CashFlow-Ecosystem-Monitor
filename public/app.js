@@ -434,7 +434,7 @@ function renderXtListings(data){
   const root=$("xtListings"); if(!root) return;
   const items=(Array.isArray(data?.items)?data.items:[]).filter(x=>x.status!=="delisted");
   const counts={
-    upcoming:items.filter(x=>x.status==="upcoming").length,
+    upcoming:items.filter(x=>x.status==="upcoming"&&x.scheduledAt&&Date.parse(x.scheduledAt)>Date.now()).length,
     launched:items.filter(x=>x.status==="launched").length,
     awaiting:items.filter(x=>x.status==="awaiting").length,
     postponed:items.filter(x=>x.status==="postponed").length,
@@ -470,7 +470,7 @@ function renderXtListings(data){
   ${group("postponed","Перенесённые листинги")}
   ${group("launched","Новые пары — уже торгуются")}
   ${group("awaiting","Ожидается подтверждение запуска")}
-  ${group("announcement","Пары без подтверждённой даты")}`;
+  ${group("announcement","Объявлены · дата не объявлена")}`;
   const updated=$("xtListingsUpdated");
   if(updated) updated.textContent=`Источник: XT.COM Help Center · Проверено: ${new Date(data.checkedAt).toLocaleString("ru-RU")} · Автообновление: 60 секунд`;
   updateXtCountdowns();
