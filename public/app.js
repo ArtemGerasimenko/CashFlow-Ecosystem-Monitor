@@ -422,17 +422,23 @@ function updateErubConverter(usdtRate,rubRate){
   const input=$("erubConvertAmount");
   if(!input) return;
   const amount=Math.max(0,Number(input.value)||0);
-  // Bounty +10% is included in the ERUB credited to the balance.
-  // Effective ERUB per 1 USDT/RUB = base rate * 1.10.
+  // Base calculation and effective calculation with +10% Bounty.
   const usdtBase=Number(usdtRate)>0?amount/Number(usdtRate):null;
   const rubBase=Number(rubRate)>0?amount/Number(rubRate):null;
   const usdtBonus=Number(usdtRate)>0?amount/(Number(usdtRate)*1.10):null;
   const rubBonus=Number(rubRate)>0?amount/(Number(rubRate)*1.10):null;
-  const show=(value,unit)=>value===null?"— "+unit:`${value.toLocaleString("ru-RU",{minimumFractionDigits:unit==="USDT"?8:2,maximumFractionDigits:unit==="USDT"?8:2})} ${unit}`;
-  $("erubConvertUsdtBase").textContent=show(usdtBase,"USDT");
-  $("erubConvertUsdt").textContent=show(usdtBonus,"USDT");
-  $("erubConvertRubBase").textContent=show(rubBase,"RUB");
-  $("erubConvertRub").textContent=show(rubBonus,"RUB");
+  const format=(value,decimals,unit)=>{
+    if(value===null||!Number.isFinite(value)) return "— "+unit;
+    return value.toLocaleString("ru-RU",{
+      minimumFractionDigits:decimals,
+      maximumFractionDigits:decimals
+    })+" "+unit;
+  };
+  // Explicit precision per currency: USDT = 8 decimals, RUB = 2 decimals.
+  $("erubConvertUsdtBase").textContent=format(usdtBase,8,"USDT");
+  $("erubConvertUsdt").textContent=format(usdtBonus,8,"USDT");
+  $("erubConvertRubBase").textContent=format(rubBase,2,"RUB");
+  $("erubConvertRub").textContent=format(rubBonus,2,"RUB");
 }
 document.addEventListener("input",event=>{
   if(event.target?.id==="erubBuyUsdt") bindErubCalculator();
