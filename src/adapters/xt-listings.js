@@ -1,62 +1,132 @@
-const CATEGORY_ID = "10304894611993";
-const HELP_CENTER = "https://support.xt.com";
-const CACHE_MS = 60_000;
-let cache = { at: 0, data: null };
+const HOSTS = ["https://xtsupport.zendesk.com", "https://support.xt.com"];
+const SECTIONS = [
+  {id:"900000084163",kind:"spot",action:"listing",label:"Спотовые листинги"},
+  {id:"10722464177561",kind:"futures",action:"listing",label:"Фьючерсные листинги"},
+  {id:"10528395637017",kind:"spot",action:"delisting",label:"Делистинги спота"},
+  {id:"50094030973721",kind:"futures",action:"delisting",label:"Делистинги фьючерсов"}
+];
+const CACHE_MS=60_000;
+const MAX_PAGES_PER_SECTION=5;
+let cache={at:0,data:null};
 
-function classify(title, body) {
-  const text = `${title} ${body}`.toLowerCase();
-  if (/upcoming listing|will be listed|will launch|scheduled to launch|listing schedule|upcoming.*trading/.test(text)) return "upcoming";
-  if (/launching|launch of|trading will be available|trading pairs? (is|are) now|listed on xt|listing of/.test(text)) return "launched";
-  return "other";
+function decodeHtml(value){
+  return String(value||"")
+    .replace(/<script[\s\S]*?<\/script>/gi," ")
+    .replace(/<style[\s\S]*?<\/style>/gi," ")
+    .replace(/<[^>]*>/g," ")
+    .replace(/&nbsp;|&#160;/gi," ")
+    .replace(/&amp;/gi,"&").replace(/&quot;/gi,'"')
+    .replace(/&#39;|&apos;/gi,"'")
+    .replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCharCode(parseInt(n,16)))
+    .replace(/\s+/g," ").trim();
 }
-function extractPairs(title, body) {
-  const text = `${title}\n${body}`;
-  const found = new Set();
-  const patterns = [
-    /\b[A-Z0-9]{2,24}\s*\/\s*(?:USDT|USDC|BTC|ETH|USD)\b/g,
-    /\b[A-Z0-9]{2,24}(?:USDT|USDC|BTC|ETH)\b/g
+function parseSchedule(text){
+  const months={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+  const marker=text.search(/launch schedule|listing schedule|trading schedule|schedule of trading/i);
+  const source=marker>=0?text.slice(marker):text;
+  const candidates=[];
+  const monthRe=new RegExp(`\\b(${Object.keys(months).join("|")})\\s+(\\d{1,2}),?\\s+(20\\d{2})(?:,?\\s+(\\d{1,2}):(\\d{2}))?\\s*(?:\\(\\s*UTC\\s*\\)|UTC)?`,"gi");
+  for(const m of source.matchAll(monthRe)){
+    const t=Date.UTC(+m[3],months[m[1].toLowerCase()],+m[2],+(m[4]||0),+(m[5]||0));
+    if(Number.isFinite(t)) candidates.push(t);
+  }
+  const isoRe=/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/g;
+  for(const m of source.matchAll(isoRe)){
+    const t=Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0));
+    if(Number.isFinite(t)) candidates.push(t);
+  }
+  if(!candidates.length) return null;
+  const future=candidates.filter(t=>t>Date.now()).sort((a,b)=>a-b);
+  const timestamp=future[0]??Math.max(...candidates);
+  return {timestamp,iso:new Date(timestamp).toISOString()};
+}
+function extractPairs(title,body){
+  const text=`${title}\n${body}`;
+  const found=new Set();
+  const patterns=[
+    /\b([A-Z0-9]{1,24})\s*\/\s*(USDT|USDC|BTC|ETH|USD|EUR|TRY|BRL|TRX)\b/gi,
+    /\b([A-Z0-9]{2,24})[-_](USDT|USDC|BTC|ETH)\b/gi,
+    /\b([A-Z0-9]{2,24})(USDT|USDC|BTC|ETH)\b/gi
   ];
-  for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) {
-      let pair = match[0].replace(/\s+/g,"").toUpperCase();
-      if (!pair.includes("/")) {
-        const quote = ["USDT","USDC","BTC","ETH"].find(q=>pair.endsWith(q));
-        if (quote) pair = `${pair.slice(0,-quote.length)}/${quote}`;
-      }
-      if (pair.length <= 32) found.add(pair);
-    }
+  for(const re of patterns) for(const m of text.matchAll(re)){
+    const base=m[1].toUpperCase(),quote=m[2].toUpperCase();
+    if(base===quote||["TRADING","PAIR","PAIRS","FUTURES","SPOT","LISTING","LAUNCH","TOKEN","CONTRACT"].includes(base)) continue;
+    found.add(`${base}/${quote}`);
   }
   return [...found];
 }
-async function getArticles() {
-  const url = `${HELP_CENTER}/api/v2/help_center/categories/${CATEGORY_ID}/articles.json?sort_by=created_at&sort_order=desc&per_page=100`;
-  const response = await fetch(url,{headers:{accept:"application/json"},signal:AbortSignal.timeout(15000)});
-  if (!response.ok) throw new Error(`XT announcements HTTP ${response.status}`);
-  const json = await response.json();
-  if (!Array.isArray(json.articles)) throw new Error("XT не вернул список объявлений");
-  return json.articles;
+function classify(article,section,body,schedule){
+  const text=`${article.title||""} ${body}`.toLowerCase();
+  if(section.action==="delisting"||/\bdelist(?:ing|ed)?\b|cease trading|remove.{0,30}trading pair|trading will be suspended/.test(text)) return "delisted";
+  if(/postpon(?:e|ed|ing)|delay(?:ed)? the listing|new schedule separately/.test(text)) return "postponed";
+  if(schedule&&schedule.timestamp>Date.now()) return "upcoming";
+  if(/upcoming listing|will be listed|will open trading|trading will be available|scheduled to launch|will launch/.test(text)) return "upcoming";
+  if(section.action==="listing"&&(/launching|launch of|now listed|trading is now open|trading has opened|is now available/.test(text))) return "launched";
+  return "announcement";
 }
-export async function fetchXtListings(force=false) {
-  if (!force && cache.data && Date.now()-cache.at<CACHE_MS) return cache.data;
-  const articles = await getArticles();
-  const items = articles.map(a=>{
-    const title=String(a.title||"");
-    const body=String(a.body||"").replace(/<[^>]*>/g," ").replace(/&nbsp;/g," ");
-    const status=classify(title,body);
-    return {
-      id:String(a.id),
-      title,
-      url:a.html_url||`${HELP_CENTER}/hc/en-us/articles/${a.id}`,
-      publishedAt:a.created_at||a.updated_at||null,
-      updatedAt:a.updated_at||null,
-      status,
-      pairs:extractPairs(title,body),
-      isEcr:/\bECR\b/i.test(`${title} ${body}`),
-      kind:/futures|perpetual|contract/i.test(title)?"futures":"spot",
-      excerpt:body.replace(/\s+/g," ").trim().slice(0,420)
-    };
-  }).filter(x=>x.status!=="other" || x.isEcr);
-  const data={ok:true,source:"XT.COM Help Center",checkedAt:new Date().toISOString(),items};
+async function fetchSectionArticles(host,section){
+  const articles=[];
+  let truncated=false;
+  for(let page=1;page<=MAX_PAGES_PER_SECTION;page++){
+    const url=`${host}/api/v2/help_center/sections/${section.id}/articles.json?sort_by=created_at&sort_order=desc&per_page=100&page=${page}`;
+    const response=await fetch(url,{headers:{accept:"application/json"},signal:AbortSignal.timeout(15000)});
+    if(!response.ok) throw new Error(`XT Help Center HTTP ${response.status} (${section.label})`);
+    const json=await response.json();
+    if(!Array.isArray(json.articles)) throw new Error(`XT вернул неверный формат (${section.label})`);
+    articles.push(...json.articles);
+    if(!json.next_page||json.articles.length===0) break;
+    if(page===MAX_PAGES_PER_SECTION) truncated=true;
+  }
+  return {articles,truncated};
+}
+async function fetchSectionWithFallback(section){
+  let lastError;
+  for(const host of HOSTS){
+    try{return {section,...await fetchSectionArticles(host,section),host};}
+    catch(error){lastError=error;}
+  }
+  return {section,articles:[],error:lastError?.message||"Источник недоступен"};
+}
+async function collectSections(){
+  return Promise.all(SECTIONS.map(fetchSectionWithFallback));
+}
+export async function fetchXtListings(force=false){
+  if(!force&&cache.data&&Date.now()-cache.at<CACHE_MS) return cache.data;
+  const sections=await collectSections();
+  if(!sections.some(x=>x.articles.length)) {
+    const reasons=sections.map(x=>`${x.section.label}: ${x.error}`).join("; ");
+    throw new Error(reasons||"XT Help Center недоступен");
+  }
+  const byId=new Map();
+  for(const {section,articles} of sections){
+    for(const article of articles){
+      const id=String(article.id);
+      const body=decodeHtml(article.body);
+      const schedule=parseSchedule(`${article.title||""} ${body}`);
+      const item={
+        id,title:String(article.title||"Без названия"),
+        url:article.html_url||`https://xtsupport.zendesk.com/hc/en-us/articles/${id}`,
+        publishedAt:article.created_at||article.updated_at||null,
+        updatedAt:article.updated_at||null,
+        status:classify(article,section,body,schedule),
+        pairs:extractPairs(article.title||"",body),
+        isEcr:/\bECR\b|eCurrency/i.test(`${article.title||""} ${body}`),
+        kind:section.kind,
+        category:section.label,
+        scheduledAt:schedule?.iso||null,
+        excerpt:body.slice(0,650)
+      };
+      const previous=byId.get(id);
+      if(!previous||item.status==="delisted"||item.status==="postponed") byId.set(id,item);
+    }
+  }
+  const items=[...byId.values()].sort((a,b)=>{
+    const rank=x=>x.isEcr?0:x.status==="upcoming"?1:x.status==="delisted"?2:3;
+    return rank(a)-rank(b)||new Date(b.publishedAt||0)-new Date(a.publishedAt||0);
+  });
+  const sectionCounts=sections.map(({section,articles,error,truncated})=>({section:section.label,count:articles.length,error:error||null,truncated:!!truncated}));
+  const data={ok:true,source:"XT.COM Official Help Center",checkedAt:new Date().toISOString(),sections:sectionCounts,warnings:sectionCounts.filter(x=>x.error||x.truncated),items};
   cache={at:Date.now(),data};
   return data;
 }
