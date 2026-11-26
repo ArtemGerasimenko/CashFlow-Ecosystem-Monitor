@@ -253,12 +253,14 @@ function erubView(source, winanceSource){
     <section class="erub-purchase-section"><div class="erub-section-heading"><span>02</span><div><h3>Покупка за RUB</h3><p>Оплата рублями с карты · сравнение с ERUB/RUB на Winance</p></div></div>
     ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}</section>
     <section class="erub-purchase-section erub-converter-section">
-      <div class="erub-section-heading"><span>03</span><div><h3>Конвертер ERUB</h3><p>Введи количество ERUB — монитор рассчитает эквивалент в USDT и RUB по актуальным курсам eRub.site</p></div></div>
+      <div class="erub-section-heading"><span>03</span><div><h3>Конвертер ERUB</h3><p>Введи количество ERUB — расчёт в USDT и RUB учитывает Bounty +10% по актуальным курсам eRub.site</p></div></div>
       <div class="erub-calculator">
         <label>Сумма ERUB<input id="erubConvertAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Например, 1000"></label>
         <div class="erub-calc-result">
-          <span>Эквивалент в USDT</span><strong id="erubConvertUsdt">— USDT</strong>
-          <span>Эквивалент в RUB</span><strong id="erubConvertRub">— RUB</strong>
+          <span>USDT · без Bounty</span><strong id="erubConvertUsdtBase">— USDT</strong>
+          <span>USDT · с Bounty +10%</span><strong id="erubConvertUsdt">— USDT</strong>
+          <span>RUB · без Bounty</span><strong id="erubConvertRubBase">— RUB</strong>
+          <span>RUB · с Bounty +10%</span><strong id="erubConvertRub">— RUB</strong>
         </div>
       </div>
     </section>
@@ -420,11 +422,17 @@ function updateErubConverter(usdtRate,rubRate){
   const input=$("erubConvertAmount");
   if(!input) return;
   const amount=Math.max(0,Number(input.value)||0);
-  const usdt=Number(usdtRate)>0?amount/Number(usdtRate):null;
-  const rub=Number(rubRate)>0?amount/Number(rubRate):null;
+  // Bounty +10% is included in the ERUB credited to the balance.
+  // Effective ERUB per 1 USDT/RUB = base rate * 1.10.
+  const usdtBase=Number(usdtRate)>0?amount/Number(usdtRate):null;
+  const rubBase=Number(rubRate)>0?amount/Number(rubRate):null;
+  const usdtBonus=Number(usdtRate)>0?amount/(Number(usdtRate)*1.10):null;
+  const rubBonus=Number(rubRate)>0?amount/(Number(rubRate)*1.10):null;
   const show=(value,unit)=>value===null?"— "+unit:`${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} ${unit}`;
-  $("erubConvertUsdt").textContent=show(usdt,"USDT");
-  $("erubConvertRub").textContent=show(rub,"RUB");
+  $("erubConvertUsdtBase").textContent=show(usdtBase,"USDT");
+  $("erubConvertUsdt").textContent=show(usdtBonus,"USDT");
+  $("erubConvertRubBase").textContent=show(rubBase,"RUB");
+  $("erubConvertRub").textContent=show(rubBonus,"RUB");
 }
 document.addEventListener("input",event=>{
   if(event.target?.id==="erubBuyUsdt") bindErubCalculator();
