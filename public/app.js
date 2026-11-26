@@ -432,45 +432,33 @@ function formatXtCountdown(timestamp){
 }
 function renderXtListings(data){
   const root=$("xtListings"); if(!root) return;
-  const items=(Array.isArray(data?.items)?data.items:[]).filter(x=>x.status!=="delisted");
+  const sourceItems=Array.isArray(data?.items)?data.items:[];
+  const items=sourceItems.filter(x=>
+    (x.status==="upcoming"&&x.scheduledAt&&Date.parse(x.scheduledAt)>Date.now()) ||
+    x.status==="launched"
+  );
   const counts={
-    upcoming:items.filter(x=>x.status==="upcoming"&&x.scheduledAt&&Date.parse(x.scheduledAt)>Date.now()).length,
-    launched:items.filter(x=>x.status==="launched").length,
-    awaiting:items.filter(x=>x.status==="awaiting").length,
-    postponed:items.filter(x=>x.status==="postponed").length,
-    ecr:items.filter(x=>x.isEcr).length,
-    pairs:items.length
+    upcoming:items.filter(x=>x.status==="upcoming").length,
+    launched:items.filter(x=>x.status==="launched").length
   };
-  const statusText={upcoming:"Предстоящий листинг",launched:"Уже торгуется",awaiting:"Дата прошла · ждём подтверждения",postponed:"Перенесён",announcement:"Дата не объявлена"};
+  const statusText={upcoming:"Предстоящий листинг",launched:"Уже торгуется"};
   const card=item=>`<article class="xt-listing-card ${item.isEcr?"ecr":""}">
-    <div class="xt-listing-card-top"><span class="xt-listing-kind">${item.kind==="futures"?"ФЬЮЧЕРСЫ":"СПОТ"}</span><span class="xt-listing-status ${item.status}">${statusText[item.status]||"Дата не объявлена"}</span>${item.isEcr?'<span class="xt-ecr-flag">ECR</span>':""}</div>
+    <div class="xt-listing-card-top"><span class="xt-listing-kind">${item.kind==="futures"?"ФЬЮЧЕРСЫ":"СПОТ"}</span><span class="xt-listing-status ${item.status}">${statusText[item.status]}</span>${item.isEcr?'<span class="xt-ecr-flag">ECR</span>':""}</div>
     <h3 class="xt-pair-title">${esc(item.title)}</h3>
-    ${item.status==="upcoming"&&item.scheduledAt&&Date.parse(item.scheduledAt)>Date.now()?`<div class="xt-countdown-wrap"><span class="xt-countdown-label">До начала торгов</span><strong class="xt-countdown" data-xt-countdown="${esc(item.scheduledAt)}">${formatXtCountdown(item.scheduledAt)}</strong><span class="xt-local-time">По Будапешту: ${esc(new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"}))}</span></div>`:item.status==="awaiting"?'<div class="xt-no-date">Указанное время уже прошло. Ожидается подтверждение фактического запуска торгов.</div>':item.status==="upcoming"||item.status==="postponed"?'<div class="xt-no-date">Точная дата листинга пока не объявлена</div>':""}
+    ${item.status==="upcoming"?`<div class="xt-countdown-wrap"><span class="xt-countdown-label">До начала торгов</span><strong class="xt-countdown" data-xt-countdown="${esc(item.scheduledAt)}">${formatXtCountdown(item.scheduledAt)}</strong><span class="xt-local-time">По Будапешту: ${esc(new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"}))}</span></div>`:""}
     <div class="xt-listing-meta">${item.publishedAt?`Объявление: ${esc(new Date(item.publishedAt).toLocaleDateString("ru-RU"))}`:""} <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">Официальный источник ↗</a></div>
   </article>`;
   const group=(status,title)=>{
     const list=items.filter(x=>x.status===status);
-    const visible=list.slice(0,xtVisible[status]||40);
-    return `<section class="xt-listing-group"><h2>${title} · ${list.length}</h2>${visible.length?visible.map(card).join(""):'<div class="card muted">Таких торговых пар пока нет.</div>'}${list.length>visible.length?`<button class="btn xt-more" type="button" data-xt-more="${status}">Показать ещё ${Math.min(40,list.length-visible.length)} из ${list.length-visible.length}</button>`:""}</section>`;
+    return `<section class="xt-listing-group"><h2>${title} · ${list.length}</h2>${list.length?list.map(card).join(""):'<div class="card muted">Таких торговых пар пока нет.</div>'}</section>`;
   };
-  const ecr=items.filter(x=>x.isEcr);
   const warnings=Array.isArray(data.warnings)?data.warnings:[];
   root.innerHTML=`${warnings.length?`<div class="xt-listing-notice"><strong>Часть источников XT.COM недоступна или ограничена</strong><p>${warnings.map(x=>esc(`${x.section}: ${x.error|| (x.truncated?"загружены только последние 500 объявлений":"")}`)).join("<br>")}</p><p>Данные по доступным категориям продолжают отображаться.</p></div>`:""}<div class="xt-listing-summary">
-    <div><strong>${counts.upcoming}</strong><span>Предстоящие пары</span></div>
+    <div><strong>${counts.upcoming}</strong><span>Предстоящие листинги</span></div>
     <div><strong>${counts.launched}</strong><span>Уже торгуются</span></div>
-    <div><strong>${counts.postponed}</strong><span>Перенесённые</span></div>
   </div>
-  <div class="xt-listing-summary xt-listing-summary-extra">
-    <div><strong>${counts.ecr}</strong><span>Пары ECR</span></div>
-    <div><strong>${counts.pairs}</strong><span>Уникальные пары</span></div>
-    <div><strong>${data.sections?.reduce((n,x)=>n+x.count,0)||0}</strong><span>Объявлений проверено</span></div>
-  </div>
-  ${ecr.length?`<section class="xt-listing-group"><h2>Приоритет: ECR</h2>${ecr.map(card).join("")}</section>`:""}
   ${group("upcoming","Предстоящие листинги")}
-  ${group("postponed","Перенесённые листинги")}
-  ${group("launched","Новые пары — уже торгуются")}
-  ${group("awaiting","Ожидается подтверждение запуска")}
-  ${group("announcement","Объявлены · дата не объявлена")}`;
+  ${group("launched","Новые пары — уже торгуются")}`;
   const updated=$("xtListingsUpdated");
   if(updated) updated.textContent=`Источник: XT.COM Help Center · Проверено: ${new Date(data.checkedAt).toLocaleString("ru-RU")} · Автообновление: 60 секунд`;
   updateXtCountdowns();
