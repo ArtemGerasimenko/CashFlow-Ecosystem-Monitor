@@ -30,7 +30,15 @@ try{
   if(!pageFromHash()&&storedPage&&validPages.has(storedPage)) savedPage=storedPage;
 }catch(_){}
 activatePage(savedPage);
-if(navigation) navigation.scrollLeft=0;
+if(navigation){
+  try{
+    const savedNavScroll=Number(localStorage.getItem("cashflow-monitor-nav-scroll"));
+    requestAnimationFrame(()=>{navigation.scrollLeft=Number.isFinite(savedNavScroll)?savedNavScroll:0;});
+  }catch(_){}
+  navigation.addEventListener("scroll",()=>{
+    try{localStorage.setItem("cashflow-monitor-nav-scroll",String(navigation.scrollLeft));}catch(_){}
+  },{passive:true});
+}
 pageButtons.forEach(button=>button.addEventListener("click",()=>{
   activatePage(button.dataset.page,true);
 }));
@@ -397,6 +405,7 @@ async function load() {
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
+    if($("ratesSources")) $("ratesSources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Курсы пока недоступны</div>';
     const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
     $("marketData").innerHTML=xtNotice;
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
