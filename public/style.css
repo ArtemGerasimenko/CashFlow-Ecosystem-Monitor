@@ -633,3 +633,13 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .xt-listing-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:12px}
 .xt-listing-meta a{color:#63e4b3;text-decoration:none;font-weight:700}
 @media(max-width:520px){.xt-listing-summary{gap:7px}.xt-listing-summary>div{padding:11px}.xt-listing-summary strong{font-size:20px}.xt-listing-meta{flex-direction:column}}
+
+
+/* XT listings: status states and expandable groups */
+.xt-listing-status.postponed{background:#45351b;color:#ffd782}
+.xt-listing-status.delisted{background:#4a2028;color:#ff9ca8}
+.xt-listing-status.announcement{background:#26344e;color:#cbd6eb}
+.xt-listing-summary-extra{margin-top:9px}
+.xt-more{width:100%;margin-top:4px}
+.xt-listing-card .xt-listing-meta{align-items:center}
+.xt-listing-card .xt-listing-meta a{white-space:nowrap}
