@@ -15,7 +15,7 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: POLL_INTERVAL_MS
-        value: 60000
+        value: 10000
       - key: HISTORY_RETENTION_DAYS
         value: 30
       - key: MAX_HISTORY_ITEMS

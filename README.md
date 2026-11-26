@@ -16,3 +16,10 @@ Open `http://localhost:8080`.
 
 ## Environment
 `PORT`, `POLL_INTERVAL_MS`, `HISTORY_RETENTION_DAYS`, `DATA_DIR`, `XT_BASE_URL`, `XT_SYMBOL`, `BLACKBIT_BASE_URL`, `WINANCE_BASE_URL`.
+
+## Monitor display rules
+- BlackBit and Winance order books are normalized and sorted before display: SELL/ASK (red) descending, BUY/BID (green) ascending.
+- Best bid is the maximum BUY price; best ask is the minimum SELL price, independent of display order.
+- Candle intervals exposed by the API: 1m, 5m, 15m, 1h, 4h, 1d. 30m and 12h are disabled.
+- Candle tables display local date and time for every interval, including daily candles.
+- Market polling uses `POLL_INTERVAL_MS`; Render is configured for 10 seconds.

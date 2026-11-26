@@ -40,7 +40,7 @@ async function handler(req,res) {
       const source = url.searchParams.get("source");
       const pair = url.searchParams.get("pair") || "erubUsdt";
       const interval = Number(url.searchParams.get("interval"));
-      const allowed = new Set([60,300,900,1800,3600,14400,43200,86400]);
+      const allowed = new Set([60,300,900,3600,14400,86400]);
       if (!allowed.has(interval) || !["blackbit","winance"].includes(source) || (source === "winance" && !["erubUsdt","erubRub"].includes(pair))) return send(res,400,{error:"Invalid candle query"});
       try {
         const candles = source === "blackbit" ? await fetchBlackBitCandles(interval) : await fetchWinanceCandles(pair,interval);
