@@ -553,3 +553,14 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+
+
+/* ERUB converter: highlight the effective +10% results in green */
+.erub-converter-results{display:grid;grid-template-columns:1fr;gap:8px;padding:12px}
+.erub-converter-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border-radius:10px;background:#111c31;border:1px solid #293b58}
+.erub-converter-line span{font-size:13px;color:var(--muted)}
+.erub-converter-line strong{font-size:14px;text-align:right;overflow-wrap:anywhere}
+.erub-converter-line.bonus{background:linear-gradient(105deg,#103c31,#124b3b);border-color:#23785e}
+.erub-converter-line.bonus span{color:#a4e9d0}
+.erub-converter-line.bonus strong{color:#63e4b3}
+@media(max-width:420px){.erub-converter-line{align-items:flex-start;flex-direction:column;gap:5px}.erub-converter-line strong{text-align:left}}

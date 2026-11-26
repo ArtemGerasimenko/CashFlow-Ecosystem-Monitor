@@ -256,11 +256,11 @@ function erubView(source, winanceSource){
       <div class="erub-section-heading"><span>03</span><div><h3>Конвертер ERUB</h3><p>Введи количество ERUB — расчёт в USDT и RUB учитывает Bounty +10% по актуальным курсам eRub.site</p></div></div>
       <div class="erub-calculator">
         <label>Сумма ERUB<input id="erubConvertAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Например, 1000"></label>
-        <div class="erub-calc-result">
-          <span>USDT · без Bounty</span><strong id="erubConvertUsdtBase">— USDT</strong>
-          <span>USDT · с Bounty +10%</span><strong id="erubConvertUsdt">— USDT</strong>
-          <span>RUB · без Bounty</span><strong id="erubConvertRubBase">— RUB</strong>
-          <span>RUB · с Bounty +10%</span><strong id="erubConvertRub">— RUB</strong>
+        <div class="erub-calc-result erub-converter-results">
+          <div class="erub-converter-line"><span>USDT · без Bounty</span><strong id="erubConvertUsdtBase">— USDT</strong></div>
+          <div class="erub-converter-line bonus"><span>USDT · с Bounty +10%</span><strong id="erubConvertUsdt">— USDT</strong></div>
+          <div class="erub-converter-line"><span>RUB · без Bounty</span><strong id="erubConvertRubBase">— RUB</strong></div>
+          <div class="erub-converter-line bonus"><span>RUB · с Bounty +10%</span><strong id="erubConvertRub">— RUB</strong></div>
         </div>
       </div>
     </section>
