@@ -428,7 +428,7 @@ function updateErubConverter(usdtRate,rubRate){
   const rubBase=Number(rubRate)>0?amount/Number(rubRate):null;
   const usdtBonus=Number(usdtRate)>0?amount/(Number(usdtRate)*1.10):null;
   const rubBonus=Number(rubRate)>0?amount/(Number(rubRate)*1.10):null;
-  const show=(value,unit)=>value===null?"— "+unit:`${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} ${unit}`;
+  const show=(value,unit)=>value===null?"— "+unit:`${value.toLocaleString("ru-RU",{minimumFractionDigits:unit==="USDT"?8:2,maximumFractionDigits:unit==="USDT"?8:2})} ${unit}`;
   $("erubConvertUsdtBase").textContent=show(usdtBase,"USDT");
   $("erubConvertUsdt").textContent=show(usdtBonus,"USDT");
   $("erubConvertRubBase").textContent=show(rubBase,"RUB");
