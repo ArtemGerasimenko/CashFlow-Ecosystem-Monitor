@@ -310,10 +310,49 @@ function restoreScrollPositions(saved){
   window.scrollTo(saved.page.x,saved.page.y);
 }
 
+function captureInteractiveState(){
+  const regions=["sources","winanceData","erubData","marketData","xtData","blackbitData","historyData"];
+  const snapshot={regions:{}};
+  for(const id of regions){
+    const root=$(id); if(!root) continue;
+    const controls=[...root.querySelectorAll("input,textarea,select")];
+    snapshot.regions[id]={
+      controls:controls.map((el,index)=>({
+        key:el.id?`id:${el.id}`:el.name?`name:${el.name}`:`pos:${index}`,
+        value:el.value,
+        checked:("checked" in el)?el.checked:undefined
+      })),
+      details:[...root.querySelectorAll("details")].map(el=>!!el.open)
+    };
+  }
+  return snapshot;
+}
+function restoreInteractiveState(snapshot){
+  if(!snapshot?.regions) return;
+  for(const [id,state] of Object.entries(snapshot.regions)){
+    const root=$(id); if(!root) continue;
+    const controls=[...root.querySelectorAll("input,textarea,select")];
+    const byKey=new Map(controls.map((el,index)=>[
+      el.id?`id:${el.id}`:el.name?`name:${el.name}`:`pos:${index}`,el
+    ]));
+    state.controls.forEach(item=>{
+      const el=byKey.get(item.key); if(!el) return;
+      if(item.value!==undefined) el.value=item.value;
+      if(item.checked!==undefined) el.checked=item.checked;
+      el.dispatchEvent(new Event("input",{bubbles:true}));
+      el.dispatchEvent(new Event("change",{bubbles:true}));
+    });
+    [...root.querySelectorAll("details")].forEach((el,index)=>{
+      if(index<state.details.length) el.open=state.details[index];
+    });
+  }
+}
+
 async function load() {
   if (loadInProgress || document.hidden) return;
   loadInProgress = true;
   let savedScroll=null;
+  const savedInteractive=captureInteractiveState();
   try {
     const s=await api("/status");
     savedScroll=captureScrollPositions();
@@ -330,6 +369,7 @@ async function load() {
       if(source&&!candleSelections.has(candleKey("winance",pairKey))) source.click();
     });
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
+    restoreInteractiveState(savedInteractive);
     requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
     $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
