@@ -13,7 +13,22 @@ let refreshPromise = null;
 
 function validate(name, data) {
   if (!data || typeof data !== "object") throw new Error("Источник вернул пустые данные");
-  if (name === "blackbit" && (!(Number(data.bestBid) > 0) || !(Number(data.bestAsk) > 0))) throw new Error("BlackBit: некорректный стакан");
+  if (name === "blackbit") {
+    if (!(Number(data.bestBid) > 0) || !(Number(data.bestAsk) > 0) || Number(data.bestBid) >= Number(data.bestAsk)) {
+      throw new Error("BlackBit: некорректные лучшие цены стакана");
+    }
+    if (!Array.isArray(data.bids) || !data.bids.length || !Array.isArray(data.asks) || !data.asks.length) {
+      throw new Error("BlackBit: отсутствует одна из сторон стакана");
+    }
+    if (!(Number(data.lastRate) > 0)) throw new Error("BlackBit: отсутствует текущая цена");
+  }
+  if (name === "winance") {
+    for (const [key, book] of Object.entries(data.orderBooks || {})) {
+      if (book?.ok && (!(Number(book.bestBid) > 0) || !(Number(book.bestAsk) > 0) || Number(book.bestBid) >= Number(book.bestAsk))) {
+        throw new Error(`Winance ${key}: некорректные лучшие цены стакана`);
+      }
+    }
+  }
   if (name === "erub" && !Array.isArray(data.rates)) throw new Error("eRub: список курсов отсутствует");
   return { status: "live", message: "Данные получены" };
 }
