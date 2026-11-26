@@ -7,10 +7,26 @@ const num = value => {
 };
 const fixedDigits = (value,digits) => { const n=Number(value); return value===null||value===undefined||value===""||!Number.isFinite(n)?"—":n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}); };
 const navigation=document.querySelector("nav");
+const pageButtons=[...document.querySelectorAll("nav button[data-page]")];
+const pages=[...document.querySelectorAll(".page")];
+const validPages=new Set(pages.map(page=>page.id));
+function activatePage(pageId, persist=false){
+  if(!validPages.has(pageId)) pageId="dashboard";
+  pageButtons.forEach(button=>button.classList.toggle("active",button.dataset.page===pageId));
+  pages.forEach(page=>page.classList.toggle("active",page.id===pageId));
+  if(persist){
+    try{localStorage.setItem("cashflow-monitor-active-page",pageId);}catch(_){}
+  }
+}
+let savedPage="dashboard";
+try{
+  const storedPage=localStorage.getItem("cashflow-monitor-active-page");
+  if(storedPage&&validPages.has(storedPage)) savedPage=storedPage;
+}catch(_){}
+activatePage(savedPage);
 if(navigation) navigation.scrollLeft=0;
-document.querySelectorAll("nav button[data-page]").forEach(button => button.addEventListener("click", () => {
-  document.querySelectorAll("nav button").forEach(item => item.classList.toggle("active",item===button));
-  document.querySelectorAll(".page").forEach(page => page.classList.toggle("active",page.id===button.dataset.page));
+pageButtons.forEach(button=>button.addEventListener("click",()=>{
+  activatePage(button.dataset.page,true);
 }));
 async function api(path) {
   const response = await fetch(`${API_BASE}${path}`,{headers:{accept:"application/json"},cache:"no-store"});
