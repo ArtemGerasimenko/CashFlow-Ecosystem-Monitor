@@ -432,20 +432,20 @@ function formatXtCountdown(timestamp){
 }
 function renderXtListings(data){
   const root=$("xtListings"); if(!root) return;
-  const items=Array.isArray(data?.items)?data.items:[];
+  const items=(Array.isArray(data?.items)?data.items:[]).filter(x=>x.status!=="delisted");
   const counts={
     upcoming:items.filter(x=>x.status==="upcoming").length,
     launched:items.filter(x=>x.status==="launched").length,
-    delisted:items.filter(x=>x.status==="delisted").length,
+    awaiting:items.filter(x=>x.status==="awaiting").length,
     postponed:items.filter(x=>x.status==="postponed").length,
     ecr:items.filter(x=>x.isEcr).length,
     pairs:items.length
   };
-  const statusText={upcoming:"Предстоящий листинг",launched:"Уже торгуется",delisted:"Делистинг",postponed:"Перенесён",announcement:"Дата не объявлена"};
+  const statusText={upcoming:"Предстоящий листинг",launched:"Уже торгуется",awaiting:"Дата прошла · ждём подтверждения",postponed:"Перенесён",announcement:"Дата не объявлена"};
   const card=item=>`<article class="xt-listing-card ${item.isEcr?"ecr":""}">
     <div class="xt-listing-card-top"><span class="xt-listing-kind">${item.kind==="futures"?"ФЬЮЧЕРСЫ":"СПОТ"}</span><span class="xt-listing-status ${item.status}">${statusText[item.status]||"Дата не объявлена"}</span>${item.isEcr?'<span class="xt-ecr-flag">ECR</span>':""}</div>
     <h3 class="xt-pair-title">${esc(item.title)}</h3>
-    ${item.scheduledAt?`<div class="xt-countdown-wrap"><span class="xt-countdown-label">До начала торгов</span><strong class="xt-countdown" data-xt-countdown="${esc(item.scheduledAt)}">${formatXtCountdown(item.scheduledAt)}</strong><span class="xt-local-time">По Будапешту: ${esc(new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"}))}</span></div>`:item.status==="upcoming"||item.status==="postponed"?'<div class="xt-no-date">Точная дата листинга пока не объявлена</div>':""}
+    ${item.status==="upcoming"&&item.scheduledAt&&Date.parse(item.scheduledAt)>Date.now()?`<div class="xt-countdown-wrap"><span class="xt-countdown-label">До начала торгов</span><strong class="xt-countdown" data-xt-countdown="${esc(item.scheduledAt)}">${formatXtCountdown(item.scheduledAt)}</strong><span class="xt-local-time">По Будапешту: ${esc(new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"}))}</span></div>`:item.status==="awaiting"?'<div class="xt-no-date">Указанное время уже прошло. Ожидается подтверждение фактического запуска торгов.</div>':item.status==="upcoming"||item.status==="postponed"?'<div class="xt-no-date">Точная дата листинга пока не объявлена</div>':""}
     <div class="xt-listing-meta">${item.publishedAt?`Объявление: ${esc(new Date(item.publishedAt).toLocaleDateString("ru-RU"))}`:""} <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">Официальный источник ↗</a></div>
   </article>`;
   const group=(status,title)=>{
@@ -458,7 +458,7 @@ function renderXtListings(data){
   root.innerHTML=`${warnings.length?`<div class="xt-listing-notice"><strong>Часть источников XT.COM недоступна или ограничена</strong><p>${warnings.map(x=>esc(`${x.section}: ${x.error|| (x.truncated?"загружены только последние 500 объявлений":"")}`)).join("<br>")}</p><p>Данные по доступным категориям продолжают отображаться.</p></div>`:""}<div class="xt-listing-summary">
     <div><strong>${counts.upcoming}</strong><span>Предстоящие пары</span></div>
     <div><strong>${counts.launched}</strong><span>Уже торгуются</span></div>
-    <div><strong>${counts.delisted}</strong><span>Делистинги</span></div>
+    <div><strong>${counts.postponed}</strong><span>Перенесённые</span></div>
   </div>
   <div class="xt-listing-summary xt-listing-summary-extra">
     <div><strong>${counts.ecr}</strong><span>Пары ECR</span></div>
@@ -469,7 +469,7 @@ function renderXtListings(data){
   ${group("upcoming","Предстоящие листинги")}
   ${group("postponed","Перенесённые листинги")}
   ${group("launched","Новые пары — уже торгуются")}
-  ${group("delisted","Делистинги")}
+  ${group("awaiting","Ожидается подтверждение запуска")}
   ${group("announcement","Пары без подтверждённой даты")}`;
   const updated=$("xtListingsUpdated");
   if(updated) updated.textContent=`Источник: XT.COM Help Center · Проверено: ${new Date(data.checkedAt).toLocaleString("ru-RU")} · Автообновление: 60 секунд`;
@@ -477,6 +477,12 @@ function renderXtListings(data){
 }
 function updateXtCountdowns(){
   document.querySelectorAll("[data-xt-countdown]").forEach(node=>{
+    const target=Date.parse(node.dataset.xtCountdown);
+    if(!Number.isFinite(target)||target<=Date.now()){
+      const wrap=node.closest(".xt-countdown-wrap");
+      if(wrap) wrap.innerHTML='<span class="xt-no-date">Время запуска наступило. Ожидается подтверждение фактического начала торгов.</span>';
+      return;
+    }
     node.textContent=formatXtCountdown(node.dataset.xtCountdown);
   });
 }
