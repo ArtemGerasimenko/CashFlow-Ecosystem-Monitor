@@ -643,3 +643,14 @@ footer{padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .xt-more{width:100%;margin-top:4px}
 .xt-listing-card .xt-listing-meta{align-items:center}
 .xt-listing-card .xt-listing-meta a{white-space:nowrap}
+
+
+/* XT.COM pair-first monitor and live listing countdown */
+.xt-pair-title{font-size:1.35rem;letter-spacing:.01em;margin:.55rem 0}
+.xt-countdown-wrap{display:flex;flex-direction:column;gap:7px;margin:14px 0;padding:14px 16px;border:1px solid rgba(41,190,139,.42);border-radius:14px;background:linear-gradient(135deg,rgba(15,111,82,.28),rgba(18,37,56,.72))}
+.xt-countdown-label{font-size:.82rem;color:#9fb5c5}
+.xt-countdown{font-size:clamp(1.35rem,5vw,1.9rem);font-variant-numeric:tabular-nums;letter-spacing:.04em;color:#67e2b5}
+.xt-local-time{font-size:.82rem;color:#b6c4d5}
+.xt-no-date{margin:12px 0;padding:11px 13px;border-radius:10px;background:rgba(125,139,165,.12);color:#b9c7d8}
+.xt-listing-card .xt-listing-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.xt-listing-card .xt-listing-meta a{color:#70dcb5}
