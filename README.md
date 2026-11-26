@@ -41,3 +41,11 @@ The XT.COM listing monitor reads public official Help Center announcement sectio
 - Futures contract delistings (`50094030973721`)
 
 The server checks up to five pages of 100 articles per section and caches the result for 60 seconds. It extracts explicit trading pairs and scheduled dates from announcement content, highlights ECR-related notices, and reports partial-source failures or pagination limits instead of silently presenting incomplete coverage as complete. Browser notifications require the user to grant permission and the monitor page to remain open.
+
+
+### XT.COM monitor display rules (updated)
+The user-facing listing monitor displays unique spot and futures trading pairs only. Delisting sections are not fetched or displayed. Historical announcements older than 180 days are excluded. A countdown is shown only when an explicit listing/trading schedule date is found, the date is valid relative to the announcement publication time, and the scheduled time is still in the future. Historical dates and publication timestamps are never used as listing countdowns. If a scheduled time has passed without explicit evidence that trading opened, the pair is marked as awaiting launch confirmation. Postponed listings show no stale countdown until XT publishes a new schedule.
+
+
+### XT.COM upcoming-count rule
+A pair is counted as an upcoming listing only when its explicit parsed trading/listing schedule is valid and strictly in the future. Announcement wording such as "will be listed" without a confirmed future date is shown only in the separate "Объявлены · дата не объявлена" group and is excluded from the upcoming counter.
