@@ -1,9 +1,7 @@
 const HOSTS = ["https://xtsupport.zendesk.com", "https://support.xt.com"];
 const SECTIONS = [
   {id:"900000084163",kind:"spot",action:"listing",label:"Спотовые листинги"},
-  {id:"10722464177561",kind:"futures",action:"listing",label:"Фьючерсные листинги"},
-  {id:"10528395637017",kind:"spot",action:"delisting",label:"Делистинги спота"},
-  {id:"50094030973721",kind:"futures",action:"delisting",label:"Делистинги фьючерсов"}
+  {id:"10722464177561",kind:"futures",action:"listing",label:"Фьючерсные листинги"}
 ];
 const CACHE_MS=60_000;
 const MAX_PAGES_PER_SECTION=5;
@@ -22,33 +20,35 @@ function decodeHtml(value){
     .replace(/\s+/g," ").trim();
 }
 function parseSchedule(text){
-  const tradingMarker=text.match(/(?:交易时间|开始交易时间|开盘时间|trading\s*time|trading\s*opens|launch\s*schedule|listing\s*schedule|trading\s*schedule)\s*[:：]?/i);
-  const source=tradingMarker?text.slice(tradingMarker.index+tradingMarker[0].length):text;
+  // Never treat publication dates, historical milestones or unrelated dates as a listing time.
+  const marker=/(?:交易时间|开始交易时间|开盘时间|listing\s*(?:date|time|schedule)|trading\s*(?:date|time|opens|schedule)|launch\s*schedule|will\s*open\s*trading)\s*[:：]?/i;
+  const match=String(text||"").match(marker);
+  if(!match) return null;
+  const source=String(text||"").slice(match.index+match[0].length).slice(0,260);
   const months={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
-  const candidates=[];
-  const monthRe=new RegExp(`\\b(${Object.keys(months).join("|")})\\s+(\\d{1,2}),?\\s+(20\\d{2})(?:,?\\s+(\\d{1,2}):(\\d{2}))?\\s*(?:\\(\\s*UTC\\s*\\)|UTC)?`,"gi");
-  for(const m of source.matchAll(monthRe)){
-    const t=Date.UTC(+m[3],months[m[1].toLowerCase()],+m[2],+(m[4]||0),+(m[5]||0));
-    if(Number.isFinite(t)) candidates.push(t);
+  let m=source.match(/\b(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日(?:\s*(\d{1,2}):(\d{2}))?\s*(?:\(\s*UTC\s*([+-]\d{1,2})(?::?(\d{2}))?\s*\)|UTC\s*([+-]\d{1,2})(?::?(\d{2})?))?/i);
+  if(m){
+    const h=+(m[4]||0),min=+(m[5]||0);
+    const oh=+(m[6]||m[8]||0),om=+(m[7]||m[9]||0);
+    const offset=(oh*60+Math.sign(oh||1)*om)*60000;
+    const t=Date.UTC(+m[1],+m[2]-1,+m[3],h,min)-offset;
+    return Number.isFinite(t)?{timestamp:t,iso:new Date(t).toISOString()}:null;
   }
-  const isoRe=/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/g;
-  for(const m of source.matchAll(isoRe)){
-    const t=Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0));
-    if(Number.isFinite(t)) candidates.push(t);
+  m=source.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?\s*(?:\(\s*UTC\s*([+-]\d{1,2})(?::?(\d{2}))?\s*\))?/i);
+  if(m){
+    const oh=+(m[6]||0),om=+(m[7]||0);
+    const offset=(oh*60+Math.sign(oh||1)*om)*60000;
+    const t=Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0))-offset;
+    return Number.isFinite(t)?{timestamp:t,iso:new Date(t).toISOString()}:null;
   }
-  // XT announcements frequently publish Chinese dates with an explicit UTC+8 offset.
-  const cnRe=/\b(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日(?:\s*(\d{1,2}):(\d{2}))?\s*(?:\(\s*UTC\s*([+-]\d{1,2})(?::?(\d{2}))?\s*\)|UTC\s*([+-]\d{1,2})(?::?(\d{2})?))?/gi;
-  for(const m of source.matchAll(cnRe)){
-    const hour=+(m[4]||0),minute=+(m[5]||0);
-    const offsetHours=+(m[6]||m[8]||0),offsetMinutes=+(m[7]||m[9]||0);
-    const offset=(offsetHours*60+Math.sign(offsetHours||1)*offsetMinutes)*60000;
-    const t=Date.UTC(+m[1],+m[2]-1,+m[3],hour,minute)-offset;
-    if(Number.isFinite(t)) candidates.push(t);
+  m=source.match(new RegExp(`\\\\b(${Object.keys(months).join("|")})\\\\s+(\\\\d{1,2}),?\\\\s+(20\\\\d{2})(?:,?\\\\s+(\\\\d{1,2}):(\\\\d{2}))?\\\\s*(?:\\\\(\\\\s*UTC\\\\s*([+-]\\\\d{1,2})(?::?(\\\\d{2}))?\\\\s*\\\\))?`,"i"));
+  if(m){
+    const oh=+(m[6]||0),om=+(m[7]||0);
+    const offset=(oh*60+Math.sign(oh||1)*om)*60000;
+    const t=Date.UTC(+m[3],months[m[1].toLowerCase()],+m[2],+(m[4]||0),+(m[5]||0))-offset;
+    return Number.isFinite(t)?{timestamp:t,iso:new Date(t).toISOString()}:null;
   }
-  if(!candidates.length) return null;
-  const future=candidates.filter(t=>t>Date.now()).sort((a,b)=>a-b);
-  const timestamp=future[0]??Math.max(...candidates);
-  return {timestamp,iso:new Date(timestamp).toISOString()};
+  return null;
 }
 function extractPairs(title,body){
   const text=`${title}\n${body}`;
@@ -67,11 +67,14 @@ function extractPairs(title,body){
 }
 function classify(article,section,body,schedule){
   const text=`${article.title||""} ${body}`.toLowerCase();
-  if(section.action==="delisting"||/\bdelist(?:ing|ed)?\b|cease trading|remove.{0,30}trading pair|trading will be suspended/.test(text)) return "delisted";
-  if(/postpon(?:e|ed|ing)|delay(?:ed)? the listing|new schedule separately/.test(text)) return "postponed";
+  if(/postpon(?:e|ed|ing)|delay(?:ed)? the listing|new schedule separately|will be notified separately|另行通知/.test(text)) return "postponed";
   if(schedule&&schedule.timestamp>Date.now()) return "upcoming";
-  if(/upcoming listing|will be listed|will open trading|trading will be available|scheduled to launch|will launch/.test(text)) return "upcoming";
-  if(section.action==="listing"&&(/launching|launch of|now listed|trading is now open|trading has opened|is now available/.test(text))) return "launched";
+  if(schedule&&schedule.timestamp<=Date.now()){
+    if(/now listed|trading is now open|trading has opened|is now available|已开放交易|正式上线/.test(text)) return "launched";
+    return "awaiting";
+  }
+  if(/upcoming listing|will be listed|will open trading|trading will open|trading will be available|scheduled to launch|will launch|即将上线/.test(text)) return "upcoming";
+  if(/launching|launch of|now listed|trading is now open|trading has opened|is now available|开放交易|上线交易/.test(text)) return "launched";
   return "announcement";
 }
 async function fetchSectionArticles(host,section){
@@ -111,19 +114,25 @@ export async function fetchXtListings(force=false){
   for(const {section,articles} of sections){
     for(const article of articles){
       const id=String(article.id);
+      const published=Date.parse(article.created_at||article.updated_at||"");
+      if(Number.isFinite(published)&&Date.now()-published>180*24*60*60*1000) continue;
       const body=decodeHtml(article.body);
-      const schedule=parseSchedule(`${article.title||""} ${body}`);
+      const announcementText=`${article.title||""} ${body}`;
+      const schedule=parseSchedule(announcementText);
+      const publishedAt=article.created_at||article.updated_at||null;
+      const publishedMs=publishedAt?Date.parse(publishedAt):NaN;
+      const validSchedule=schedule&&(!Number.isFinite(publishedMs)||schedule.timestamp>=publishedMs-24*60*60*1000)?schedule:null;
       const item={
         id,title:String(article.title||"Без названия"),
         url:article.html_url||`https://xtsupport.zendesk.com/hc/en-us/articles/${id}`,
-        publishedAt:article.created_at||article.updated_at||null,
+        publishedAt,
         updatedAt:article.updated_at||null,
-        status:classify(article,section,body,schedule),
+        status:classify(article,section,body,validSchedule),
         pairs:extractPairs(article.title||"",body),
         isEcr:/\bECR\b|eCurrency/i.test(`${article.title||""} ${body}`),
         kind:section.kind,
         category:section.label,
-        scheduledAt:schedule?.iso||null,
+        scheduledAt:validSchedule?.iso||null,
         excerpt:body.slice(0,650)
       };
       const previous=byId.get(id);
@@ -131,9 +140,9 @@ export async function fetchXtListings(force=false){
     }
   }
   const pairMap=new Map();
-  const statusPriority={upcoming:5,postponed:4,delisted:3,launched:2,announcement:1};
+  const statusPriority={upcoming:5,postponed:4,awaiting:3,launched:2,announcement:1};
   for(const notice of byId.values()){
-    if(!notice.pairs?.length) continue;
+    if(notice.status==="delisted"||!notice.pairs?.length) continue;
     for(const pair of notice.pairs){
       const key=`${notice.kind}:${pair}`;
       const record={...notice,id:key,title:pair,pairs:[pair],sourceTitle:notice.title,notices:[notice.id]};
