@@ -41,7 +41,7 @@ function sideTable(levels,side) {
 function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,midText="—"){
   // Keep the 10 best market levels, then apply the requested visual order.
   // SELL/ASK: choose the 10 lowest asks (closest to market), display descending.
-  // BUY/BID: choose the 10 highest bids (closest to market), display ascending.
+  // BUY/BID: choose the 10 highest bids (closest to market), display descending.
   const fixed=(value,digits)=>{
     const n=Number(value);
     return Number.isFinite(n)?n.toLocaleString("ru-RU",{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}):"—";
@@ -54,7 +54,7 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
   })).filter(r=>Number.isFinite(Number(r.price))&&Number(r.price)>0);
   const allSell=normalize(asks), allBuy=normalize(bids);
   const sell=allSell.slice().sort((a,b)=>Number(a.price)-Number(b.price)).slice(0,10).sort((a,b)=>Number(b.price)-Number(a.price));
-  const buy=allBuy.slice().sort((a,b)=>Number(b.price)-Number(a.price)).slice(0,10).sort((a,b)=>Number(a.price)-Number(b.price));
+  const buy=allBuy.slice().sort((a,b)=>Number(b.price)-Number(a.price)).slice(0,10);
   const max=Math.max(1,...sell.map(r=>Number(r.total)||0),...buy.map(r=>Number(r.total)||0));
   const rows=(items,side)=>items.map(r=>{
     const depth=Math.max(3,Math.min(100,(Number(r.total)||0)/max*100));
