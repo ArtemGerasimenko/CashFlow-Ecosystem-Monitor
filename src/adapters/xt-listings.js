@@ -71,7 +71,9 @@ function classify(article,section,body,schedule){
   if(schedule&&schedule.timestamp>Date.now()) return "upcoming";
   if(schedule&&schedule.timestamp<=Date.now()){
     if(/now listed|trading is now open|trading has opened|is now available|已开放交易|正式上线/.test(text)) return "launched";
-    return "awaiting";
+    // A past date alone does not mean a listing is still awaiting launch.
+    // Keep it in the undated/announcement group unless XT explicitly says it was delayed.
+    return "announcement";
   }
   // "Upcoming" is reserved for a verified future trading timestamp.
   // Announcement wording without an explicit future schedule is not enough.
