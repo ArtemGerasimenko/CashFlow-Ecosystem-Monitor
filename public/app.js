@@ -112,19 +112,16 @@ function candleControls(source,pair,defaultInterval){
   return `<div class="candle-controls" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
 }
 function candleRows(items,source,interval=86400){
-  const isDaily=Number(interval)===86400;
   const date = c => {
     const raw=Number(c.timestamp);
     const stamp=raw>1e12?raw:raw*1000;
     const d=new Date(stamp);
     if(!Number.isFinite(d.getTime())) return "—";
-    // Daily candles show their calendar date; intraday candles show the exact candle start time.
-    return isDaily
-      ? d.toLocaleDateString("ru-RU")
-      : `${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",hour12:false})}`;
+    // Always show the exact candle timestamp, including daily candles.
+    return `${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",hour12:false})}`;
   };
   const sorted=(Array.isArray(items)?items:[]).filter(c=>Number.isFinite(Number(c.timestamp))).sort((a,b)=>Number(b.timestamp)-Number(a.timestamp)).slice(0,30);
-  return `<div class="table-wrap history-table"><table><thead><tr><th>${isDaily?"Дата":"Дата и время"}</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-wrap history-table"><table><thead><tr><th>Дата и время</th><th>Открытие</th><th>Макс.</th><th>Мин.</th><th>Закрытие</th><th>Объём</th></tr></thead><tbody>${sorted.map(c=>`<tr><td>${date(c)}</td><td>${fixedDigits(c.open,6)}</td><td>${fixedDigits(c.high,6)}</td><td>${fixedDigits(c.low,6)}</td><td>${fixedDigits(c.close,6)}</td><td>${fixedDigits(c.volume,8)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 document.addEventListener("click",async event=>{
   const button=event.target.closest("[data-candle-interval]"); if(!button) return;
