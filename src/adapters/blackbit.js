@@ -94,10 +94,24 @@ export async function fetchBlackBitMarket() {
     throw new Error(`BlackBit: некорректные лучшие цены стакана (BUY ${bestBid}, SELL ${bestAsk})`);
   }
 
-  const lastRate = Number(book.last_rate ?? pair.rate);
-  if (!(lastRate > 0) || !Number.isFinite(lastRate)) {
-    throw new Error("BlackBit: отсутствует корректная текущая цена пары");
-  }
+  // The API's book.last_rate can lag behind the live pair/ticker.
+  // Prefer a valid trade/pair/candle price that belongs to the current spread.
+  const latestCandle = candles.slice().sort((a, b) => b.timestamp - a.timestamp)[0];
+  const candidates = [
+    { value: Number(book.last_rate), source: "order_book.last_rate" },
+    { value: Number(pair.rate), source: "currency_pairs.rate" },
+    { value: Number(latestCandle?.close), source: "latest_15m_candle.close" }
+  ];
+  const inSpread = candidates.find(x =>
+    Number.isFinite(x.value) && x.value > 0 &&
+    x.value >= bestBid && x.value <= bestAsk
+  );
+  const validCandidate = candidates.find(x => Number.isFinite(x.value) && x.value > 0);
+  const selectedPrice = inSpread || validCandidate;
+  if (!selectedPrice) throw new Error("BlackBit: нет корректной текущей цены ECR/USDT");
+  const lastRate = selectedPrice.value;
+  const priceSource = selectedPrice.source;
+  const priceInsideSpread = lastRate >= bestBid && lastRate <= bestAsk;
 
   return {
     source: "blackbit.exchange public website endpoints",
@@ -115,6 +129,8 @@ export async function fetchBlackBitMarket() {
       volumeQuoted: Number(pair.volume_quoted)
     },
     lastRate,
+    priceSource,
+    priceInsideSpread,
     bestBid,
     bestAsk,
     bids,
