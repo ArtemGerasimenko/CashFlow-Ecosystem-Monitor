@@ -417,14 +417,74 @@ async function load() {
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
 function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
 $("gross").addEventListener("input",calculate); calculate();
+
+function renderXtListings(data){
+  const root=$("xtListings"); if(!root) return;
+  const items=Array.isArray(data?.items)?data.items:[];
+  const upcoming=items.filter(x=>x.status==="upcoming");
+  const launched=items.filter(x=>x.status==="launched");
+  const ecr=items.filter(x=>x.isEcr);
+  const card=item=>`<article class="xt-listing-card ${item.isEcr?"ecr":""}">
+    <div class="xt-listing-card-top"><span class="xt-listing-kind">${item.kind==="futures"?"ФЬЮЧЕРСЫ":"СПОТ"}</span><span class="xt-listing-status ${item.status}">${item.status==="upcoming"?"Предстоящий":item.status==="launched"?"Запущен":"Объявление"}</span>${item.isEcr?'<span class="xt-ecr-flag">ECR</span>':""}</div>
+    <h3>${esc(item.title)}</h3>
+    ${item.pairs?.length?`<div class="xt-pairs">${item.pairs.map(p=>`<span>${esc(p)}</span>`).join("")}</div>`:""}
+    <p>${esc(item.excerpt||"Официальное объявление XT.COM")}</p>
+    <div class="xt-listing-meta">${item.publishedAt?`Опубликовано: ${esc(new Date(item.publishedAt).toLocaleString("ru-RU"))}`:""} <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">Открыть объявление ↗</a></div>
+  </article>`;
+  root.innerHTML=`<div class="xt-listing-summary">
+    <div><strong>${upcoming.length}</strong><span>Предстоящие</span></div>
+    <div><strong>${launched.length}</strong><span>Запущенные</span></div>
+    <div><strong>${ecr.length}</strong><span>Объявления ECR</span></div>
+  </div>
+  ${ecr.length?`<section class="xt-listing-group"><h2>Приоритет: ECR</h2>${ecr.map(card).join("")}</section>`:""}
+  <section class="xt-listing-group"><h2>Предстоящие листинги</h2>${upcoming.length?upcoming.map(card).join(""):'<div class="card muted">Сейчас нет найденных объявлений о предстоящих листингах.</div>'}</section>
+  <section class="xt-listing-group"><h2>Недавно запущенные</h2>${launched.length?launched.map(card).join(""):'<div class="card muted">Новых запусков пока нет.</div>'}</section>`;
+  $("xtListingsUpdated").textContent=`Последняя проверка: ${new Date(data.checkedAt).toLocaleString("ru-RU")} · Следующая через 60 секунд`;
+}
+let xtKnownIds=null;
+async function loadXtListings(){
+  try{
+    const data=await api("/xt-listings");
+    if(!data.ok) throw new Error(data.message||"Нет данных");
+    const ids=data.items.map(x=>x.id);
+    let previous=[];
+    try{previous=JSON.parse(localStorage.getItem("xt-listing-known-ids")||"[]");}catch(_){}
+    if(xtKnownIds===null){
+      xtKnownIds=new Set(previous.length?previous:ids);
+      if(!previous.length) try{localStorage.setItem("xt-listing-known-ids",JSON.stringify(ids));}catch(_){}
+    }else{
+      const added=data.items.filter(x=>!xtKnownIds.has(x.id));
+      for(const item of added){
+        if("Notification" in window&&Notification.permission==="granted"){
+          try{new Notification(item.isEcr?"XT.COM: объявление ECR":"XT.COM: новый листинг",{body:item.title,tag:`xt-${item.id}`});}catch(_){}
+        }
+      }
+      ids.forEach(id=>xtKnownIds.add(id));
+      try{localStorage.setItem("xt-listing-known-ids",JSON.stringify([...xtKnownIds].slice(-300)));}catch(_){}
+    }
+    renderXtListings(data);
+  }catch(error){
+    const root=$("xtListings");
+    if(root&&!root.querySelector(".xt-listing-card")) root.innerHTML=`<div class="xt-listing-notice"><strong>Не удалось получить объявления XT.COM</strong><p>${esc(error.message)}</p><p>Монитор повторит запрос через минуту. Рыночные пары не выдумываются.</p></div>`;
+    $("xtListingsUpdated").textContent="Источник объявлений временно недоступен";
+  }
+}
+$("xtNotifyEnable")?.addEventListener("click",async()=>{
+  if(!("Notification" in window)){alert("Этот браузер не поддерживает уведомления.");return;}
+  const permission=await Notification.requestPermission();
+  $("xtNotifyEnable").textContent=permission==="granted"?"Уведомления включены":"Разрешение не предоставлено";
+});
+
 load();
+loadXtListings();
+let xtListingsTimer=setInterval(()=>{if(!document.hidden) loadXtListings();},60000);
 let refreshTimer = null;
 function scheduleRefresh(){
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = null;
   if (!document.hidden) refreshTimer = setInterval(load,10000);
 }
-document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden) load();});
+document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden){load();loadXtListings();}});
 scheduleRefresh();
 function updateErubBounty(inputId,rate,baseId,bonusId,totalId){
   const input=$(inputId); if(!input) return;
