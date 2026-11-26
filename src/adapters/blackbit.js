@@ -79,10 +79,24 @@ export async function fetchBlackBitMarket() {
     [candle.open, candle.high, candle.low, candle.close, candle.volume].every(Number.isFinite)
   );
 
-  const bids = normalizeLevels(book?.levels_buy);
-  const asks = normalizeLevels(book?.levels_sell);
+  // Display convention requested for the monitor:
+  // BUY (green): minimum at top -> maximum at bottom.
+  // SELL (red): maximum at top -> minimum at bottom.
+  // Sort the complete book before the UI limits it to 10 levels.
+  const bids = normalizeLevels(book?.levels_buy).sort((a, b) => a.rate - b.rate);
+  const asks = normalizeLevels(book?.levels_sell).sort((a, b) => b.rate - a.rate);
   if (!bids.length || !asks.length) {
     throw new Error("BlackBit: стакан не содержит обе стороны levels_buy и levels_sell");
+  }
+  const bestBid = Math.max(...bids.map(level => level.rate));
+  const bestAsk = Math.min(...asks.map(level => level.rate));
+  if (!(bestBid > 0) || !(bestAsk > 0) || bestBid >= bestAsk) {
+    throw new Error(`BlackBit: некорректные лучшие цены стакана (BUY ${bestBid}, SELL ${bestAsk})`);
+  }
+
+  const lastRate = Number(book.last_rate ?? pair.rate);
+  if (!(lastRate > 0) || !Number.isFinite(lastRate)) {
+    throw new Error("BlackBit: отсутствует корректная текущая цена пары");
   }
 
   return {
@@ -100,9 +114,9 @@ export async function fetchBlackBitMarket() {
       volumeBase: Number(pair.volume_base),
       volumeQuoted: Number(pair.volume_quoted)
     },
-    lastRate: Number(book.last_rate ?? pair.rate),
-    bestBid: bids[0].rate,
-    bestAsk: asks[0].rate,
+    lastRate,
+    bestBid,
+    bestAsk,
     bids,
     asks,
     candles,

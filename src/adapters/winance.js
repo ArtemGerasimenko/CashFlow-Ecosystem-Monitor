@@ -37,8 +37,9 @@ async function fetchOrderBook(pair) {
   try {
     const response = await get(`/site/v2/orders/book?currency_pair=${encodeURIComponent(pair.id)}&depth=100`);
     const book = response?.data && !response.levels_buy ? response.data : response;
-    const bids = normalizeLevels(book?.levels_buy ?? book?.bids);
-    const asks = normalizeLevels(book?.levels_sell ?? book?.asks);
+    // BUY (green): ascending for display. SELL (red): descending for display.
+    const bids = normalizeLevels(book?.levels_buy ?? book?.bids).sort((a, b) => a.rate - b.rate);
+    const asks = normalizeLevels(book?.levels_sell ?? book?.asks).sort((a, b) => b.rate - a.rate);
     if (!bids.length || !asks.length) {
       return {
         ok: false,
@@ -48,13 +49,24 @@ async function fetchOrderBook(pair) {
         asks: []
       };
     }
+    const bestBid = Math.max(...bids.map(level => level.rate));
+    const bestAsk = Math.min(...asks.map(level => level.rate));
+    if (!(bestBid > 0) || !(bestAsk > 0) || bestBid >= bestAsk) {
+      return {
+        ok: false,
+        status: "unavailable",
+        message: `Winance: некорректные лучшие цены стакана (BUY ${bestBid}, SELL ${bestAsk})`,
+        bids: [],
+        asks: []
+      };
+    }
     return {
       ok: true,
       status: "live",
       bids: bids.slice(0, 100),
       asks: asks.slice(0, 100),
-      bestBid: bids[0].rate,
-      bestAsk: asks[0].rate,
+      bestBid,
+      bestAsk,
       receivedAt: new Date().toISOString()
     };
   } catch (error) {
