@@ -78,7 +78,7 @@ function classify(article,section,body,schedule){
   // "Upcoming" is reserved for a verified future trading timestamp.
   // Announcement wording without an explicit future schedule is not enough.
   if(/upcoming listing|will be listed|will open trading|trading will open|trading will be available|scheduled to launch|will launch|即将上线/.test(text)) return "announcement";
-  if(/launching|launch of|now listed|trading is now open|trading has opened|is now available|开放交易|上线交易/.test(text)) return "launched";
+  if(/now listed|trading is now open|trading has opened|is now available|已开放交易|正式上线/.test(text)) return "launched";
   return "announcement";
 }
 async function fetchSectionArticles(host,section){
