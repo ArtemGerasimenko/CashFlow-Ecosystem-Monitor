@@ -53,7 +53,6 @@ async function api(path) {
   return payload;
 }
 function sourceCard(name,v) {
-  if(name==="xt") return `<article class="card"><div class="source-name">XT.COM</div><div class="source-state">Ожидается листинг ECR</div><div class="muted">Мониторинг ECR будет добавлен после листинга.</div></article>`;
   const labels={blackbit:"BlackBit",winance:"Winance",erub:"еРубль"};
   const status=v?.status||"нет статуса";
   return `<article class="card"><div class="source-name">${esc(labels[name]||name)}</div><div class="source-state ${v?.ok?"live":status==="error"?"error":""}">${esc(status)}</div><div class="muted">${esc(v?.message||(v?.ok?"Источник отвечает":"Нет данных"))}</div><div class="muted">${esc(v?.checkedAt||"")}</div></article>`;
@@ -97,20 +96,6 @@ function renderRatesSources(snapshot){
   ].join("");
 }
 
-function pairRows(levels) {
-  if (!Array.isArray(levels)) return [];
-  return levels.slice(0,10).map(level => {
-    if (Array.isArray(level)) return {price:level[0],quantity:level[1]};
-    if (level && typeof level==="object") return {price:level.price??level.p??level[0],quantity:level.quantity??level.qty??level.amount??level.q??level[1]};
-    return {price:null,quantity:null};
-  }).filter(x=>x.price!=null);
-}
-function sideTable(levels,side) {
-  const rows=pairRows(levels);
-  if (!rows.length) return `<div class="empty-side">Нет уровней стакана</div>`;
-  return `<div class="book-table ${side}"><div class="book-head"><span>Цена (USDT)</span><span>Объём (BTC)</span></div>${rows.map(row=>`<div class="book-row"><strong>${num(row.price)}</strong><span>${num(row.quantity)}</span></div>`).join("")}</div>`;
-}
-
 function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,midText="—"){
   // Keep the 10 best market levels, then apply the requested visual order.
   // SELL/ASK: choose the 10 lowest asks (closest to market), display descending.
@@ -143,35 +128,6 @@ function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,mi
   </section>`;
 }
 
-function market(xt) {
-  if (!xt?.ok) return `<p>${esc(xt?.message||"XT.COM пока не вернул данные")}</p>`;
-  const d=xt.data||{}, ticker=Array.isArray(d.ticker)?d.ticker[0]:d.ticker||{};
-  const book=d.orderBook?.result??d.orderBook??{};
-  const bids=pairRows(book.bids), asks=pairRows(book.asks);
-  const bestBid=d.bestBid??book.bids?.[0]?.[0]??book.bids?.[0]?.price??ticker.bp??ticker.bidPrice;
-  const bestAsk=d.bestAsk??book.asks?.[0]?.[0]??book.asks?.[0]?.price??ticker.ap??ticker.askPrice;
-  const spread=(Number(bestBid)>0&&Number(bestAsk)>0)?Number(bestAsk)-Number(bestBid):null;
-  const spreadPct=spread!==null?spread/Number(bestBid)*100:null;
-  const change=ticker.cr??ticker.changeRate??ticker.changePercent;
-  const changeText=change==null?"—":`${Number(change).toFixed(4)}%`;
-  const updated=d.receivedAt||xt.checkedAt||"";
-  return `<div class="market-head"><div><div class="eyebrow">РЫНОЧНЫЕ ДАННЫЕ XT.COM SPOT</div><h2>${esc((d.symbol||ticker.s||"BTC_USDT").replace("_"," / ").toUpperCase())}</h2></div><span class="live-pill">● LIVE</span></div>
-  <div class="quote-grid">
-    <div class="quote-box bid"><span>ЛУЧШАЯ ПОКУПКА</span><strong>${num(bestBid)}</strong></div>
-    <div class="quote-box ask"><span>ЛУЧШАЯ ПРОДАЖА</span><strong>${num(bestAsk)}</strong></div>
-  </div>
-  <div class="market-metrics">
-    <div><span>Спред</span><strong>${spread===null?"—":num(spread)}</strong></div>
-    <div><span>Спред, %</span><strong>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</strong></div>
-    <div><span>Изменение 24ч</span><strong>${esc(changeText)}</strong></div>
-    <div><span>Последняя цена</span><strong>${num(ticker.c??ticker.lastPrice??ticker.close)}</strong></div>
-    <div><span>Максимум 24ч</span><strong>${num(ticker.h??ticker.highPrice)}</strong></div>
-    <div><span>Минимум 24ч</span><strong>${num(ticker.l??ticker.lowPrice)}</strong></div>
-  </div>
-  <h3 class="book-title">Стакан заявок · первые 10 уровней</h3>
-  <div class="book-grid"><section><h4 class="bid-label">Покупки (BID)</h4>${sideTable(book.bids,"bid")}</section><section><h4 class="ask-label">Продажи (ASK)</h4>${sideTable(book.asks,"ask")}</section></div>
-  <p class="market-updated">Последнее получение данных: ${esc(updated)}</p>`;
-}
 
 
 const CANDLE_INTERVALS = [[60,"1м"],[300,"5м"],[900,"15м"],[3600,"1ч"],[14400,"4ч"],[86400,"1д"]];
@@ -396,7 +352,7 @@ function restoreScrollPositions(saved){
 }
 
 function captureInteractiveState(){
-  const regions=["sources","winanceData","erubData","marketData","xtData","blackbitData","historyData"];
+  const regions=["sources","winanceData","erubData","blackbitData","historyData"];
   const snapshot={regions:{}};
   for(const id of regions){
     const root=$(id); if(!root) continue;
@@ -445,10 +401,9 @@ async function load() {
     savedScroll=captureScrollPositions();
     $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
-    $("sources").innerHTML=[["xt",{}],...Object.entries(s.sources||{}).filter(([k])=>k!=="xt")].map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
+    $("sources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
     // Rates are rendered above with actual quotes, not source-status placeholders.
-    const xtNotice=`<div class="xt-listing-notice"><strong>Ожидается листинг ECR на XT.COM</strong><p>Пока торговая пара ECR не залистилась, рыночные данные и стакан не отображаются.</p><p>После листинга добавим мониторинг курса, лучших покупок и продаж, объёмов и стакана заявок.</p></div>`; $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance); 
-    $("marketData").innerHTML=xtNotice;
+    $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance);
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
     $("winanceData").querySelectorAll("[data-candle-panel]").forEach(panel=>{
       const source=panel.querySelector('[data-candle-source="winance"][data-candle-interval="900"]');
@@ -468,116 +423,14 @@ $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=
 function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
 $("gross").addEventListener("input",calculate); calculate();
 
-const xtVisible={upcoming:40,launched:40,delisted:40,postponed:40,announcement:20};
-function formatXtCountdown(timestamp){
-  const diff=new Date(timestamp).getTime()-Date.now();
-  if(!Number.isFinite(diff)) return "Время запуска не распознано";
-  if(diff<=0) return "Время запуска наступило — ожидается подтверждение торгов";
-  const total=Math.floor(diff/1000);
-  const days=Math.floor(total/86400);
-  const hours=Math.floor((total%86400)/3600);
-  const minutes=Math.floor((total%3600)/60);
-  const seconds=total%60;
-  return `${days?`${days} дн. `:""}${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
-}
-function renderXtListings(data){
-  const root=$("xtListings"); if(!root) return;
-  const sourceItems=Array.isArray(data?.items)?data.items:[];
-  const items=sourceItems.filter(x=>
-    (x.status==="upcoming"&&x.scheduledAt&&Date.parse(x.scheduledAt)>Date.now()) ||
-    x.status==="launched"
-  );
-  const counts={
-    upcoming:items.filter(x=>x.status==="upcoming").length,
-    launched:items.filter(x=>x.status==="launched").length
-  };
-  const statusText={upcoming:"Предстоящий листинг",launched:"Уже торгуется"};
-  const card=item=>`<article class="xt-listing-card ${item.isEcr?"ecr":""}">
-    <div class="xt-listing-card-top"><span class="xt-listing-kind">${item.kind==="futures"?"ФЬЮЧЕРСЫ":"СПОТ"}</span><span class="xt-listing-status ${item.status}">${statusText[item.status]}</span>${item.isEcr?'<span class="xt-ecr-flag">ECR</span>':""}</div>
-    <h3 class="xt-pair-title">${esc(item.title)}</h3>
-    ${item.status==="upcoming"?`<div class="xt-countdown-wrap"><span class="xt-countdown-label">До начала торгов</span><strong class="xt-countdown" data-xt-countdown="${esc(item.scheduledAt)}">${formatXtCountdown(item.scheduledAt)}</strong><span class="xt-local-time">По Будапешту: ${esc(new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"}))}</span></div>`:""}
-    <div class="xt-listing-meta">${item.publishedAt?`Объявление: ${esc(new Date(item.publishedAt).toLocaleDateString("ru-RU"))}`:""} <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">Официальный источник ↗</a></div>
-  </article>`;
-  const group=(status,title)=>{
-    const list=items.filter(x=>x.status===status);
-    return `<section class="xt-listing-group"><h2>${title} · ${list.length}</h2>${list.length?list.map(card).join(""):'<div class="card muted">Таких торговых пар пока нет.</div>'}</section>`;
-  };
-  const warnings=Array.isArray(data.warnings)?data.warnings:[];
-  root.innerHTML=`${warnings.length?`<div class="xt-listing-notice"><strong>Часть источников XT.COM недоступна или ограничена</strong><p>${warnings.map(x=>esc(`${x.section}: ${x.error|| (x.truncated?"загружены только последние 500 объявлений":"")}`)).join("<br>")}</p><p>Данные по доступным категориям продолжают отображаться.</p></div>`:""}<div class="xt-listing-summary">
-    <div><strong>${counts.upcoming}</strong><span>Предстоящие листинги</span></div>
-    <div><strong>${counts.launched}</strong><span>Уже торгуются</span></div>
-  </div>
-  ${group("upcoming","Предстоящие листинги")}
-  ${group("launched","Новые пары — уже торгуются")}`;
-  const updated=$("xtListingsUpdated");
-  if(updated) updated.textContent=`Источник: XT.COM Help Center · Проверено: ${new Date(data.checkedAt).toLocaleString("ru-RU")} · Автообновление: 60 секунд`;
-  updateXtCountdowns();
-}
-function updateXtCountdowns(){
-  document.querySelectorAll("[data-xt-countdown]").forEach(node=>{
-    const target=Date.parse(node.dataset.xtCountdown);
-    if(!Number.isFinite(target)||target<=Date.now()){
-      const wrap=node.closest(".xt-countdown-wrap");
-      if(wrap) wrap.innerHTML='<span class="xt-no-date">Время запуска наступило. Ожидается подтверждение фактического начала торгов.</span>';
-      return;
-    }
-    node.textContent=formatXtCountdown(node.dataset.xtCountdown);
-  });
-}
-if(!window.xtCountdownTimer) window.xtCountdownTimer=setInterval(updateXtCountdowns,1000);
-$("xtListings")?.addEventListener("click",event=>{
-  const button=event.target.closest("[data-xt-more]");
-  if(!button)return;
-  const status=button.dataset.xtMore;
-  xtVisible[status]=(xtVisible[status]||40)+40;
-  if(window.xtLatestData)renderXtListings(window.xtLatestData);
-});
-let xtKnownIds=null;
-async function loadXtListings(){
-  try{
-    const data=await api("/xt-listings");
-    if(!data.ok) throw new Error(data.message||"Нет данных");
-    const fingerprints=data.items.map(x=>`${x.id}:${x.updatedAt||x.publishedAt||""}`);
-    let previous=[];
-    try{previous=JSON.parse(localStorage.getItem("xt-listing-known-ids")||"[]");}catch(_){}
-    if(xtKnownIds===null){
-      xtKnownIds=new Set(previous.length?previous:fingerprints);
-      if(!previous.length) try{localStorage.setItem("xt-listing-known-ids",JSON.stringify(fingerprints));}catch(_){}
-    }else{
-      const added=data.items.filter(x=>!xtKnownIds.has(`${x.id}:${x.updatedAt||x.publishedAt||""}`));
-      for(const item of added){
-        if("Notification" in window&&Notification.permission==="granted"){
-          const prefix=item.isEcr?"XT.COM: листинг ECR":"XT.COM: новая торговая пара";
-          try{new Notification(prefix,{body:`${item.title}${item.scheduledAt?` · ${new Date(item.scheduledAt).toLocaleString("ru-RU",{timeZone:"Europe/Budapest"})}`:""}`,tag:`xt-${item.id}-${item.updatedAt||item.publishedAt||""}`});}catch(_){}
-        }
-      }
-      fingerprints.forEach(key=>xtKnownIds.add(key));
-      try{localStorage.setItem("xt-listing-known-ids",JSON.stringify([...xtKnownIds].slice(-500)));}catch(_){}
-    }
-    window.xtLatestData=data;
-    renderXtListings(data);
-  }catch(error){
-    const root=$("xtListings");
-    if(root&&!root.querySelector(".xt-listing-card")) root.innerHTML=`<div class="xt-listing-notice"><strong>Не удалось получить объявления XT.COM</strong><p>${esc(error.message)}</p><p>Монитор повторит запрос через минуту. Рыночные пары не выдумываются.</p></div>`;
-    const updated=$("xtListingsUpdated"); if(updated) updated.textContent="Источник объявлений временно недоступен";
-  }
-}
-$("xtNotifyEnable")?.addEventListener("click",async()=>{
-  if(!("Notification" in window)){alert("Этот браузер не поддерживает уведомления.");return;}
-  const permission=await Notification.requestPermission();
-  $("xtNotifyEnable").textContent=permission==="granted"?"Уведомления включены":"Разрешение не предоставлено";
-});
-
 load();
-loadXtListings();
-let xtListingsTimer=setInterval(()=>{if(!document.hidden) loadXtListings();},60000);
 let refreshTimer = null;
 function scheduleRefresh(){
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = null;
   if (!document.hidden) refreshTimer = setInterval(load,10000);
 }
-document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden){load();loadXtListings();}});
+document.addEventListener("visibilitychange",()=>{scheduleRefresh(); if(!document.hidden){load();}});
 scheduleRefresh();
 function updateErubBounty(inputId,rate,baseId,bonusId,totalId){
   const input=$(inputId); if(!input) return;
