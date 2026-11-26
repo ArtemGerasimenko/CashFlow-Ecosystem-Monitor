@@ -49,3 +49,7 @@ The user-facing listing monitor displays unique spot and futures trading pairs o
 
 ### XT.COM upcoming-count rule
 A pair is counted as an upcoming listing only when its explicit parsed trading/listing schedule is valid and strictly in the future. Announcement wording such as "will be listed" without a confirmed future date is shown only in the separate "Объявлены · дата не объявлена" group and is excluded from the upcoming counter.
+
+
+### XT.COM past-date handling
+A schedule timestamp in the past is not sufficient evidence that a pair is still awaiting launch. Unless the announcement explicitly confirms trading has opened, the pair is moved to the undated announcements group. The "awaiting launch confirmation" state is not assigned merely because a parsed date has elapsed.
