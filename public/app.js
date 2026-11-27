@@ -548,13 +548,13 @@ function applyWithdrawalLimits(){
     const value=data?.ok && Number.isFinite(Number(data.maximum)) ? Number(data.maximum) : null;
     if(input) input.value=value===null?"—":String(value);
     if(status){
-      status.textContent=data?.ok?"API · обновлено":data?.status==="stale"?"Устаревшее значение":"API не подключён";
+      status.textContent=data?.status==="observed"?"Браузер · считано":data?.ok?"API · обновлено":data?.status==="stale"?"Устаревшее значение":"Ожидание данных";
       status.className=`tariff-status ${data?.ok?"confirmed":data?.status==="stale"?"pending":"pending"}`;
     }
     if(note){
       const time=data?.checkedAt?new Date(data.checkedAt).toLocaleTimeString("ru-RU"):"";
       note.textContent=value!==null
-        ? `Максимум из API аккаунта: ${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} USDT${time?` · проверено ${time}`:""}.`
+        ? `${data?.status==="observed"?"Максимум из уведомления BlackBit":"Максимум из API аккаунта"}: ${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} USDT${time?` · проверено ${time}`:""}.`
         : `${label}: персональный максимум не получен. Публичные котировки не содержат лимит аккаунта.`;
     }
   }

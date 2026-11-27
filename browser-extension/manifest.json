@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "CashFlow BlackBit Limit Observer",
+  "version": "1.0.0",
+  "description": "Reads the maximum-withdrawal notice displayed by BlackBit and forwards the number to the local CashFlow Monitor. Does not click or submit withdrawals.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://blackbit.exchange/*",
+    "https://www.blackbit.exchange/*",
+    "http://127.0.0.1:8080/*",
+    "http://localhost:8080/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://blackbit.exchange/*",
+        "https://www.blackbit.exchange/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

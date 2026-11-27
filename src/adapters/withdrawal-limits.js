@@ -16,6 +16,21 @@ const SOURCES = {
 const cache = { blackbit: null, winance: null };
 const lastAttempt = { blackbit: 0, winance: 0 };
 const CACHE_MS = 10000;
+const OBSERVED_TTL_MS = 30 * 60 * 1000;
+const observed = { blackbit: null, winance: null };
+
+export function recordObservedWithdrawalLimit({ platform, maximum, currency = "USDT", network = "TRC-20", source = "browser-notice" }) {
+  if (platform !== "blackbit") throw new Error("Browser notice is enabled only for BlackBit");
+  const value = Number(maximum);
+  if (currency !== "USDT" || network !== "TRC-20" || !Number.isFinite(value) || value <= 0 || value > 1000000000) {
+    throw new Error("Invalid observed withdrawal limit");
+  }
+  const now = new Date().toISOString();
+  observed[platform] = { platform, ok: true, status: "observed", currency, network, minimum: 10, maximum: value, available: null, message: "Лимит считан из уведомления формы BlackBit в браузере", source, checkedAt: now };
+  cache[platform] = observed[platform];
+  lastAttempt[platform] = Date.now();
+  return observed[platform];
+}
 
 function unavailable(platform, reason = "API персонального лимита не настроен") {
   return {
@@ -77,6 +92,12 @@ export async function getWithdrawalLimits({ force = false } = {}) {
   const now = Date.now();
   const result = {};
   await Promise.all(Object.keys(SOURCES).map(async platform => {
+    const seen = observed[platform];
+    if (seen && Date.now() - Date.parse(seen.checkedAt) < OBSERVED_TTL_MS) {
+      result[platform] = seen;
+      return;
+    }
+    if (seen && Date.now() - Date.parse(seen.checkedAt) >= OBSERVED_TTL_MS) observed[platform] = null;
     if (!force && cache[platform] && now - lastAttempt[platform] < CACHE_MS) {
       result[platform] = cache[platform];
       return;

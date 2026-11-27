@@ -9,7 +9,7 @@ import { config } from "./src/config.js";
 import { startScheduler, getSnapshot, refreshAll } from "./src/monitor.js";
 import { fetchBlackBitCandles } from "./src/adapters/blackbit.js";
 import { fetchWinanceCandles } from "./src/adapters/winance.js";
-import { getWithdrawalLimits } from "./src/adapters/withdrawal-limits.js";
+import { getWithdrawalLimits, recordObservedWithdrawalLimit } from "./src/adapters/withdrawal-limits.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
@@ -31,9 +31,24 @@ async function handler(req,res) {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   if (url.pathname.startsWith("/api/")) {
     const isRefresh = url.pathname === "/api/refresh";
-    if (isRefresh ? !["POST", "GET"].includes(req.method) : req.method !== "GET") {
-      res.setHeader("Allow", isRefresh ? "GET, POST" : "GET");
+    const isObservedLimit = url.pathname === "/api/withdrawal-limits/observed";
+    if (isRefresh ? !["POST", "GET"].includes(req.method) : isObservedLimit ? req.method !== "POST" : req.method !== "GET") {
+      res.setHeader("Allow", isRefresh ? "GET, POST" : isObservedLimit ? "POST" : "GET");
       return send(res,405,{error:"Method not allowed"});
+    }
+    if (isObservedLimit) {
+      const origin = req.headers.origin || "";
+      if (!origin.startsWith("chrome-extension://") && !origin.startsWith("moz-extension://") && !["127.0.0.1","localhost"].includes((req.socket.remoteAddress || "").replace("::ffff:",""))) {
+        return send(res,403,{error:"Local browser observer only"});
+      }
+      let raw = "";
+      for await (const chunk of req) { raw += chunk; if (raw.length > 2048) return send(res,413,{error:"Payload too large"}); }
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return send(res,400,{error:"Invalid JSON"}); }
+      try {
+        const limit = recordObservedWithdrawalLimit(body);
+        return send(res,200,{ok:true,limit});
+      } catch (error) { return send(res,400,{error:error.message}); }
     }
     if (url.pathname === "/api/health") return send(res,200,{ok:true,service:"CashFlow Ecosystem Monitor",pollIntervalMs:config.pollIntervalMs,now:new Date().toISOString()});
     if (url.pathname === "/api/status") return send(res,200,getSnapshot());
