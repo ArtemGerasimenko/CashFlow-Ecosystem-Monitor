@@ -1,11 +1,32 @@
 const $ = id => document.getElementById(id);
-// CashFlow uses the refreshed light appearance by default.
+// Theme preference: restore the user's choice and allow instant switching.
 (function initTheme(){
   const root=document.documentElement;
-  root.dataset.theme="light";
-  try{localStorage.setItem("cashflow-monitor-theme","light");}catch(_){}
-  const meta=document.getElementById("themeColorMeta");if(meta)meta.content="#f5f8f6";
-  const button=document.getElementById("themeToggle");if(button)button.hidden=true;
+  const button=document.getElementById("themeToggle");
+  const meta=document.getElementById("themeColorMeta");
+  let theme="light";
+  try{
+    const saved=localStorage.getItem("cashflow-monitor-theme");
+    if(saved==="dark"||saved==="light") theme=saved;
+  }catch(_){}
+  const applyTheme=(next)=>{
+    theme=next==="dark"?"dark":"light";
+    root.dataset.theme=theme;
+    root.style.colorScheme=theme;
+    if(meta) meta.content=theme==="dark"?"#101713":"#f3f7f4";
+    if(button){
+      button.hidden=false;
+      button.setAttribute("aria-label",theme==="dark"?"Включить светлую тему":"Включить тёмную тему");
+      button.title=theme==="dark"?"Включить светлую тему":"Включить тёмную тему";
+      const icon=button.querySelector(".theme-toggle-icon");
+      const label=button.querySelector(".theme-toggle-label");
+      if(icon) icon.textContent=theme==="dark"?"☀":"☾";
+      if(label) label.textContent=theme==="dark"?"Светлая тема":"Тёмная тема";
+    }
+    try{localStorage.setItem("cashflow-monitor-theme",theme);}catch(_){}
+  };
+  applyTheme(theme);
+  button?.addEventListener("click",()=>applyTheme(theme==="dark"?"light":"dark"));
 })();
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));

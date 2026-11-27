@@ -538,3 +538,134 @@ html[data-theme="dark"] body,html[data-theme="dark"] .topbar,html[data-theme="da
 .withdraw-erub-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .withdraw-erub-title strong{font-size:16px}
 .withdraw-erub-card .amount-input input{min-width:0}
+
+
+/* =========================================================
+   CASHFLOW 2026 — unified visual system / light + dark themes
+   ========================================================= */
+:root{
+  color-scheme:light;
+  --bg:#f2f6f3;--surface:#ffffff;--surface-soft:#f7faf8;
+  --ink:#17231d;--muted:#718078;--line:#e1eae4;
+  --green:#079653;--green-dark:#087342;--green-soft:#e4f6ec;
+  --red:#d34d58;--red-soft:#fff0f1;
+  --shadow:0 12px 34px rgba(24,54,38,.065);--radius:19px;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:"DM Sans",Manrope,Arial,sans-serif;letter-spacing:-.01em}
+.topbar{height:76px;padding:0 clamp(18px,3vw,42px);background:rgba(255,255,255,.88)!important;border-color:var(--line)!important;box-shadow:0 4px 24px rgba(20,50,32,.035)}
+.logo-mark{border-radius:15px;box-shadow:0 8px 22px rgba(7,150,83,.22)}
+.brand-copy strong{font-size:20px;letter-spacing:-.8px}
+.topbar-right{gap:14px}
+.theme-toggle{display:inline-flex!important;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:var(--surface);color:var(--ink);font-weight:750;transition:.2s}
+.theme-toggle:hover{border-color:var(--green);transform:translateY(-1px)}
+.theme-toggle-icon{font-size:17px}
+.layout{grid-template-columns:250px minmax(0,1fr);max-width:1920px;min-height:calc(100vh - 76px)}
+.sidebar{top:76px;height:calc(100vh - 76px);padding:28px 17px 22px;background:#fbfdfb!important;border-color:var(--line)!important}
+.nav-caption{padding:0 13px 16px;font-size:9px;letter-spacing:1.7px}
+nav:not(.mobile-nav){gap:6px}
+nav button{position:relative;padding:13px 14px;border-radius:13px;font-size:14px;color:#526158}
+nav button.active{background:var(--green-soft);color:var(--green-dark)}
+nav button.active:after{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0;background:var(--green)}
+.nav-icon{font-size:19px}
+.sidebar-bottom{padding:20px 8px 3px}
+.sidebar-mark{border-radius:13px}
+.main-content{max-width:1660px;padding:38px clamp(22px,3.2vw,56px) 54px}
+.page-heading{margin-bottom:28px}
+.eyebrow{font-size:10px;letter-spacing:1.7px}
+.page h1{font-size:clamp(29px,3vw,39px);letter-spacing:-1.5px}
+.page-subtitle{font-size:14px}
+.metric-grid{gap:16px;margin-bottom:22px}
+.metric-card,.panel,.card,.source-detail,.rate-source-card,.winance-market-card,.erub-total,.erub-compare-card,.erub-calculator,.erub-calculator-details,.erub-purchase-section,.withdraw-erub-card{
+  border-radius:var(--radius)!important;border-color:var(--line)!important;box-shadow:var(--shadow)!important
+}
+.metric-card{padding:21px}
+.panel{padding:22px}
+.panel-heading{margin-bottom:17px}
+.panel-heading h2{font-size:16px;letter-spacing:-.35px}
+.quick-actions button{border-radius:13px}
+input,select,textarea{border-radius:11px}
+.btn{border-radius:12px}
+.btn-outline{background:var(--surface);border-color:var(--line);color:var(--green-dark)}
+.withdraw-erub-card{padding:21px!important;gap:13px!important}
+.withdraw-erub-title strong{font-size:16px}
+.withdraw-erub-results>div{border-radius:12px;padding:12px}
+.site-footer{padding:18px 20px;color:var(--muted)}
+.mobile-nav{background:rgba(255,255,255,.94)!important;backdrop-filter:blur(18px);border-color:var(--line)!important}
+.mobile-nav button.active{background:var(--green-soft)!important;color:var(--green-dark)!important}
+@media(min-width:1500px){.main-content{padding-left:58px;padding-right:58px}.metric-grid{gap:18px}}
+@media(max-width:1000px){.layout{grid-template-columns:220px minmax(0,1fr)}.sidebar{padding-left:12px;padding-right:12px}.main-content{padding:28px 22px 42px}.topbar{padding:0 18px}.updated-label,.top-divider{display:none}}
+@media(max-width:760px){
+ .topbar{height:66px;padding:0 13px}.brand-copy strong{font-size:16px}.brand-copy small{font-size:7px;letter-spacing:1.3px}.logo-mark{width:38px;height:38px}.logo-mark svg{width:29px;height:29px}
+ .layout{display:block;min-height:calc(100vh - 66px)}.sidebar{display:none}.main-content{padding:24px 15px 105px}
+ .topbar-right{gap:6px}.theme-toggle{padding:8px 10px}.theme-toggle-label{display:none}.status{font-size:10px}
+ .page-heading{align-items:flex-start;flex-direction:column;gap:12px;margin-bottom:20px}.page h1{font-size:28px}
+ .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric-card{padding:15px}
+ .panel{padding:16px}.mobile-nav{display:flex!important}
+}
+@media(max-width:420px){.brand-copy small{display:none}.brand-copy strong{font-size:14px}.status{display:none}.metric-grid{gap:8px}.main-content{padding-left:11px;padding-right:11px}}
+
+/* Dark mode: all major surfaces, nested data panels and controls share one palette. */
+html[data-theme="dark"]{
+ color-scheme:dark;
+ --bg:#0d1411;--surface:#151f19;--surface-soft:#1a2820;
+ --ink:#e8f1eb;--muted:#9aaba0;--line:#293a30;
+ --green:#35c982;--green-dark:#65dfa0;--green-soft:#193b2a;
+ --red:#ff7b83;--red-soft:#3a2226;
+ --shadow:0 14px 38px rgba(0,0,0,.22);
+}
+html[data-theme="dark"] body,html[data-theme="dark"] .main-content{background:var(--bg)!important;color:var(--ink)!important}
+html[data-theme="dark"] .topbar{background:rgba(17,26,21,.94)!important;border-color:var(--line)!important}
+html[data-theme="dark"] .sidebar{background:#111a15!important;border-color:var(--line)!important}
+html[data-theme="dark"] .brand,html[data-theme="dark"] .brand-copy strong,html[data-theme="dark"] .sidebar-bottom strong{color:var(--ink)!important}
+html[data-theme="dark"] .brand-copy small,html[data-theme="dark"] .nav-caption{color:#819389!important}
+html[data-theme="dark"] nav button{color:#b6c6bb}
+html[data-theme="dark"] nav button:hover{background:#1b2b21;color:var(--green-dark)}
+html[data-theme="dark"] nav button.active{background:#193b2a;color:#70e2a5}
+html[data-theme="dark"] nav button.active:after{background:#35c982}
+html[data-theme="dark"] .nav-icon{color:#91a398}
+html[data-theme="dark"] .sidebar-mark{background:#193b2a;color:#70e2a5}
+html[data-theme="dark"] .metric-card,html[data-theme="dark"] .panel,html[data-theme="dark"] .card,
+html[data-theme="dark"] .source-detail,html[data-theme="dark"] .rate-source-card,
+html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .erub-total,
+html[data-theme="dark"] .erub-compare-card,html[data-theme="dark"] .erub-calculator,
+html[data-theme="dark"] .erub-calculator-details,html[data-theme="dark"] .erub-purchase-section,
+html[data-theme="dark"] .withdraw-erub-card,html[data-theme="dark"] .calculator-panel,
+html[data-theme="dark"] .result-panel,html[data-theme="dark"] .tariff-card{
+ background:var(--surface)!important;color:var(--ink)!important;border-color:var(--line)!important;box-shadow:var(--shadow)!important
+}
+html[data-theme="dark"] .result-panel{background:linear-gradient(145deg,#193326,#15231b)!important}
+html[data-theme="dark"] .withdraw-erub-results>div,html[data-theme="dark"] .bb-summary>div,
+html[data-theme="dark"] .erub-compare-columns>div,html[data-theme="dark"] .erub-calc-result,
+html[data-theme="dark"] .amount-input,html[data-theme="dark"] .tariff-input,
+html[data-theme="dark"] .calculator-panel select,html[data-theme="dark"] .erub-calculator input,
+html[data-theme="dark"] .erub-converter-input input,html[data-theme="dark"] .bb-level-head,
+html[data-theme="dark"] .book-row,html[data-theme="dark"] .ub-mid{
+ background:var(--surface-soft)!important;color:var(--ink)!important;border-color:var(--line)!important
+}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{color:var(--ink)!important;color-scheme:dark}
+html[data-theme="dark"] .amount-input input{background:transparent!important;color:var(--ink)!important}
+html[data-theme="dark"] .muted,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .withdraw-erub-note,
+html[data-theme="dark"] .withdraw-erub-results span,html[data-theme="dark"] .field-label{color:var(--muted)!important}
+html[data-theme="dark"] .theme-toggle,html[data-theme="dark"] .btn-outline,
+html[data-theme="dark"] .quick-actions button,html[data-theme="dark"] .candle-interval,
+html[data-theme="dark"] .live-indicator{background:#1a2820!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme="dark"] .quick-actions button:hover,html[data-theme="dark"] .candle-interval:hover{background:#22372a!important}
+html[data-theme="dark"] .live-pill,html[data-theme="dark"] .minimum.good,
+html[data-theme="dark"] .source-state.live,html[data-theme="dark"] .tariff-status.confirmed{
+ background:#193b2a!important;color:#70e2a5!important
+}
+html[data-theme="dark"] .minimum.bad,html[data-theme="dark"] .source-state.error{background:#3a2226!important;color:#ff9298!important}
+html[data-theme="dark"] .notice,html[data-theme="dark"] .tariff-warning,html[data-theme="dark"] .tariff-locked-note{
+ background:#1d3025!important;border-color:#31513d!important;color:#c1d5c7!important
+}
+html[data-theme="dark"] .notice strong,html[data-theme="dark"] .tariff-warning strong{color:#70e2a5!important}
+html[data-theme="dark"] .mobile-nav{background:rgba(17,26,21,.96)!important;border-color:var(--line)!important}
+html[data-theme="dark"] .mobile-nav button{color:#a9b9ae}
+html[data-theme="dark"] .mobile-nav button.active{background:#193b2a!important;color:#70e2a5!important}
+html[data-theme="dark"] .site-footer{color:#84958a}
+html[data-theme="dark"] .history-table th,html[data-theme="dark"] .history-table td,
+html[data-theme="dark"] .rate-row,html[data-theme="dark"] .source-row,
+html[data-theme="dark"] .panel-heading,html[data-theme="dark"] .calc-breakdown{border-color:var(--line)!important}
+html[data-theme="dark"] .skeleton{background:linear-gradient(90deg,#17221b,#223329,#17221b);background-size:200% 100%}
+html[data-theme="dark"] button:focus-visible,html[data-theme="dark"] a:focus-visible{outline-color:#56d994!important}
