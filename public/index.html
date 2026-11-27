@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#f5f8f6" id="themeColorMeta"><meta name="description" content="CashFlow Ecosystem Monitor — мониторинг, аналитика и калькулятор">
   <title>CashFlow Ecosystem Monitor</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=bb-observer-20261127">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header class="topbar">
@@ -37,7 +37,7 @@
       <section id="rates" class="page"><div class="page-heading"><div><p class="eyebrow">КОТИРОВКИ ИСТОЧНИКОВ</p><h1>Курсы</h1><p class="page-subtitle">Актуальные валютные пары, цены и состояние источников.</p></div></div><div id="ratesSources" class="rates-grid"><div class="panel">Загрузка курсов…</div></div></section>
       <section id="withdraw" class="page">
         <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода USDT</h1><p class="page-subtitle">Отдельные параметры и проверка лимитов BlackBit и Winance.</p></div></div>
-        <div class="notice"><strong>Важно</strong><span>Минимум и торговые комиссии остаются заданными тарифами. Персональный максимум вывода загружается отдельно из API аккаунта каждой площадки; без подтверждённого API максимум не отображается.</span></div>
+        <div class="notice"><strong>Важно</strong><span>Лимиты и торговые комиссии задаются отдельно для каждой площадки. Комиссия вывода единая для BlackBit и Winance: фиксированная и процентная части не меняются между площадками.</span></div>
         <div class="withdraw-layout">
           <div class="panel calculator-panel">
             <div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Параметры расчёта</h2></div></div>
@@ -50,28 +50,58 @@
           </div>
           <div class="panel result-panel"><span class="result-eyebrow">ИТОГОВАЯ СУММА</span><div class="muted">Ориентировочно получите</div><strong id="net" class="net-value">— USDT</strong><div id="fee" class="fee-value">Комиссия: —</div><div id="minimum" class="minimum"></div><div id="resultNote" class="result-footnote">Проверка по параметрам выбранной площадки.</div></div>
         </div>
+        <section class="erub-purchase-section withdrawal-erub-section">
+          <div class="erub-section-heading"><span>ERUB</span><div><h3>Дополнительные расчёты вывода ERUB</h3><p>Новые направления добавлены отдельно. Существующий расчёт BlackBit / Winance и все тарифы сохранены.</p></div></div>
+          <div class="withdraw-erub-grid">
+            <article class="withdraw-erub-card">
+              <div class="withdraw-erub-title"><strong>ERUB → USDT</strong><span class="live-pill">Winance</span></div>
+              <label class="field-label" for="erubUsdtTarget">Сколько USDT нужно получить</label>
+              <div class="amount-input"><input id="erubUsdtTarget" type="number" min="0" step="0.01" value="500"><span>USDT</span></div>
+              <div class="withdraw-erub-results">
+                <div><span>Курс продажи ERUB</span><strong id="erubUsdtRate">Ожидание курса</strong></div>
+                <div><span>ERUB к продаже</span><strong id="erubUsdtNeeded">— ERUB</strong></div>
+                <div><span>Торговая комиссия Winance</span><strong id="erubUsdtTradeFee">0,20%</strong></div>
+                <div><span>Комиссия вывода</span><strong>3 USDT + 1%</strong></div>
+              </div>
+              <p class="withdraw-erub-note" id="erubUsdtStatus">Расчёт появится после получения актуального курса Winance.</p>
+            </article>
+            <article class="withdraw-erub-card">
+              <div class="withdraw-erub-title"><strong>ERUB → RUB · российская карта</strong><span class="live-pill">Комиссия 5%</span></div>
+              <label class="field-label" for="erubRubTarget">Сумма в RUB</label>
+              <div class="amount-input"><input id="erubRubTarget" type="number" min="0" step="0.01" value="10000"><span>RUB</span></div>
+              <label class="withdraw-fee-toggle"><input id="erubRubFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
+              <div class="withdraw-erub-results">
+                <div><span>Курс продажи ERUB</span><strong id="erubRubRate">Ожидание курса</strong></div>
+                <div><span>ERUB к продаже</span><strong id="erubRubNeeded">— ERUB</strong></div>
+                <div><span>Комиссия 5%</span><strong id="erubRubFee">— RUB</strong></div>
+                <div><span>Получите на карту</span><strong id="erubRubNet">— RUB</strong></div>
+              </div>
+              <p class="withdraw-erub-note" id="erubRubStatus">Расчёт появится после получения актуального курса Winance.</p>
+            </article>
+          </div>
+        </section>
         <div class="tariff-section">
           <div class="tariff-section-heading"><div><span class="panel-icon">⇄</span><div><h2>Лимиты и тарифы площадок</h2><p>Индивидуальные ограничения и торговые комиссии</p></div></div><span class="panel-kicker">BLACKBIT · WINANCE</span></div>
           <div class="tariff-grid">
             <article class="panel tariff-card" data-tariff="blackbit">
-              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark blackbit-mark">B</span><div><strong>BlackBit</strong><small>Площадка продажи ECR</small></div></div><span id="bbLimitStatus" class="tariff-status pending">Ожидание API</span></div>
+              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark blackbit-mark">B</span><div><strong>BlackBit</strong><small>Площадка продажи ECR</small></div></div><span class="tariff-status confirmed">Лимит по скриншоту</span></div>
               <div class="tariff-form-grid">
                 <label>Минимум вывода <span>USDT</span><input id="bbMin" type="number" min="0" step="0.000001" value="10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
-                <label>Максимум вывода <span>USDT</span><input id="bbMax" type="text" value="—" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Максимум вывода <span>USDT</span><input id="bbMax" type="number" min="0" step="0.000001" value="502.744987" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
                 <label>Торговая комиссия <span>%</span><input id="bbTrade" type="number" min="0" step="0.001" value="0.10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
                 <label>Сеть вывода<input id="bbNetwork" type="text" value="TRC-20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
               </div>
-              <p class="tariff-note"><span id="bbLimitNote">Персональный максимум появится после подключения API аккаунта. Публичный рыночный API его не раскрывает.</span> Торговая комиссия — ранее заданный тариф CashFlow.</p>
+              <p class="tariff-note">Максимум 502.744987 USDT зафиксирован по скриншоту от 27.11.2026 и может изменяться. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
             <article class="panel tariff-card" data-tariff="winance">
-              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark winance-mark">W</span><div><strong>Winance</strong><small>Площадка обмена ERUB</small></div></div><span id="winLimitStatus" class="tariff-status pending">Ожидание API</span></div>
+              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark winance-mark">W</span><div><strong>Winance</strong><small>Площадка обмена ERUB</small></div></div><span class="tariff-status confirmed">Лимит сообщён</span></div>
               <div class="tariff-form-grid">
                 <label>Минимум вывода <span>USDT</span><input id="winMin" type="number" min="0" step="0.000001" value="10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
-                <label>Максимум вывода <span>USDT</span><input id="winMax" type="text" value="—" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Максимум вывода <span>USDT</span><input id="winMax" type="number" min="0" step="0.000001" value="5000" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
                 <label>Торговая комиссия <span>%</span><input id="winTrade" type="number" min="0" step="0.001" value="0.20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
                 <label>Сеть вывода<input id="winNetwork" type="text" value="TRC-20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
               </div>
-              <p class="tariff-note"><span id="winLimitNote">Персональный максимум появится после подключения API аккаунта. Публичный рыночный API его не раскрывает.</span> Торговая комиссия — ранее заданный тариф CashFlow.</p>
+              <p class="tariff-note">Минимум 10 USDT и максимум 5 000 USDT — по сообщению пользователя. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
           </div>
           <article class="panel shared-fees-card">
@@ -82,7 +112,7 @@
             </div>
             <p class="tariff-note">Текущие общие значения CashFlow: 3 USDT + 1%. Они применяются к выбранной площадке одинаково и не дублируются в её индивидуальных настройках.</p>
           </article>
-          <div class="tariff-locked-note"><span class="lock-icon">🔒</span><span><strong>Настройки зафиксированы</strong><small>Тарифы доступны только для просмотра. Персональные максимумы обновляются автоматически только при подключённом официальном API аккаунта.</small></span></div>
+          <div class="tariff-locked-note"><span class="lock-icon">🔒</span><span><strong>Настройки зафиксированы</strong><small>Лимиты и комиссии доступны только для просмотра. Изменение значений в интерфейсе запрещено.</small></span></div>
           <div class="notice tariff-warning"><strong>Принцип расчёта</strong><span>Торговая комиссия площадки показывается отдельно. Единая комиссия вывода 3 USDT + 1% применяется к введённой сумме. Минимум и максимум проверяются до вычета комиссии.</span></div>
         </div>
       </section>
@@ -93,5 +123,5 @@
   </div>
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button class="active" data-page="dashboard"><span>⌂</span><small>Обзор</small></button><button data-page="rates"><span>↗</span><small>Курсы</small></button><button data-page="withdraw"><span>▦</span><small>Расчёт</small></button><button data-page="erub"><span>⇄</span><small>ERUB</small></button><button data-page="markets"><span>▥</span><small>Рынок</small></button><button data-page="history"><span>◷</span><small>История</small></button></nav>
   <footer class="site-footer">CashFlow Ecosystem Monitor <span>·</span> API-ключи хранятся только на сервере <span>·</span> Данные рынка не являются торговой рекомендацией.</footer>
-  <script type="module" src="./app.js?v=bb-observer-20261127"></script>
+  <script type="module" src="./app.js"></script>
 </body></html>

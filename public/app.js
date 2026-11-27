@@ -482,8 +482,6 @@ function restoreInteractiveState(snapshot){
   }
 }
 
-let currentWithdrawalLimits = { blackbit: null, winance: null };
-let limitReachedNotice = false;
 async function load() {
   if (loadInProgress || document.hidden) return;
   loadInProgress = true;
@@ -491,14 +489,7 @@ async function load() {
   const savedInteractive=captureInteractiveState();
   try {
     const s=await api("/status");
-    try {
-      const withdrawal = await api("/withdrawal-limits");
-      currentWithdrawalLimits = withdrawal.limits || currentWithdrawalLimits;
-      applyWithdrawalLimits();
-    } catch (limitError) {
-      currentWithdrawalLimits = { blackbit: null, winance: null };
-      applyWithdrawalLimits();
-    }
+    window.__cashflowSnapshot=s;
     renderOverview(s);
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
@@ -516,6 +507,7 @@ async function load() {
     });
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
     restoreInteractiveState(savedInteractive);
+    calculateErubWithdrawals(s);
     requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
     $("overall").innerHTML="<i></i>Сервер недоступен"; $("overall").className="status error";
@@ -523,42 +515,72 @@ async function load() {
   } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
+// Дополнительные ERUB-калькуляторы. Они не изменяют существующий расчёт BlackBit/Winance.
+const erubNumber = value => Number(value).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:8});
+function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
+  const win=snapshot?.sources?.winance;
+  const pairs=win?.ok?win.data?.pairs||{}:{};
+  const books=win?.ok?win.data?.orderBooks||{}:{};
+  const sellRate=key=>{
+    const book=books[key];
+    const bid=Number(book?.ok?book.bestBid:NaN);
+    if(bid>0) return {rate:bid,source:"лучшая цена BUY (стакан)"};
+    const fallback=Number(pairs[key]?.rate);
+    return fallback>0?{rate:fallback,source:"последняя цена пары; стакан недоступен"}:null;
+  };
+  const usdt=sellRate("erubUsdt");
+  const rub=sellRate("erubRub");
+  const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+  const target=Math.max(0,Number($("erubUsdtTarget")?.value)||0);
+  if(usdt&&target>0){
+    // Target is net USDT after Winance trading fee 0.2% and withdrawal fee 3 USDT + 1%.
+    const withdrawalFee=3 + target*0.01;
+    const requiredBeforeWithdrawal=target + withdrawalFee;
+    const beforeTrade=requiredBeforeWithdrawal/(1-0.002);
+    put("erubUsdtRate",`${erubNumber(usdt.rate)} USDT / ERUB`);
+    put("erubUsdtNeeded",`${erubNumber(beforeTrade/usdt.rate)} ERUB`);
+    put("erubUsdtStatus",`Оценка по ${usdt.source}. Цель ${erubNumber(target)} USDT после комиссий. Комиссия вывода ${erubNumber(withdrawalFee)} USDT (3 USDT + 1% от номинала), торговая комиссия 0,20%.`);
+  }else{
+    put("erubUsdtRate","Нет актуального курса");put("erubUsdtNeeded","— ERUB");
+    put("erubUsdtStatus","Нет доступной котировки ERUB/USDT на Winance; расчёт не подменяется старым курсом.");
+  }
+  const rubTarget=Math.max(0,Number($("erubRubTarget")?.value)||0);
+  const included=Boolean($("erubRubFeeIncluded")?.checked);
+  if(rub&&rubTarget>0){
+    const fee=rubTarget*0.05;
+    const grossRub=included?rubTarget:rubTarget+fee;
+    const netRub=included?rubTarget-fee:rubTarget;
+    put("erubRubRate",`${erubNumber(rub.rate)} RUB / ERUB`);
+    put("erubRubNeeded",`${erubNumber(grossRub/rub.rate)} ERUB`);
+    put("erubRubFee",`${erubNumber(fee)} RUB`);
+    put("erubRubNet",`${erubNumber(netRub)} RUB`);
+    put("erubRubStatus",included
+      ?`Введённая сумма включает комиссию: из ${erubNumber(rubTarget)} RUB комиссия ${erubNumber(fee)} RUB, на карту поступит ${erubNumber(netRub)} RUB. Курс: ${rub.source}.`
+      :`Введена сумма к получению: ${erubNumber(rubTarget)} RUB. Комиссия ${erubNumber(fee)} RUB добавляется сверху; всего потребуется ${erubNumber(grossRub)} RUB. Курс: ${rub.source}.`);
+  }else{
+    put("erubRubRate","Нет актуального курса");put("erubRubNeeded","— ERUB");
+    put("erubRubFee","— RUB");put("erubRubNet","— RUB");
+    put("erubRubStatus","Нет доступной котировки ERUB/RUB на Winance; расчёт не подменяется старым курсом.");
+  }
+}
+["erubUsdtTarget","erubRubTarget","erubRubFeeIncluded"].forEach(id=>{
+  $(id)?.addEventListener("input",()=>calculateErubWithdrawals());
+  $(id)?.addEventListener("change",()=>calculateErubWithdrawals());
+});
+
 // Зафиксированные тарифы. Пользовательский интерфейс доступен только для просмотра.
 const LOCKED_TARIFFS = {
-  bbMin:10, bbMax:null, bbTrade:0.10, bbNetwork:"TRC-20",
-  winMin:10, winMax:null, winTrade:0.20, winNetwork:"TRC-20",
+  bbMin:10, bbMax:502.744987, bbTrade:0.10, bbNetwork:"TRC-20",
+  winMin:10, winMax:5000, winTrade:0.20, winNetwork:"TRC-20",
   sharedFixed:3, sharedPercent:1
 };
 function applyLockedTariffs(){
   for(const [id,value] of Object.entries(LOCKED_TARIFFS)){
     const el=$(id); if(!el) continue;
-    el.value=value===null?"":String(value);
+    el.value=String(value);
     el.readOnly=true;
     el.setAttribute("aria-readonly","true");
   }
-}
-function applyWithdrawalLimits(){
-  const rows=[
-    ["blackbit","bbMax","bbLimitStatus","bbLimitNote","BlackBit"],
-    ["winance","winMax","winLimitStatus","winLimitNote","Winance"]
-  ];
-  for(const [key,inputId,statusId,noteId,label] of rows){
-    const data=currentWithdrawalLimits?.[key];
-    const input=$(inputId), status=$(statusId), note=$(noteId);
-    const value=data?.ok && Number.isFinite(Number(data.maximum)) ? Number(data.maximum) : null;
-    if(input) input.value=value===null?"—":String(value);
-    if(status){
-      status.textContent=data?.status==="observed"?"Браузер · считано":data?.ok?"API · обновлено":data?.status==="stale"?"Устаревшее значение":"Ожидание данных";
-      status.className=`tariff-status ${data?.ok?"confirmed":data?.status==="stale"?"pending":"pending"}`;
-    }
-    if(note){
-      const time=data?.checkedAt?new Date(data.checkedAt).toLocaleTimeString("ru-RU"):"";
-      note.textContent=value!==null
-        ? `${data?.status==="observed"?"Максимум из уведомления BlackBit":"Максимум из API аккаунта"}: ${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} USDT${time?` · проверено ${time}`:""}.`
-        : `${label}: персональный максимум не получен. Публичные котировки не содержат лимит аккаунта.`;
-    }
-  }
-  calculate();
 }
 function tariffValue(id){const el=$(id); if(!el) return null; if(el.value.trim()==="") return null; const n=Number(el.value); return Number.isFinite(n)?n:null;}
 function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
@@ -577,35 +599,17 @@ function calculate(){
   $("percentFeeLabel").textContent=percent===null?"Не подтверждена":`${percent}%`;
   const m=$("minimum"), problems=[];
   if(min!==null&&gross+1e-9<min) problems.push(`Ниже минимума ${min} USDT`);
-  if(max!==null&&gross>max+1e-9) problems.push(`Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT`);
+  if(max!==null&&gross>max+1e-9) problems.push(`Превышен максимум ${max.toLocaleString("ru-RU")} USDT`);
   if(!feeKnown) problems.push("Нельзя определить сумму на руки без комиссии вывода");
   if(problems.length){m.textContent=problems.join(" · ");m.className="minimum bad";}
   else {m.textContent=`Сумма в пределах лимитов ${platform==="winance"?"Winance":"BlackBit"} · сеть ${network}`;m.className="minimum good";}
   $("resultNote").textContent=`Проверка лимита до комиссии · ${platform==="winance"?"Winance":"BlackBit"} · ${network}`;
-  $("fieldHelp").textContent=limitReachedNotice && max!==null
-    ? `Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT. Дальше увеличить сумму нельзя.`
-    : `Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не получен из API":max.toLocaleString("ru-RU")+" USDT"}.`;
+  $("fieldHelp").textContent=`Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не задан":max.toLocaleString("ru-RU")+" USDT"}.`;
   if(max!==null) $("gross").setAttribute("max",String(max)); else $("gross").removeAttribute("max");
 }
 applyLockedTariffs();
-$("gross")?.addEventListener("input",()=>{
-  const platform=selectedTariff(), prefix=platform==="winance"?"win":"bb";
-  const max=tariffValue(prefix+"Max"), input=$("gross");
-  const entered=Number(input.value);
-  if(max!==null && Number.isFinite(entered) && entered>max){
-    input.value=String(max);
-    limitReachedNotice=true;
-    $("fieldHelp").textContent=`Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT. Увеличить сумму выше лимита нельзя.`;
-    $("fieldHelp").classList.add("limit-warning");
-  } else {
-    limitReachedNotice=false;
-    $("fieldHelp").classList.remove("limit-warning");
-  }
-  calculate();
-  $("fieldHelp").classList.toggle("limit-warning",limitReachedNotice);
-});
-$("withdrawExchange")?.addEventListener("input",()=>{limitReachedNotice=false;calculate();});
-$("withdrawExchange")?.addEventListener("change",()=>{limitReachedNotice=false;calculate();});
+["gross","withdrawExchange"].forEach(id=>$(id)?.addEventListener("input",calculate));
+$("withdrawExchange")?.addEventListener("change",calculate);
 // Render the withdrawal result immediately on first page load, before the user edits anything.
 calculate();
 

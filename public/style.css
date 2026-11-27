@@ -475,47 +475,30 @@ html[data-theme="dark"] .history-table th,html[data-theme="dark"] .history-table
 html[data-theme="dark"] select,html[data-theme="dark"] input,html[data-theme="dark"] textarea{color-scheme:dark}
 @media(max-width:760px){.theme-toggle{min-height:36px;padding:0 9px}.theme-toggle-label{display:none}.topbar-right{gap:7px}}
 
-
-/* Live account withdrawal limit status */
-.tariff-status.pending{color:#8a641b;background:#fff3d8}
-.field-help.limit-warning{color:#b42318;font-weight:800}
-[data-theme="dark"] .tariff-status.pending{color:#f2cf82;background:#47391f}
+/* Additional ERUB withdrawal calculators */
+.withdrawal-erub-section{margin:20px 0}.withdraw-erub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.withdraw-erub-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px;min-width:0}.withdraw-erub-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.withdraw-erub-title strong{font-family:Manrope,sans-serif;font-size:16px}.withdraw-erub-card .amount-input{margin:7px 0 12px}.withdraw-erub-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}.withdraw-erub-results>div{padding:10px;background:var(--surface-soft);border:1px solid var(--line);border-radius:10px;min-width:0}.withdraw-erub-results span,.withdraw-erub-results strong{display:block}.withdraw-erub-results span{font-size:11px;color:var(--muted)}.withdraw-erub-results strong{font-size:14px;margin-top:4px;overflow-wrap:anywhere}.withdraw-erub-note{font-size:11px;color:var(--muted);margin:12px 0 0}.withdraw-fee-toggle{display:flex;align-items:center;gap:9px;margin:8px 0 10px;font-weight:700;cursor:pointer}.withdraw-fee-toggle input{width:17px;height:17px;accent-color:var(--green)}html[data-theme="dark"] .withdraw-erub-card{background:#17231c;border-color:#31513c}html[data-theme="dark"] .withdraw-erub-results>div{background:#111a15;border-color:#35483b}@media(max-width:760px){.withdraw-erub-grid{grid-template-columns:1fr}.withdraw-erub-card{padding:14px}.withdraw-erub-results{grid-template-columns:1fr 1fr}}
 
 
-/* FINAL layout repair: withdrawal tariff cards */
-#withdraw .tariff-section{display:block;width:100%;min-width:0}
-#withdraw .tariff-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:22px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-#withdraw .tariff-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;align-items:stretch}
-#withdraw .tariff-card{display:flex!important;flex-direction:column!important;gap:0!important;min-width:0!important;width:100%!important;padding:22px!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden}
-#withdraw .tariff-title{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;width:100%!important;margin:0 0 16px!important;padding:0 0 14px!important;border-bottom:1px solid var(--line)!important}
-#withdraw .tariff-brand{display:flex!important;align-items:center!important;gap:12px!important;min-width:0}
-#withdraw .tariff-brand>div{display:flex!important;flex-direction:column!important;gap:3px!important}
-#withdraw .tariff-brand strong{font-size:16px!important;line-height:1.25}
-#withdraw .tariff-brand small{font-size:11px!important;color:var(--muted)!important}
-#withdraw .tariff-status{flex:0 0 auto;white-space:nowrap}
-#withdraw .tariff-form-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;width:100%!important;margin:0!important}
-#withdraw .tariff-form-grid label,
-#withdraw .shared-fees-grid label{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;min-width:0!important;margin:0!important;line-height:1.35!important;font-size:12px!important;font-weight:700!important}
-#withdraw .tariff-form-grid label span,
-#withdraw .shared-fees-grid label span{display:block!important;margin:0!important;font-size:10px!important;line-height:1.2!important}
-#withdraw .tariff-form-grid input,
-#withdraw .shared-fees-grid input{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;height:44px!important;margin:0!important;padding:0 12px!important;border:1px solid var(--line)!important;border-radius:10px!important;font-size:14px!important;line-height:normal!important}
-#withdraw .tariff-form-grid input[readonly],
-#withdraw .shared-fees-grid input[readonly]{cursor:default!important;opacity:1!important}
-#withdraw .tariff-note{display:block!important;margin:16px 0 0!important;font-size:11px!important;line-height:1.6!important;overflow-wrap:anywhere}
-#withdraw .shared-fees-card{display:block!important;width:100%!important;margin-top:16px!important;padding:22px!important;border:1px solid var(--line)!important;border-radius:18px!important}
-#withdraw .shared-fees-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important;margin-bottom:16px!important}
-#withdraw .shared-fees-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;max-width:720px!important}
-#withdraw .tariff-locked-note,#withdraw .tariff-warning{margin-top:14px!important}
-@media(max-width:900px){
-  #withdraw .tariff-grid{grid-template-columns:1fr!important}
-}
-@media(max-width:560px){
-  #withdraw .tariff-card,#withdraw .shared-fees-card{padding:16px!important}
-  #withdraw .tariff-title{align-items:flex-start!important}
-  #withdraw .tariff-form-grid,#withdraw .shared-fees-grid{grid-template-columns:1fr!important}
-  #withdraw .tariff-status{font-size:9px!important;white-space:normal!important;text-align:center}
-  #withdraw .tariff-section-heading{align-items:flex-start!important}
-}
-html[data-theme="dark"] #withdraw .tariff-form-grid input[readonly],
-html[data-theme="dark"] #withdraw .shared-fees-grid input[readonly]{background:#111a15!important;color:#e7efe9!important;border-color:#35483b!important}
+/* ERUB withdrawal calculators */
+.withdrawal-erub-section{margin-top:24px}
+.erub-section-heading{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.erub-section-heading>span{display:grid;place-items:center;min-width:52px;height:42px;border-radius:12px;background:rgba(16,185,129,.12);color:var(--green);font-weight:850}
+.erub-section-heading h3{margin:0;font-size:16px;line-height:1.3}
+.erub-section-heading p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.withdraw-erub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.withdraw-erub-card{min-width:0;padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--panel);display:flex;flex-direction:column;gap:14px}
+.withdraw-erub-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.withdraw-erub-title strong{font-size:15px}
+.withdraw-erub-title .live-pill{font-size:10px;font-weight:750;padding:5px 9px;border-radius:999px;background:rgba(16,185,129,.12);color:var(--green)}
+.withdraw-erub-card .field-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:-8px}
+.withdraw-erub-card .amount-input{display:flex;align-items:center;gap:8px;min-width:0}
+.withdraw-erub-card .amount-input input{width:100%;min-width:0;box-sizing:border-box}
+.withdraw-erub-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.withdraw-erub-results>div{min-width:0;padding:11px;border-radius:11px;background:var(--surface,rgba(127,127,127,.07));display:flex;flex-direction:column;gap:6px}
+.withdraw-erub-results span{font-size:10px;line-height:1.35;color:var(--muted)}
+.withdraw-erub-results strong{font-size:13px;line-height:1.35;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.withdraw-erub-note{margin:0;color:var(--muted);font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+.withdraw-fee-toggle{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:650;cursor:pointer}
+.withdraw-fee-toggle input{width:17px;height:17px;accent-color:var(--green)}
+@media(max-width:800px){.withdraw-erub-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.withdraw-erub-card{padding:15px}.withdraw-erub-results{grid-template-columns:1fr 1fr}.erub-section-heading{align-items:flex-start}}
