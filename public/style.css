@@ -860,3 +860,120 @@ html[data-theme="dark"] textarea {
 button:focus-visible, a:focus-visible, input:focus-visible {
   outline-color: var(--green) !important;
 }
+
+
+/* ==========================================================
+   CASHFLOW BRAND SYSTEM — unified colors for ALL UI sections
+   Light: porcelain / graphite / signal red
+   Dark: deep graphite / steel / soft signal red
+   ========================================================== */
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef0f3 !important;
+  --surface: #ffffff !important;
+  --surface-soft: #f5f6f8 !important;
+  --ink: #202630 !important;
+  --muted: #687381 !important;
+  --line: #dce1e7 !important;
+  --green: #c93642 !important;
+  --green-dark: #ad2935 !important;
+  --green-soft: #fbeaec !important;
+  --accent: #c93642 !important;
+  --accent-strong: #ad2935 !important;
+  --accent-soft: #fbeaec !important;
+  --red: #c93642 !important;
+  --red-soft: #fbeaec !important;
+  --shadow: 0 8px 26px rgba(27,35,46,.07) !important;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b !important;
+  --surface: #1b222c !important;
+  --surface-soft: #242d38 !important;
+  --ink: #edf1f5 !important;
+  --muted: #a6b0bd !important;
+  --line: #303b49 !important;
+  --green: #ed737b !important;
+  --green-dark: #ff9299 !important;
+  --green-soft: #40272e !important;
+  --accent: #ed737b !important;
+  --accent-strong: #ff9299 !important;
+  --accent-soft: #40272e !important;
+  --red: #ff8189 !important;
+  --red-soft: #40272e !important;
+  --shadow: 0 12px 34px rgba(0,0,0,.25) !important;
+}
+html, body { background: var(--bg) !important; color: var(--ink) !important; }
+body { color-scheme: inherit; }
+body :is(h1,h2,h3,h4,h5,h6,p,span,label,small,strong,b,em,li,dt,dd,th,td,caption,legend,summary,figcaption) {
+  color: inherit;
+}
+body :is(.muted,.subtle,.description,.subtitle,.hint,.help-text,.field-hint,.panel-subtitle,.metric-label,.source-meta,.timestamp,.empty-state,.brand-copy small,.nav-section-title) {
+  color: var(--muted) !important;
+}
+body :is(.topbar,.sidebar,.mobile-nav,.panel,.metric-card,.card,.source-detail,.rate-source-card,.winance-market-card,.withdraw-erub-card,.erub-total,.erub-compare-card,.erub-purchase-section,.calculator-panel,.tariff-card,.shared-fees-card,.site-footer,.modal,.popover,.dropdown-menu) {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body :is(.panel-heading,.section-heading,.tariff-section-heading,.shared-fees-heading,.history-table thead,.table-head,.book-header,.bb-level-head) {
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body :is(input,select,textarea,.amount-input,.erub-converter-input,.tariff-input,.calculator-panel input,.calculator-panel select) {
+  background: var(--surface-soft) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body input::placeholder, body textarea::placeholder { color: var(--muted) !important; opacity: .82; }
+body :is(button,.btn,.btn-outline,.theme-toggle,.quick-actions button,.candle-interval,.live-indicator) {
+  border-color: var(--line);
+}
+body :is(.btn-primary,.quick-actions .quick-primary,.primary-button,.submit-button) {
+  background: linear-gradient(135deg,#ad2935,#df515d) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+body :is(.btn-primary,.quick-actions .quick-primary,.primary-button,.submit-button) * { color: #fff !important; }
+body :is(nav button.active,.mobile-nav button.active,.tab.active,.segmented-control button.active) {
+  background: var(--green-soft) !important;
+  color: var(--green-dark) !important;
+}
+body :is(nav button,.mobile-nav button,.tab,.segmented-control button) { color: var(--muted); }
+body a { color: var(--green-dark); }
+body a:hover { color: var(--green); }
+body :is(.logo-mark,.brand-mark) { background: linear-gradient(145deg,#df5963,#a92330) !important; }
+body :is(.metric-icon,.panel-icon,.sidebar-mark,.live-pill,.source-state,.minimum.good,.shared-lock,.tariff-status.confirmed) {
+  background: var(--green-soft) !important;
+  color: var(--green-dark) !important;
+}
+body :is(.result-panel,.erub-calc-result,.withdraw-erub-results>div,.bb-summary>div,.erub-compare-columns>div,.ub-mid,.book-row,.erub-converter-line) {
+  background: var(--surface-soft) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body :is(.notice,.tariff-warning,.tariff-locked-note,.erub-bounty-banner,.erub-verdict.better) {
+  background: var(--green-soft) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body :is(.notice strong,.tariff-warning strong,.tariff-locked-note strong,.erub-verdict.better strong) {
+  color: var(--green-dark) !important;
+}
+body :is(.minimum.bad,.source-state.error,.status.error,.error-message,.validation-error) {
+  background: var(--red-soft);
+  color: var(--red) !important;
+}
+body :is(.status.ok,.status.success,.positive,.profit,.text-success) { color: #168653 !important; }
+body :is(.negative,.loss,.text-danger) { color: #c93642 !important; }
+html[data-theme="dark"] body :is(.status.ok,.status.success,.positive,.profit,.text-success) { color: #69d6a0 !important; }
+html[data-theme="dark"] body :is(.negative,.loss,.text-danger) { color: #ff9299 !important; }
+body :is(.history-table th,.history-table td,.rate-row,.source-row,.table-row,.divider) { border-color: var(--line) !important; }
+html[data-theme="dark"] body :is(.topbar,.sidebar,.mobile-nav) { background: var(--surface) !important; }
+html[data-theme="dark"] body :is(.result-panel,.shared-fees-card,.tariff-card) { background: var(--surface-soft) !important; }
+html[data-theme="dark"] body :is(.theme-toggle,.btn-outline,.quick-actions button,.candle-interval,.live-indicator) {
+  background: var(--surface-soft) !important; color: var(--ink) !important; border-color: var(--line) !important;
+}
+html[data-theme="dark"] body :is(input,select,textarea) { color-scheme: dark; }
+body :focus-visible { outline-color: var(--green) !important; }

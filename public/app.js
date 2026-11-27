@@ -534,29 +534,38 @@ function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
     put("blackbitEcrRate",bid>0?`${erubNumber(bid)} USDT / ECR`:"Нет актуального курса");
     put("blackbitEcrNeeded","— ECR"); put("blackbitEcrTradeFee","— USDT");
     put("blackbitEcrWithdrawalFee","— USDT"); put("blackbitWinanceTradeFee","— USDT");
-    put("blackbitEcrNet","— USDT");
-    put("blackbitEcrStatus",bid>0?"Введите целевую сумму USDT после всех комиссий.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
+    put("blackbitWinanceWithdrawalFee","— USDT"); put("blackbitEcrNet","— USDT");
+    put("blackbitEcrStatus",bid>0?"Введите желаемую сумму после вывода Winance.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
     return;
   }
-  const bbTradeRate=0.001, bbWithdrawFixed=3, bbWithdrawRate=0.01, winTradeRate=0.002;
-  // Важно: 1% считается от целевой суммы. При цели 500 USDT выводная комиссия = 3 + 5 = 8 USDT.
-  const bbWithdrawalFee=bbWithdrawFixed+target*bbWithdrawRate;
-  const winanceTradeFee=target*winTradeRate;
-  const bbTransferAmount=target+winanceTradeFee;
-  const bbNetRequired=bbTransferAmount+bbWithdrawalFee;
-  const bbGrossSale=bbNetRequired/(1-bbTradeRate);
+  const bbTradeRate=0.001;
+  const winanceTradeRate=0.002;
+  const winanceWithdrawFixed=3;
+  const winanceWithdrawRate=0.01;
+  // Цель — сумма после вывода с Winance. Комиссия вывода:
+  // 3 USDT + 1% от целевой суммы. Для 500 USDT это 8 USDT,
+  // значит на Winance требуется 508 USDT до вывода.
+  const winanceWithdrawalFee=winanceWithdrawFixed+target*winanceWithdrawRate;
+  const amountNeededOnWinance=target+winanceWithdrawalFee;
+  // Торговая комиссия Winance 0,2% показывается отдельно и учитывается
+  // в ERUB→USDT калькуляторе; она не добавляется второй раз к маршруту USDT.
+  const winanceTradeFee=amountNeededOnWinance*winanceTradeRate;
+  // На BlackBit продаём ровно сумму, нужную для перевода на Winance,
+  // с учётом только комиссии торгового ордера BlackBit 0,1%.
+  const bbGrossSale=amountNeededOnWinance/(1-bbTradeRate);
   const bbTradeFee=bbGrossSale*bbTradeRate;
   const ecrToSell=bbGrossSale/bid;
   const min=10, max=502.744987, warnings=[];
-  if(bbTransferAmount+1e-9<min)warnings.push(`сумма перевода на Winance ниже минимума ${min} USDT`);
-  if(bbTransferAmount>max+1e-9)warnings.push(`превышен зафиксированный максимум вывода ${erubNumber(max)} USDT`);
+  if(amountNeededOnWinance+1e-9<min)warnings.push(`сумма ниже минимума ${min} USDT`);
+  if(amountNeededOnWinance>max+1e-9)warnings.push(`превышен зафиксированный максимум вывода ${erubNumber(max)} USDT`);
   put("blackbitEcrRate",`${erubNumber(bid)} USDT / ECR`);
   put("blackbitEcrNeeded",`${erubNumber(ecrToSell)} ECR`);
   put("blackbitEcrTradeFee",`${erubNumber(bbTradeFee)} USDT`);
-  put("blackbitEcrWithdrawalFee",`${erubNumber(bbWithdrawalFee)} USDT`);
-  put("blackbitWinanceTradeFee",`${erubNumber(winanceTradeFee)} USDT`);
+  put("blackbitEcrWithdrawalFee","— USDT");
+  put("blackbitWinanceTradeFee",`${erubNumber(winanceTradeFee)} USDT (0,20%; справочно)`);
+  put("blackbitWinanceWithdrawalFee",`${erubNumber(winanceWithdrawalFee)} USDT`);
   put("blackbitEcrNet",`${erubNumber(target)} USDT`);
-  put("blackbitEcrStatus",`Для цели ${erubNumber(target)} USDT: комиссия вывода BlackBit — 3 USDT + 1% от цели (${erubNumber(bbWithdrawalFee)} USDT); комиссия ордера Winance 0,2% (${erubNumber(winanceTradeFee)} USDT) учитывается отдельно. На Winance переводится ${erubNumber(bbTransferAmount)} USDT. С учётом торговой комиссии BlackBit 0,1% нужно продать примерно ${erubNumber(ecrToSell)} ECR.${warnings.length?` Проверка лимита вывода BlackBit: ${warnings.join("; ")}.`:" Лимит вывода BlackBit соблюдён."}`);
+  put("blackbitEcrStatus",`Цель после вывода Winance: ${erubNumber(target)} USDT. Комиссия вывода Winance: 3 USDT + 1% от цели = ${erubNumber(winanceWithdrawalFee)} USDT. На Winance нужно получить ${erubNumber(amountNeededOnWinance)} USDT. На BlackBit нужно продать на ${erubNumber(bbGrossSale)} USDT с учётом торговой комиссии BlackBit 0,1%; потребуется ${erubNumber(ecrToSell)} ECR. Торговая комиссия Winance 0,2% (${erubNumber(winanceTradeFee)} USDT) отображается отдельно и не добавляется повторно к USDT-маршруту.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит проверен."}`);
 }
 ["blackbitEcrTarget"].forEach(id=>{
   $(id)?.addEventListener("input",()=>calculateBlackBitEcr());

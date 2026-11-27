@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cashflow-app-logo-20261128';
+const CACHE_NAME = 'cashflow-winance-withdrawal-added-20261128';
 const APP_SHELL = [
   '/',
   '/index.html',
