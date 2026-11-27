@@ -52,3 +52,9 @@ Open `http://localhost:8080`.
 - Winance: 5 000 USDT (значение сообщено пользователем).
 
 Калькулятор предупреждает о превышении зафиксированного максимума BlackBit. Значения не являются автоматической онлайн-синхронизацией с личными кабинетами и должны обновляться после повторной проверки формы вывода. Комиссии сетей Winance не считаются подтверждёнными.
+
+### Withdrawal settings update
+- BlackBit and Winance now have separate minimum/maximum withdrawal limits, trading fees, and network fields.
+- Withdrawal fees are configured once in shared settings and apply identically to both platforms (default: 3 USDT + 1%).
+- Existing saved tariff settings are migrated from the previous duplicated fee fields where possible.
+- The withdrawal settings layout is responsive for desktop, tablet, and mobile.

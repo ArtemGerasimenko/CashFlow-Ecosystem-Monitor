@@ -485,16 +485,17 @@ async function load() {
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
 const TARIFF_FIELDS = {
-  blackbit:["bbMin","bbMax","bbTrade","bbFixed","bbPercent","bbNetwork"],
-  winance:["winMin","winMax","winTrade","winFixed","winPercent","winNetwork"]
+  blackbit:["bbMin","bbMax","bbTrade","bbNetwork"],
+  winance:["winMin","winMax","winTrade","winNetwork"]
 };
+const SHARED_FEE_FIELDS = ["sharedFixed","sharedPercent"];
 function tariffValue(id){const el=$(id); if(!el) return null; if(el.value.trim()==="") return null; const n=Number(el.value); return Number.isFinite(n)?n:null;}
 function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
 function calculate(){
   const platform=selectedTariff(), prefix=platform==="winance"?"win":"bb";
   const gross=Math.max(0,Number($("gross")?.value)||0);
   const min=tariffValue(prefix+"Min"), max=tariffValue(prefix+"Max");
-  const fixed=tariffValue(prefix+"Fixed"), percent=tariffValue(prefix+"Percent");
+  const fixed=tariffValue("sharedFixed"), percent=tariffValue("sharedPercent");
   const network=$(prefix+"Network")?.value?.trim()||"не указана";
   const feeKnown=fixed!==null&&percent!==null;
   const net=feeKnown?Math.max(0,(gross-fixed)/(1+percent/100)):null;
@@ -516,16 +517,22 @@ function calculate(){
 function loadTariffs(){
   try{const saved=JSON.parse(localStorage.getItem("cashflow-withdrawal-tariffs")||"{}");
     for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) if(saved[id]!==undefined&&$(id)) $(id).value=saved[id];
+    // Migrate the previous duplicated fee settings into one shared commission.
+    if(saved.sharedFixed!==undefined) $("sharedFixed").value=saved.sharedFixed;
+    else if(saved.bbFixed!==undefined) $("sharedFixed").value=saved.bbFixed;
+    if(saved.sharedPercent!==undefined) $("sharedPercent").value=saved.sharedPercent;
+    else if(saved.bbPercent!==undefined) $("sharedPercent").value=saved.bbPercent;
   }catch(_){}
 }
 function saveTariffs(){
   const data={}; for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) data[id]=$(id)?.value??"";
+  for(const id of SHARED_FEE_FIELDS) data[id]=$(id)?.value??"";
   try{localStorage.setItem("cashflow-withdrawal-tariffs",JSON.stringify(data));$("tariffSaveStatus").textContent="Настройки сохранены в этом браузере.";}
   catch(_){$("tariffSaveStatus").textContent="Не удалось сохранить настройки браузера.";}
   calculate();
 }
 loadTariffs();
-["gross","withdrawExchange",...Object.values(TARIFF_FIELDS).flat()].forEach(id=>$(id)?.addEventListener("input",calculate));
+["gross","withdrawExchange",...Object.values(TARIFF_FIELDS).flat(),...SHARED_FEE_FIELDS].forEach(id=>$(id)?.addEventListener("input",calculate));
 $("withdrawExchange")?.addEventListener("change",calculate);
 $("saveTariffs")?.addEventListener("click",saveTariffs);
 calculate();

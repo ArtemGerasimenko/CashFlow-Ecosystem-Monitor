@@ -346,3 +346,38 @@ td,th { overflow-wrap:anywhere; }
 .calculator-panel .tariff-input{margin:0 0 14px}
 #resultNote{margin-top:8px}
 @media(max-width:760px){.tariff-form-grid{grid-template-columns:1fr}.tariff-actions{align-items:stretch;flex-direction:column}.tariff-actions .primary-button{width:100%}}
+
+/* Refined withdrawal settings: shared payout fee + independent exchange limits */
+.tariff-section{margin-top:26px}
+.tariff-section-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 15px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.tariff-section-heading>div,.shared-fees-heading>div{display:flex;align-items:center;gap:11px;min-width:0}
+.tariff-section-heading h2,.shared-fees-heading h3{margin:0;font:800 17px Manrope,sans-serif}
+.tariff-section-heading p,.shared-fees-heading p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.tariff-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.tariff-card{padding:22px;min-width:0}
+.tariff-title{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 17px;margin:0 0 16px;border-bottom:1px solid var(--line)}
+.tariff-brand{display:flex;align-items:center;gap:12px;min-width:0}
+.tariff-brand>div{display:grid;gap:2px}.tariff-brand strong{font:800 18px Manrope,sans-serif}.tariff-brand small{color:var(--muted);font-size:11px}
+.exchange-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;color:white;font-weight:900;font-size:19px;flex:0 0 auto}
+.blackbit-mark{background:#202522}.winance-mark{background:#078747}
+.tariff-status{font-size:10px;font-weight:800;padding:6px 9px;border-radius:999px;white-space:nowrap}
+.tariff-status.confirmed{color:#087443;background:#e5f6ec}
+.tariff-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.tariff-form-grid label,.shared-fees-grid label{display:flex;flex-direction:column;gap:7px;color:#536158;font-size:12px;font-weight:700;min-width:0}
+.tariff-form-grid label span,.shared-fees-grid label span{color:#89968e;font-size:10px;font-weight:600}
+.tariff-form-grid input,.shared-fees-grid input{width:100%;min-width:0;height:43px;border:1px solid #dfe9e2;border-radius:10px;background:#fbfdfb;color:var(--ink);padding:0 12px;font:700 14px Manrope,sans-serif;outline:none;transition:border-color .15s,box-shadow .15s}
+.tariff-form-grid input:focus,.shared-fees-grid input:focus{border-color:var(--green);box-shadow:0 0 0 3px #16865318;background:white}
+.tariff-note{font-size:11px;line-height:1.6;color:var(--muted);margin:15px 0 0}
+.shared-fees-card{margin-top:16px;padding:21px 22px;background:linear-gradient(135deg,#fff 0%,#f5fbf7 100%)}
+.shared-fees-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+.shared-fees-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:var(--green-soft);color:var(--green);font-size:22px;font-weight:800}
+.shared-lock{font-size:10px;letter-spacing:.8px;color:var(--green-dark);font-weight:900;background:#e6f6ed;padding:7px 10px;border-radius:999px;white-space:nowrap}
+.shared-fees-grid{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:14px;margin-top:16px}
+.tariff-actions{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin:17px 0}
+.tariff-actions .primary-button{border:0;border-radius:11px;background:linear-gradient(135deg,#0a9b56,#06763f);color:#fff;padding:12px 20px;font-weight:800;cursor:pointer;box-shadow:0 5px 13px #07874725;min-height:44px}
+.tariff-actions .primary-button:hover{filter:brightness(.97);transform:translateY(-1px)}
+.calculator-panel .tariff-input{height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;width:100%;margin:0 0 14px;color:var(--ink)}
+.calculator-panel .field-label{display:block;margin:13px 0 7px}
+@media(max-width:900px){.tariff-grid{grid-template-columns:1fr}.tariff-card{padding:19px}}
+@media(max-width:600px){.tariff-section-heading{align-items:flex-start}.tariff-section-heading .panel-kicker{display:none}.tariff-card,.shared-fees-card{padding:16px}.tariff-title{align-items:flex-start;flex-direction:column}.tariff-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.shared-fees-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shared-fees-heading{align-items:flex-start;flex-direction:column}.shared-lock{align-self:flex-start}.tariff-actions{align-items:stretch;flex-direction:column}.tariff-actions .primary-button{width:100%}}
+@media(max-width:380px){.tariff-form-grid,.shared-fees-grid{grid-template-columns:1fr}}

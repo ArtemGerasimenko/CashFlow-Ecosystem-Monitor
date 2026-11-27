@@ -37,7 +37,7 @@
       <section id="rates" class="page"><div class="page-heading"><div><p class="eyebrow">КОТИРОВКИ ИСТОЧНИКОВ</p><h1>Курсы</h1><p class="page-subtitle">Актуальные валютные пары, цены и состояние источников.</p></div></div><div id="ratesSources" class="rates-grid"><div class="panel">Загрузка курсов…</div></div></section>
       <section id="withdraw" class="page">
         <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода USDT</h1><p class="page-subtitle">Отдельные параметры и проверка лимитов BlackBit и Winance.</p></div></div>
-        <div class="notice"><strong>Важно</strong><span>Лимиты и комиссии задаются отдельно для каждой площадки. Неизвестные комиссии оставлены пустыми и не участвуют в расчёте до подтверждения.</span></div>
+        <div class="notice"><strong>Важно</strong><span>Лимиты и торговые комиссии задаются отдельно для каждой площадки. Комиссия вывода единая для BlackBit и Winance: фиксированная и процентная части не меняются между площадками.</span></div>
         <div class="withdraw-layout">
           <div class="panel calculator-panel">
             <div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Параметры расчёта</h2></div></div>
@@ -51,33 +51,39 @@
           <div class="panel result-panel"><span class="result-eyebrow">ИТОГОВАЯ СУММА</span><div class="muted">Ориентировочно получите</div><strong id="net" class="net-value">— USDT</strong><div id="fee" class="fee-value">Комиссия: —</div><div id="minimum" class="minimum"></div><div id="resultNote" class="result-footnote">Проверка по параметрам выбранной площадки.</div></div>
         </div>
         <div class="tariff-section">
-          <div class="panel-heading"><div><span class="panel-icon">⇄</span><h2>Настройки лимитов и комиссий</h2></div><span class="panel-kicker">РЕДАКТИРУЕМЫЕ ПОЛЯ</span></div>
+          <div class="tariff-section-heading"><div><span class="panel-icon">⇄</span><div><h2>Лимиты и тарифы площадок</h2><p>Индивидуальные ограничения и торговые комиссии</p></div></div><span class="panel-kicker">BLACKBIT · WINANCE</span></div>
           <div class="tariff-grid">
-            <article class="panel tariff-card" data-tariff="blackbit"><div class="tariff-title"><strong>BlackBit</strong><span class="source-state live">Данные по скриншоту и тарифу CashFlow</span></div>
+            <article class="panel tariff-card" data-tariff="blackbit">
+              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark blackbit-mark">B</span><div><strong>BlackBit</strong><small>Площадка продажи ECR</small></div></div><span class="tariff-status confirmed">Лимит по скриншоту</span></div>
               <div class="tariff-form-grid">
-                <label>Минимум вывода (USDT)<input id="bbMin" type="number" min="0" step="0.000001" value="10"></label>
-                <label>Максимум вывода (USDT)<input id="bbMax" type="number" min="0" step="0.000001" value="502.744987"></label>
-                <label>Торговая комиссия (%)<input id="bbTrade" type="number" min="0" step="0.001" value="0.10"></label>
-                <label>Фикс. комиссия вывода (USDT)<input id="bbFixed" type="number" min="0" step="0.01" value="3"></label>
-                <label>Комиссия вывода (%)<input id="bbPercent" type="number" min="0" step="0.01" value="1"></label>
+                <label>Минимум вывода <span>USDT</span><input id="bbMin" type="number" min="0" step="0.000001" value="10"></label>
+                <label>Максимум вывода <span>USDT</span><input id="bbMax" type="number" min="0" step="0.000001" value="502.744987"></label>
+                <label>Торговая комиссия <span>%</span><input id="bbTrade" type="number" min="0" step="0.001" value="0.10"></label>
                 <label>Сеть вывода<input id="bbNetwork" type="text" value="TRC-20"></label>
               </div>
-              <p class="tariff-note">Максимум 502.744987 USDT — значение с твоего скриншота от 27.11.2026, оно может меняться. Комиссии 3 USDT + 1% и торговая 0,10% — ранее заданные параметры CashFlow.</p>
+              <p class="tariff-note">Максимум 502.744987 USDT зафиксирован по скриншоту от 27.11.2026 и может изменяться. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
-            <article class="panel tariff-card" data-tariff="winance"><div class="tariff-title"><strong>Winance</strong><span class="source-state pending">Часть параметров не подтверждена</span></div>
+            <article class="panel tariff-card" data-tariff="winance">
+              <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark winance-mark">W</span><div><strong>Winance</strong><small>Площадка обмена ERUB</small></div></div><span class="tariff-status confirmed">Лимит сообщён</span></div>
               <div class="tariff-form-grid">
-                <label>Минимум вывода (USDT)<input id="winMin" type="number" min="0" step="0.000001" value="10"></label>
-                <label>Максимум вывода (USDT)<input id="winMax" type="number" min="0" step="0.000001" value="5000"></label>
-                <label>Торговая комиссия (%)<input id="winTrade" type="number" min="0" step="0.001" value="0.20"></label>
-                <label>Фикс. комиссия вывода (USDT)<input id="winFixed" type="number" min="0" step="0.01" placeholder="Не подтверждена"></label>
-                <label>Комиссия вывода (%)<input id="winPercent" type="number" min="0" step="0.01" placeholder="Не подтверждена"></label>
+                <label>Минимум вывода <span>USDT</span><input id="winMin" type="number" min="0" step="0.000001" value="10"></label>
+                <label>Максимум вывода <span>USDT</span><input id="winMax" type="number" min="0" step="0.000001" value="5000"></label>
+                <label>Торговая комиссия <span>%</span><input id="winTrade" type="number" min="0" step="0.001" value="0.20"></label>
                 <label>Сеть вывода<input id="winNetwork" type="text" value="TRC-20"></label>
               </div>
-              <p class="tariff-note">Максимум 5 000 USDT и минимум 10 USDT — по твоему сообщению. Торговая комиссия 0,20% — ранее указанное значение. Комиссия вывода не подтверждена и оставлена пустой.</p>
+              <p class="tariff-note">Минимум 10 USDT и максимум 5 000 USDT — по сообщению пользователя. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
           </div>
+          <article class="panel shared-fees-card">
+            <div class="shared-fees-heading"><div><span class="shared-fees-icon">⊕</span><div><h3>Единая комиссия вывода</h3><p>Одинакова для BlackBit и Winance — задаётся один раз</p></div></div><span class="shared-lock">ОБЩИЕ УСЛОВИЯ</span></div>
+            <div class="shared-fees-grid">
+              <label>Фиксированная комиссия <span>USDT</span><input id="sharedFixed" type="number" min="0" step="0.01" value="3"></label>
+              <label>Процентная комиссия <span>%</span><input id="sharedPercent" type="number" min="0" step="0.01" value="1"></label>
+            </div>
+            <p class="tariff-note">Текущие общие значения CashFlow: 3 USDT + 1%. Они применяются к выбранной площадке одинаково и не дублируются в её индивидуальных настройках.</p>
+          </article>
           <div class="tariff-actions"><button id="saveTariffs" class="primary-button" type="button">Сохранить настройки</button><span id="tariffSaveStatus" class="muted" aria-live="polite">Изменения сохраняются в этом браузере.</span></div>
-          <div class="notice tariff-warning"><strong>Как рассчитывается сумма</strong><span>Торговая комиссия показывается отдельно и не вычитается повторно из введённой суммы, если сумма уже получена после продажи. Для Winance чистая сумма не рассчитывается до заполнения подтверждённых комиссий вывода.</span></div>
+          <div class="notice tariff-warning"><strong>Принцип расчёта</strong><span>Торговая комиссия площадки показывается отдельно. Единая комиссия вывода 3 USDT + 1% применяется к введённой сумме. Минимум и максимум проверяются до вычета комиссии.</span></div>
         </div>
       </section>
       <section id="erub" class="page"><div class="page-heading"><div><p class="eyebrow">СРАВНИТЕЛЬНАЯ АНАЛИТИКА</p><h1>Сравнение ERUB</h1><p class="page-subtitle">Сопоставление курсов eRub.site и Winance с учётом Bounty.</p></div></div><div id="erubData" class="erub-dashboard">Загрузка курсов eRub…</div></section>
