@@ -334,3 +334,15 @@ td,th { overflow-wrap:anywhere; }
 /* Exchange withdrawal limits and fee matrix */
 .tariff-section{margin-top:24px}.tariff-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tariff-card{padding:20px;min-width:0}.tariff-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:13px;border-bottom:1px solid var(--line);margin-bottom:7px}.tariff-title strong{font-family:Manrope,sans-serif;font-size:19px}.tariff-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #eff3f0;font-size:12px}.tariff-row span{color:var(--muted)}.tariff-row b{text-align:right;font-variant-numeric:tabular-nums}.tariff-row .unknown{color:#a36b18}.tariff-note{font-size:11px;line-height:1.55;color:var(--muted);margin:13px 0 0}.tariff-warning{margin-top:14px}.tariff-warning strong{color:#8b641e}.tariff-warning{background:#fff9ed;border-color:#f0dfb8;color:#725b32}
 @media(max-width:760px){.tariff-grid{grid-template-columns:1fr}.tariff-card{padding:16px}.tariff-title{align-items:flex-start;flex-direction:column}.tariff-row{font-size:11px}.tariff-row b{max-width:52%;overflow-wrap:anywhere}}
+
+/* Editable, independent withdrawal tariff settings */
+.tariff-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:16px}
+.tariff-form-grid label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:650;min-width:0}
+.tariff-form-grid input,.tariff-input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:11px 12px;font:600 14px Manrope, sans-serif;outline:none}
+.tariff-form-grid input:focus,.tariff-input:focus{border-color:var(--green);box-shadow:0 0 0 3px #16865318}
+.tariff-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0}
+.tariff-actions .primary-button{border:0;border-radius:10px;background:var(--accent);color:#fff;padding:12px 18px;font-weight:700;cursor:pointer}
+.tariff-actions .primary-button:hover{filter:brightness(.96)}
+.calculator-panel .tariff-input{margin:0 0 14px}
+#resultNote{margin-top:8px}
+@media(max-width:760px){.tariff-form-grid{grid-template-columns:1fr}.tariff-actions{align-items:stretch;flex-direction:column}.tariff-actions .primary-button{width:100%}}

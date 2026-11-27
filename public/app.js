@@ -484,17 +484,51 @@ async function load() {
   } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
-const WITHDRAWAL_LIMITS = { blackbitUsdtMax: 502.744987, winanceUsdtMax: 5000 };
+const TARIFF_FIELDS = {
+  blackbit:["bbMin","bbMax","bbTrade","bbFixed","bbPercent","bbNetwork"],
+  winance:["winMin","winMax","winTrade","winFixed","winPercent","winNetwork"]
+};
+function tariffValue(id){const el=$(id); if(!el) return null; if(el.value.trim()==="") return null; const n=Number(el.value); return Number.isFinite(n)?n:null;}
+function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
 function calculate(){
-  const input=$("gross"), gross=Math.max(0,Number(input.value)||0), net=Math.max(0,(gross-3)/1.01), fee=gross-net;
-  $("net").textContent=`${net.toFixed(2)} USDT`; $("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;
-  const m=$("minimum"), minOk=gross+1e-9>=10, maxOk=gross<=WITHDRAWAL_LIMITS.blackbitUsdtMax+1e-9;
-  if(!maxOk){m.textContent=`Превышен последний зафиксированный максимум BlackBit: ${WITHDRAWAL_LIMITS.blackbitUsdtMax.toFixed(6)} USDT`;m.className="minimum bad";}
-  else if(!minOk){m.textContent="Минимум 10 USDT до комиссии не достигнут";m.className="minimum bad";}
-  else {m.textContent="Сумма в пределах зафиксированного лимита BlackBit; минимум 10 USDT достигнут";m.className="minimum good";}
-  input.setAttribute("aria-valuemax",String(WITHDRAWAL_LIMITS.blackbitUsdtMax));
+  const platform=selectedTariff(), prefix=platform==="winance"?"win":"bb";
+  const gross=Math.max(0,Number($("gross")?.value)||0);
+  const min=tariffValue(prefix+"Min"), max=tariffValue(prefix+"Max");
+  const fixed=tariffValue(prefix+"Fixed"), percent=tariffValue(prefix+"Percent");
+  const network=$(prefix+"Network")?.value?.trim()||"не указана";
+  const feeKnown=fixed!==null&&percent!==null;
+  const net=feeKnown?Math.max(0,(gross-fixed)/(1+percent/100)):null;
+  const fee=net===null?null:gross-net;
+  $("net").textContent=net===null?"Не рассчитано":`${net.toFixed(2)} USDT`;
+  $("fee").textContent=fee===null?"Комиссия вывода не подтверждена":`Комиссия: ${fee.toFixed(2)} USDT`;
+  $("fixedFeeLabel").textContent=fixed===null?"Не подтверждена":`${fixed.toFixed(2)} USDT`;
+  $("percentFeeLabel").textContent=percent===null?"Не подтверждена":`${percent}%`;
+  const m=$("minimum"), problems=[];
+  if(min!==null&&gross+1e-9<min) problems.push(`Ниже минимума ${min} USDT`);
+  if(max!==null&&gross>max+1e-9) problems.push(`Превышен максимум ${max.toLocaleString("ru-RU")} USDT`);
+  if(!feeKnown) problems.push("Нельзя определить сумму на руки без комиссии вывода");
+  if(problems.length){m.textContent=problems.join(" · ");m.className="minimum bad";}
+  else {m.textContent=`Сумма в пределах лимитов ${platform==="winance"?"Winance":"BlackBit"} · сеть ${network}`;m.className="minimum good";}
+  $("resultNote").textContent=`Проверка лимита до комиссии · ${platform==="winance"?"Winance":"BlackBit"} · ${network}`;
+  $("fieldHelp").textContent=`Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не задан":max.toLocaleString("ru-RU")+" USDT"}.`;
+  if(max!==null) $("gross").setAttribute("max",String(max)); else $("gross").removeAttribute("max");
 }
-$("gross").addEventListener("input",calculate); calculate();
+function loadTariffs(){
+  try{const saved=JSON.parse(localStorage.getItem("cashflow-withdrawal-tariffs")||"{}");
+    for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) if(saved[id]!==undefined&&$(id)) $(id).value=saved[id];
+  }catch(_){}
+}
+function saveTariffs(){
+  const data={}; for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) data[id]=$(id)?.value??"";
+  try{localStorage.setItem("cashflow-withdrawal-tariffs",JSON.stringify(data));$("tariffSaveStatus").textContent="Настройки сохранены в этом браузере.";}
+  catch(_){$("tariffSaveStatus").textContent="Не удалось сохранить настройки браузера.";}
+  calculate();
+}
+loadTariffs();
+["gross","withdrawExchange",...Object.values(TARIFF_FIELDS).flat()].forEach(id=>$(id)?.addEventListener("input",calculate));
+$("withdrawExchange")?.addEventListener("change",calculate);
+$("saveTariffs")?.addEventListener("click",saveTariffs);
+calculate();
 
 load();
 let refreshTimer = null;

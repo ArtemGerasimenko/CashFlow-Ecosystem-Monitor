@@ -35,28 +35,49 @@
         </div>
       </section>
       <section id="rates" class="page"><div class="page-heading"><div><p class="eyebrow">КОТИРОВКИ ИСТОЧНИКОВ</p><h1>Курсы</h1><p class="page-subtitle">Актуальные валютные пары, цены и состояние источников.</p></div></div><div id="ratesSources" class="rates-grid"><div class="panel">Загрузка курсов…</div></div></section>
-      <section id="withdraw" class="page"><div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода USDT</h1><p class="page-subtitle">Расчёт суммы к получению с учётом подтверждённой комиссии вывода.</p></div></div><div class="notice"><strong>Правило расчёта</strong><span>Комиссия вывода: 3 USDT + 1% от суммы, которую нужно получить. Минимум проверяется по сумме после продажи на BlackBit, до комиссии вывода. Тарифы остальных этапов маршрута не подставляются без подтверждённой актуальной таблицы.</span></div><div class="withdraw-layout"><div class="panel calculator-panel"><div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Параметры расчёта</h2></div></div><label class="field-label" for="gross">Сумма после продажи на BlackBit <span>USDT</span></label><div class="amount-input"><input id="gross" type="number" inputmode="decimal" min="0" max="502.744987" step="0.000001" value="13.10"><span>USDT</span></div><p class="field-help">Введи сумму до комиссии вывода. Последний зафиксированный максимум BlackBit: <strong>502.744987 USDT</strong>.</p><div class="calc-breakdown"><div><span>Фиксированная комиссия</span><strong>3.00 USDT</strong></div><div><span>Переменная комиссия</span><strong>1%</strong></div></div></div><div class="panel result-panel"><span class="result-eyebrow">ИТОГОВАЯ СУММА</span><div class="muted">Получишь на руки</div><strong id="net" class="net-value">10.00 USDT</strong><div id="fee" class="fee-value">Комиссия: 3.10 USDT</div><div id="minimum" class="minimum"></div><div class="result-footnote">Минимум 10 USDT проверяется до комиссии вывода.</div></div></div><p class="formula-note">Расчёт: чистая сумма = (сумма до вывода − 3) / 1,01. Минимум 10 USDT проверяется до комиссии вывода.</p>
+      <section id="withdraw" class="page">
+        <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода USDT</h1><p class="page-subtitle">Отдельные параметры и проверка лимитов BlackBit и Winance.</p></div></div>
+        <div class="notice"><strong>Важно</strong><span>Лимиты и комиссии задаются отдельно для каждой площадки. Неизвестные комиссии оставлены пустыми и не участвуют в расчёте до подтверждения.</span></div>
+        <div class="withdraw-layout">
+          <div class="panel calculator-panel">
+            <div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Параметры расчёта</h2></div></div>
+            <label class="field-label" for="withdrawExchange">Площадка вывода</label>
+            <select id="withdrawExchange" class="tariff-input"><option value="blackbit">BlackBit</option><option value="winance">Winance</option></select>
+            <label class="field-label" for="gross">Сумма до комиссии вывода <span>USDT</span></label>
+            <div class="amount-input"><input id="gross" type="number" inputmode="decimal" min="0" step="0.000001" value="100"><span>USDT</span></div>
+            <p id="fieldHelp" class="field-help">Введите сумму для проверки лимитов выбранной площадки.</p>
+            <div class="calc-breakdown"><div><span>Фиксированная комиссия</span><strong id="fixedFeeLabel">3 USDT</strong></div><div><span>Переменная комиссия</span><strong id="percentFeeLabel">1%</strong></div></div>
+          </div>
+          <div class="panel result-panel"><span class="result-eyebrow">ИТОГОВАЯ СУММА</span><div class="muted">Ориентировочно получите</div><strong id="net" class="net-value">— USDT</strong><div id="fee" class="fee-value">Комиссия: —</div><div id="minimum" class="minimum"></div><div id="resultNote" class="result-footnote">Проверка по параметрам выбранной площадки.</div></div>
+        </div>
         <div class="tariff-section">
-          <div class="panel-heading"><div><span class="panel-icon">⇄</span><h2>Лимиты и комиссии площадок</h2></div><span class="panel-kicker">BLACKBIT · WINANCE</span></div>
+          <div class="panel-heading"><div><span class="panel-icon">⇄</span><h2>Настройки лимитов и комиссий</h2></div><span class="panel-kicker">РЕДАКТИРУЕМЫЕ ПОЛЯ</span></div>
           <div class="tariff-grid">
-            <article class="panel tariff-card"><div class="tariff-title"><strong>BlackBit</strong><span class="source-state live">Тариф CashFlow</span></div>
-              <div class="tariff-row"><span>Торговая комиссия ECR/USDT</span><b>0,10%</b></div>
-              <div class="tariff-row"><span>Вывод USDT · TRC-20</span><b>3 USDT + 1%</b></div>
-              <div class="tariff-row"><span>Минимум для вывода</span><b>10 USDT</b></div>
-              <div class="tariff-row"><span>Максимум вывода USDT</span><b class="limit-value">502.744987 USDT</b></div>
-              <p class="tariff-note">Минимум проверяется по сумме после продажи ECR, до комиссии вывода. Тарифные значения комиссии взяты из ранее заданных параметров CashFlow.</p>
+            <article class="panel tariff-card" data-tariff="blackbit"><div class="tariff-title"><strong>BlackBit</strong><span class="source-state live">Данные по скриншоту и тарифу CashFlow</span></div>
+              <div class="tariff-form-grid">
+                <label>Минимум вывода (USDT)<input id="bbMin" type="number" min="0" step="0.000001" value="10"></label>
+                <label>Максимум вывода (USDT)<input id="bbMax" type="number" min="0" step="0.000001" value="502.744987"></label>
+                <label>Торговая комиссия (%)<input id="bbTrade" type="number" min="0" step="0.001" value="0.10"></label>
+                <label>Фикс. комиссия вывода (USDT)<input id="bbFixed" type="number" min="0" step="0.01" value="3"></label>
+                <label>Комиссия вывода (%)<input id="bbPercent" type="number" min="0" step="0.01" value="1"></label>
+                <label>Сеть вывода<input id="bbNetwork" type="text" value="TRC-20"></label>
+              </div>
+              <p class="tariff-note">Максимум 502.744987 USDT — значение с твоего скриншота от 27.11.2026, оно может меняться. Комиссии 3 USDT + 1% и торговая 0,10% — ранее заданные параметры CashFlow.</p>
             </article>
-            <article class="panel tariff-card"><div class="tariff-title"><strong>Winance</strong><span class="source-state pending">Часть условий подтверждена</span></div>
-              <div class="tariff-row"><span>Торговая комиссия ERUB</span><b>0,20%</b></div>
-              <div class="tariff-row"><span>Вывод USDT · TRC-20</span><b>Минимум 10 USDT</b></div>
-              <div class="tariff-row"><span>Максимум вывода USDT</span><b class="limit-value">5 000 USDT</b></div>
-              <div class="tariff-row"><span>Вывод на карту RUB</span><b>5 000–50 000 RUB*</b></div>
-              <div class="tariff-row"><span>Комиссия вывода USDT / RUB</span><b class="unknown">Не подтверждена</b></div>
-              <div class="tariff-row"><span>BTC · ETH · LTC · TRX</span><b>Вывод заявлен; лимиты неизвестны</b></div>
-              <p class="tariff-note">*Вывод на карту включался не постоянно; доступность нужно проверять в момент операции. Условия и комиссия могут изменяться.</p>
+            <article class="panel tariff-card" data-tariff="winance"><div class="tariff-title"><strong>Winance</strong><span class="source-state pending">Часть параметров не подтверждена</span></div>
+              <div class="tariff-form-grid">
+                <label>Минимум вывода (USDT)<input id="winMin" type="number" min="0" step="0.000001" value="10"></label>
+                <label>Максимум вывода (USDT)<input id="winMax" type="number" min="0" step="0.000001" value="5000"></label>
+                <label>Торговая комиссия (%)<input id="winTrade" type="number" min="0" step="0.001" value="0.20"></label>
+                <label>Фикс. комиссия вывода (USDT)<input id="winFixed" type="number" min="0" step="0.01" placeholder="Не подтверждена"></label>
+                <label>Комиссия вывода (%)<input id="winPercent" type="number" min="0" step="0.01" placeholder="Не подтверждена"></label>
+                <label>Сеть вывода<input id="winNetwork" type="text" value="TRC-20"></label>
+              </div>
+              <p class="tariff-note">Максимум 5 000 USDT и минимум 10 USDT — по твоему сообщению. Торговая комиссия 0,20% — ранее указанное значение. Комиссия вывода не подтверждена и оставлена пустой.</p>
             </article>
           </div>
-          <div class="notice tariff-warning"><strong>Неизвестные параметры не подставляются в расчёт</strong><span>Максимум BlackBit зафиксирован по скриншоту формы вывода (502.744987 USDT), максимум Winance — по сообщению пользователя (5 000 USDT). Эти значения могут меняться и пока не обновляются автоматически из личных кабинетов. Комиссии сетей Winance требуют отдельного подтверждения.</span></div>
+          <div class="tariff-actions"><button id="saveTariffs" class="primary-button" type="button">Сохранить настройки</button><span id="tariffSaveStatus" class="muted" aria-live="polite">Изменения сохраняются в этом браузере.</span></div>
+          <div class="notice tariff-warning"><strong>Как рассчитывается сумма</strong><span>Торговая комиссия показывается отдельно и не вычитается повторно из введённой суммы, если сумма уже получена после продажи. Для Winance чистая сумма не рассчитывается до заполнения подтверждённых комиссий вывода.</span></div>
         </div>
       </section>
       <section id="erub" class="page"><div class="page-heading"><div><p class="eyebrow">СРАВНИТЕЛЬНАЯ АНАЛИТИКА</p><h1>Сравнение ERUB</h1><p class="page-subtitle">Сопоставление курсов eRub.site и Winance с учётом Bounty.</p></div></div><div id="erubData" class="erub-dashboard">Загрузка курсов eRub…</div></section>
