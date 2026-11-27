@@ -25,7 +25,7 @@ installButton?.addEventListener('click', async () => {
   updateInstallButton();
 });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(error => console.warn('PWA offline support unavailable:', error)));
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(error => console.warn('PWA offline support unavailable:', error)));
 }
 if (themeMeta) {
   const syncThemeColor = () => {
