@@ -507,3 +507,21 @@ html[data-theme="dark"] select,html[data-theme="dark"] input,html[data-theme="da
 #withdraw .amount-input:focus-within{border-color:var(--line)!important;box-shadow:none!important;outline:none!important}
 #withdraw .amount-input input:focus,#withdraw .amount-input input:focus-visible{outline:none!important;box-shadow:none!important}
 #withdraw :focus-visible{outline:none!important}
+
+/* CashFlow refreshed light theme: consistent surfaces and readable contrast. */
+:root{color-scheme:light;--bg:#f3f6f4;--surface:#ffffff;--surface-soft:#f7faf8;--ink:#17231c;--muted:#68776e;--line:#dfe8e2;--green:#079653;--green-dark:#087342;--green-soft:#e3f5eb;--red:#c9434d;--red-soft:#fff0f0;--shadow:0 5px 20px rgba(22,48,32,.055);--radius:16px}
+html,body{background:var(--bg)!important;color:var(--ink)!important}
+.topbar,.sidebar,.mobile-nav{background:rgba(255,255,255,.97)!important;border-color:var(--line)!important}
+.panel,.metric-card,.card,.source-detail,.rate-source-card,.winance-market-card,.erub-total,.erub-compare-card,.erub-calculator,.erub-calculator-details,.erub-purchase-section,.withdraw-erub-card{background:#fff!important;color:var(--ink)!important;border-color:var(--line)!important;box-shadow:var(--shadow)}
+.calculator-panel,.result-panel{background:#fff!important;color:var(--ink)!important}
+.result-panel{background:linear-gradient(145deg,#f1fbf5,#fff)!important;border-color:#c9e8d6!important}
+.amount-input,.calculator-panel select,.tariff-input,.erub-calculator input,.erub-converter-input input{background:#fbfdfc!important;color:var(--ink)!important;border:1px solid #d5e2da!important}
+.amount-input input{background:transparent!important;color:var(--ink)!important}
+.amount-input:focus-within{outline:none!important;box-shadow:0 0 0 2px rgba(7,150,83,.10)!important;border-color:#9bcdb0!important}
+input:focus,input:focus-visible,select:focus,textarea:focus{outline:none!important;box-shadow:none!important}
+button:focus-visible,a:focus-visible{outline:2px solid #75bd91!important;outline-offset:2px}
+.withdraw-erub-results>div,.bb-summary>div,.erub-compare-columns>div,.erub-calc-result{background:#f6faf7!important;border-color:#e4ece7!important;color:var(--ink)!important}
+.tariff-card{background:#fff!important;color:var(--ink)!important}
+.minimum.bad{background:var(--red-soft)!important;color:#a82e39!important}.minimum.good{background:var(--green-soft)!important;color:var(--green-dark)!important}
+html[data-theme="dark"]{color-scheme:light!important;--bg:#f3f6f4;--surface:#fff;--surface-soft:#f7faf8;--ink:#17231c;--muted:#68776e;--line:#dfe8e2;--green:#079653;--green-dark:#087342;--green-soft:#e3f5eb;--red:#c9434d;--red-soft:#fff0f0;--shadow:0 5px 20px rgba(22,48,32,.055)}
+html[data-theme="dark"] body,html[data-theme="dark"] .topbar,html[data-theme="dark"] .sidebar,html[data-theme="dark"] .panel,html[data-theme="dark"] .metric-card,html[data-theme="dark"] .card,html[data-theme="dark"] .source-detail,html[data-theme="dark"] .rate-source-card,html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .erub-total,html[data-theme="dark"] .erub-compare-card,html[data-theme="dark"] .erub-calculator,html[data-theme="dark"] .erub-calculator-details,html[data-theme="dark"] .erub-purchase-section{background:#fff!important;color:#17231c!important;border-color:#dfe8e2!important}

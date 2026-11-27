@@ -1,32 +1,11 @@
 const $ = id => document.getElementById(id);
-// Persistent light/dark appearance preference.
+// CashFlow uses the refreshed light appearance by default.
 (function initTheme(){
   const root=document.documentElement;
-  let saved="light";
-  try{saved=localStorage.getItem("cashflow-monitor-theme")||"light";}catch(_){}
-  const apply=theme=>{
-    const dark=theme==="dark";
-    root.dataset.theme=dark?"dark":"light";
-    const button=document.getElementById("themeToggle");
-    if(button){button.innerHTML=dark?'<span class="theme-toggle-icon">☀</span><span class="theme-toggle-label">Светлая тема</span>':'<span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">Тёмная тема</span>';button.setAttribute("aria-label",dark?"Включить светлую тему":"Включить тёмную тему");button.title=dark?"Переключить на светлую тему":"Переключить на тёмную тему";}
-    const meta=document.getElementById("themeColorMeta");if(meta)meta.content=dark?"#111a16":"#f5f8f6";
-  };
-  apply(saved);
-  // The module script is deferred by the browser, so the button already exists here.
-  // Bind immediately instead of relying on DOMContentLoaded (which may already have fired
-  // in embedded previews or hot-reload environments).
-  const bindToggle=()=>{
-    const button=document.getElementById("themeToggle");
-    if(!button || button.dataset.themeBound==="1") return;
-    button.dataset.themeBound="1";
-    button.addEventListener("click",()=>{
-      const next=root.dataset.theme==="dark"?"light":"dark";
-      apply(next);
-      try{localStorage.setItem("cashflow-monitor-theme",next);}catch(_){}
-    });
-  };
-  bindToggle();
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",bindToggle,{once:true});
+  root.dataset.theme="light";
+  try{localStorage.setItem("cashflow-monitor-theme","light");}catch(_){}
+  const meta=document.getElementById("themeColorMeta");if(meta)meta.content="#f5f8f6";
+  const button=document.getElementById("themeToggle");if(button)button.hidden=true;
 })();
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -573,45 +552,61 @@ function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
 
 // Зафиксированные тарифы. Пользовательский интерфейс доступен только для просмотра.
 const LOCKED_TARIFFS = {
-  bbMin:10, bbMax:502.744987, bbTrade:0.10, bbNetwork:"TRC-20",
-  winMin:10, winMax:5000, winTrade:0.20, winNetwork:"TRC-20",
-  sharedFixed:3, sharedPercent:1
+  bbMin:10, bbMax:502.744987, bbTrade:0.10,
+  winMin:10, winMax:5000, winTrade:0.20,
+  winFixed:3, winPercent:1
 };
 function applyLockedTariffs(){
   for(const [id,value] of Object.entries(LOCKED_TARIFFS)){
     const el=$(id); if(!el) continue;
-    el.value=String(value);
-    el.readOnly=true;
-    el.setAttribute("aria-readonly","true");
+    el.value=String(value);el.readOnly=true;el.setAttribute("aria-readonly","true");
   }
 }
-function tariffValue(id){const el=$(id); if(el && el.value.trim()!==""){const n=Number(el.value);return Number.isFinite(n)?n:null;} const fixed={bbMin:10,bbMax:502.744987,winMin:10,winMax:5000,sharedFixed:3,sharedPercent:1}; return Object.prototype.hasOwnProperty.call(fixed,id)?fixed[id]:null;}
+function tariffValue(id){
+  const values={bbMin:10,bbMax:502.744987,bbTrade:0.10,winMin:10,winMax:5000,winTrade:0.20,winFixed:3,winPercent:1};
+  const el=$(id);
+  if(el && el.value.trim()!==""){const n=Number(el.value);return Number.isFinite(n)?n:null;}
+  return Object.prototype.hasOwnProperty.call(values,id)?values[id]:null;
+}
 function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
 function calculate(){
   const platform=selectedTariff(), prefix=platform==="winance"?"win":"bb";
-  const gross=Math.max(0,Number($("gross")?.value)||0);
+  const entered=Math.max(0,Number($("gross")?.value)||0);
   const min=tariffValue(prefix+"Min"), max=tariffValue(prefix+"Max");
-  const fixed=tariffValue("sharedFixed"), percent=tariffValue("sharedPercent");
-  const network=$(prefix+"Network")?.value?.trim()||"TRC-20";
-  const feeKnown=fixed!==null&&percent!==null;
+  const trade=tariffValue(prefix+"Trade");
+  const fixed=platform==="winance"?tariffValue("winFixed"):null;
+  const percent=platform==="winance"?tariffValue("winPercent"):null;
   const included=Boolean($("withdrawFeeIncluded")?.checked);
-  const net=feeKnown?(included?Math.max(0,(gross-fixed)/(1+percent/100)):gross):null;
-  const fee=net===null?null:(fixed+net*percent/100);
-  const totalNeeded=net===null?null:net+fee;
-  $("net").textContent=net===null?"Не рассчитано":`${net.toFixed(2)} USDT`;
-  $("fee").textContent=fee===null?"Комиссия вывода не подтверждена":`Комиссия: ${fee.toFixed(2)} USDT`;
-  $("fixedFeeLabel").textContent=fixed===null?"Не подтверждена":`${fixed.toFixed(2)} USDT`;
-  $("percentFeeLabel").textContent=percent===null?"Не подтверждена":`${percent}%`;
-  const m=$("minimum"), problems=[];
-  if(min!==null&&net!==null&&net+1e-9<min) problems.push(`Ниже минимума ${min} USDT`);
-  if(max!==null&&net!==null&&net>max+1e-9) problems.push(`Превышен максимум ${max.toLocaleString("ru-RU")} USDT`);
-  if(!feeKnown) problems.push("Нельзя определить сумму на руки без комиссии вывода");
-  if(problems.length){m.textContent=problems.join(" · ");m.className="minimum bad";}
-  else {m.textContent=`Сумма в пределах лимитов ${platform==="winance"?"Winance":"BlackBit"} · сеть ${network}`;m.className="minimum good";}
-  $("resultNote").textContent=`Проверка лимита по сумме вывода · ${platform==="winance"?"Winance":"BlackBit"} · ${network}`;
-  $("fieldHelp").textContent=`Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не задан":max.toLocaleString("ru-RU")+" USDT"}. ${included?"Комиссия внутри введённой суммы.":`Потребуется всего ${totalNeeded?.toFixed(2)||"—"} USDT с комиссией.`}`;
-  if(max!==null) $("gross").setAttribute("max",String(max)); else $("gross").removeAttribute("max");
+  const tradeRate=(trade||0)/100;
+  let net=entered, tradeFee=0, withdrawalFee=null, totalNeeded=entered;
+  if(included){
+    if(platform==="winance"){
+      const divisor=(1+tradeRate)*(1+(percent||0)/100);
+      net=Math.max(0,(entered-(fixed||0))/divisor);
+      tradeFee=net*tradeRate;
+      withdrawalFee=(fixed||0)+net*(percent||0)/100;
+    }else{
+      net=entered/(1+tradeRate);tradeFee=entered-net;
+    }
+  }else{
+    tradeFee=entered*tradeRate;net=entered-tradeFee;
+    if(platform==="winance")withdrawalFee=(fixed||0)+net*(percent||0)/100;
+  }
+  totalNeeded=platform==="winance"?(included?entered:entered+tradeFee+(fixed||0)+net*(percent||0)/100):(included?entered:entered+tradeFee);
+  $("net").textContent=`${net.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:6})} USDT`;
+  $("fee").textContent=platform==="winance"?`Торговая: ${tradeFee.toFixed(2)} USDT · вывод: ${(withdrawalFee||0).toFixed(2)} USDT`:`Торговая комиссия ${trade}%: ${tradeFee.toFixed(2)} USDT · комиссия вывода BlackBit не подтверждена`;
+  $("fixedFeeLabel").textContent=platform==="winance"?`${fixed} USDT`:`Не подтверждена`;
+  $("percentFeeLabel").textContent=platform==="winance"?`${percent}%`:`Торговая ${trade}%`;
+  const problems=[];
+  if(min!==null&&net+1e-9<min)problems.push(`Ниже минимума ${min} USDT`);
+  if(max!==null&&net>max+1e-9)problems.push(`Превышен максимум ${max.toLocaleString("ru-RU")} USDT`);
+  if(platform==="blackbit")problems.push("Комиссия вывода BlackBit не подтверждена — итог после вывода не рассчитывается");
+  const m=$("minimum");m.textContent=problems.join(" · ");m.className="minimum "+(problems.length?"bad":"good");
+  $("resultNote").textContent=`BlackBit: торговая комиссия 0,1%. Winance: торговая комиссия 0,2%, вывод 3 USDT + 1%.`;
+  $("fieldHelp").textContent=`Минимум: ${min??"—"} USDT · Максимум: ${max?.toLocaleString("ru-RU")??"—"} USDT. ${included?"Комиссии учитываются внутри введённой суммы.":`Сумма с учётом комиссий: около ${totalNeeded.toFixed(2)} USDT.`}`;
+  if(max!==null)$("gross").setAttribute("max",String(max));else $("gross").removeAttribute("max");
 }
+
 applyLockedTariffs();
 ["gross","withdrawExchange","withdrawFeeIncluded"].forEach(id=>$(id)?.addEventListener("input",calculate));
 $("withdrawExchange")?.addEventListener("change",calculate);
