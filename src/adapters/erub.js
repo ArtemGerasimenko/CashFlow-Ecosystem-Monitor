@@ -4,7 +4,7 @@ async function get(path) {
   const response = await fetch(`${BASE}${path}`, {
     headers: { accept: "application/json" },
     signal: AbortSignal.timeout(12000),
-    cache: "no-store"
+    cache: "no-store",
   });
   if (!response.ok) throw new Error(`eRub ${path}: HTTP ${response.status}`);
   const json = await response.json();
@@ -17,25 +17,33 @@ async function get(path) {
 const CURRENCY = { 643: "RUB", 2010: "ERUB", 4840: "USDT" };
 
 export async function fetchErubMarket() {
-  const [total, ratesResponse, merchant, currenciesResponse] = await Promise.all([
-    get("/site/total_bought"),
-    get("/site/rates"),
-    get("/site/merchant_config"),
-    get("/site/currencies")
-  ]);
-  if (total.amount == null) throw new Error("eRub: total_bought amount is missing");
-  if (!Array.isArray(ratesResponse.rates)) throw new Error("eRub: rates list is missing");
+  const [total, ratesResponse, merchant, currenciesResponse] =
+    await Promise.all([
+      get("/site/total_bought"),
+      get("/site/rates"),
+      get("/site/merchant_config"),
+      get("/site/currencies"),
+    ]);
+  if (total.amount == null)
+    throw new Error("eRub: total_bought amount is missing");
+  if (!Array.isArray(ratesResponse.rates))
+    throw new Error("eRub: rates list is missing");
 
-  const rates = ratesResponse.rates.map(item => ({
-    fromId: item.from,
-    from: CURRENCY[item.from] || `ID ${item.from}`,
-    toId: item.to,
-    to: CURRENCY[item.to] || `ID ${item.to}`,
-    rate: Number(item.rate),
-    version: item.version ?? null
-  })).filter(item => Number.isFinite(item.rate));
+  const rates = ratesResponse.rates
+    .map((item) => ({
+      fromId: item.from,
+      from: CURRENCY[item.from] || `ID ${item.from}`,
+      toId: item.to,
+      to: CURRENCY[item.to] || `ID ${item.to}`,
+      rate: Number(item.rate),
+      version: item.version ?? null,
+    }))
+    .filter((item) => Number.isFinite(item.rate));
 
-  const currencies = currenciesResponse.currencies ?? currenciesResponse.data ?? currenciesResponse;
+  const currencies =
+    currenciesResponse.currencies ??
+    currenciesResponse.data ??
+    currenciesResponse;
   return {
     receivedAt: new Date().toISOString(),
     totalBought: String(total.amount),
@@ -43,6 +51,7 @@ export async function fetchErubMarket() {
     currencies: Array.isArray(currencies) ? currencies : [],
     merchantConfig: merchant,
     mapping: CURRENCY,
-    source: "eRub public website endpoints; undocumented public interface, no account access"
+    source:
+      "eRub public website endpoints; undocumented public interface, no account access",
   };
 }
