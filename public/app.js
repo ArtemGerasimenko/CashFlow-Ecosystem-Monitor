@@ -529,7 +529,7 @@ function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
   const data=source?.ok?source.data:null;
   const bid=Number(data?.bestBid);
   const target=Math.max(0,Number($("blackbitEcrTarget")?.value)||0);
-  const included=Boolean($("blackbitEcrFeeIncluded")?.checked);
+  const included=true;
   const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
   if(!(bid>0)||!(target>0)){
     put("blackbitEcrRate",bid>0?`${erubNumber(bid)} USDT / ECR`:"Нет актуального курса");
@@ -552,9 +552,9 @@ function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
   put("blackbitEcrNeeded",`${erubNumber(ecrToSell)} ECR`);
   put("blackbitEcrTradeFee",`${erubNumber(tradeFee)} USDT`);
   put("blackbitEcrNet",`${erubNumber(netUsdt)} USDT`);
-  put("blackbitEcrStatus",`Расчёт по лучшей цене BUY стакана BlackBit. ${included?"Введённая сумма включает торговую комиссию.":"Введена желаемая сумма после торговой комиссии."} Для получения ${erubNumber(netUsdt)} USDT нужно продать примерно ${erubNumber(ecrToSell)} ECR. Комиссия торговли 0,1%. Комиссия вывода BlackBit не подтверждена и здесь не учитывается.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит вывода по USDT соблюдён."}`);
+  put("blackbitEcrStatus",`Расчёт по лучшей цене BUY стакана BlackBit. ${"Обязательные комиссии автоматически учтены."} Для получения ${erubNumber(netUsdt)} USDT нужно продать примерно ${erubNumber(ecrToSell)} ECR. Комиссия вывода BlackBit не подтверждена и здесь не учитывается.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит вывода по USDT соблюдён."}`);
 }
-["blackbitEcrTarget","blackbitEcrFeeIncluded"].forEach(id=>{
+["blackbitEcrTarget"].forEach(id=>{
   $(id)?.addEventListener("input",()=>calculateBlackBitEcr());
   $(id)?.addEventListener("change",()=>calculateBlackBitEcr());
 });
@@ -574,7 +574,7 @@ function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
   const rub=sellRate("erubRub");
   const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
   const target=Math.max(0,Number($("erubUsdtTarget")?.value)||0);
-  const usdtIncluded=Boolean($("erubUsdtFeeIncluded")?.checked);
+  const usdtIncluded=true;
   if(usdt&&target>0){
     // Winance trading fee 0.2%; withdrawal fee 3 USDT + 1%.
     const tradeRate=0.002, withdrawalRate=0.01;
@@ -590,14 +590,14 @@ function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
     put("erubUsdtTradeFee",`${erubNumber(tradeFee)} USDT (0,20%)`);
     put("erubUsdtWithdrawalFee",`${erubNumber(withdrawalFee)} USDT`);
     put("erubUsdtNet",`${erubNumber(received)} USDT`);
-    put("erubUsdtStatus",`Курс: ${usdt.source}. ${usdtIncluded?`Введённая сумма включает торговую и выводную комиссии; на руки поступит около ${erubNumber(received)} USDT.`:`Цель к получению ${erubNumber(received)} USDT; для этого потребуется около ${erubNumber(beforeTrade)} USDT до вывода.`} Торговая комиссия Winance 0,20%; вывод 3 USDT + 1% от суммы вывода.`);
+    put("erubUsdtStatus",`Курс: ${usdt.source}. ${usdtIncluded?`Введённая сумма включает торговую и выводную комиссии; на руки поступит около ${erubNumber(received)} USDT.`:`Цель к получению ${erubNumber(received)} USDT; для этого потребуется около ${erubNumber(beforeTrade)} USDT до вывода.`} Вывод 3 USDT + 1% от суммы вывода.`);
   }else{
     put("erubUsdtRate","Нет актуального курса");put("erubUsdtNeeded","— ERUB");
     put("erubUsdtWithdrawalFee","— USDT");put("erubUsdtNet","— USDT");
     put("erubUsdtStatus","Нет доступной котировки ERUB/USDT на Winance; расчёт не подменяется старым курсом.");
   }
   const rubTarget=Math.max(0,Number($("erubRubTarget")?.value)||0);
-  const included=Boolean($("erubRubFeeIncluded")?.checked);
+  const included=true;
   if(rub&&rubTarget>0){
     const fee=rubTarget*0.05;
     const grossRub=included?rubTarget:rubTarget+fee;
@@ -609,7 +609,7 @@ function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
     put("erubRubFee",`${erubNumber(fee)} RUB`);
     put("erubRubNet",`${erubNumber(netRub)} RUB`);
     put("erubRubStatus",included
-      ?`Введённая сумма включает комиссии: из ${erubNumber(rubTarget)} RUB комиссия карты ${erubNumber(fee)} RUB, на карту поступит ${erubNumber(netRub)} RUB. Торговая комиссия Winance 0,20% учтена. Курс: ${rub.source}.`
+      ?`Введённая сумма включает комиссии: из ${erubNumber(rubTarget)} RUB комиссия карты ${erubNumber(fee)} RUB, на карту поступит ${erubNumber(netRub)} RUB. Курс: ${rub.source}.`
       :`Введена сумма к получению: ${erubNumber(rubTarget)} RUB. Комиссия ${erubNumber(fee)} RUB добавляется сверху; всего потребуется ${erubNumber(grossRub)} RUB. Курс: ${rub.source}; торговая комиссия Winance 0,20% учтена.`);
   }else{
     put("erubRubRate","Нет актуального курса");put("erubRubNeeded","— ERUB");
@@ -618,7 +618,7 @@ function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
     put("erubRubStatus","Нет доступной котировки ERUB/RUB на Winance; расчёт не подменяется старым курсом.");
   }
 }
-["erubUsdtTarget","erubUsdtFeeIncluded","erubRubTarget","erubRubFeeIncluded"].forEach(id=>{
+["erubUsdtTarget","erubRubTarget"].forEach(id=>{
   $(id)?.addEventListener("input",()=>calculateErubWithdrawals());
   $(id)?.addEventListener("change",()=>calculateErubWithdrawals());
 });

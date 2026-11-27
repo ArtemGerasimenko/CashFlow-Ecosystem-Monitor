@@ -38,17 +38,15 @@
       <section id="withdraw" class="page">
         <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода средств</h1><p class="page-subtitle">Три независимых направления: BlackBit ECR, Winance ERUB и вывод на российскую карту.</p></div></div>
         <section class="erub-purchase-section withdrawal-erub-section">
-          <div class="erub-section-heading"><span>3</span><div><h3>Основные варианты расчёта</h3><p>Каждая карточка рассчитывается отдельно. Комиссия включается в сумму или добавляется сверху — в зависимости от переключателя.</p></div></div>
+          <div class="erub-section-heading"><span>3</span><div><h3>Основные варианты расчёта</h3><p>Комиссии торговых ордеров всегда автоматически учитываются в расчёте.</p></div></div>
           <div class="withdraw-erub-grid">
             <article class="withdraw-erub-card">
-              <div class="withdraw-erub-title"><strong>ECR → USDT</strong><span class="live-pill">BlackBit · 0,1%</span></div>
+              <div class="withdraw-erub-title"><strong>ECR → USDT</strong><span class="live-pill">BlackBit</span></div>
               <label class="field-label" for="blackbitEcrTarget">Сколько USDT нужно получить</label>
               <div class="amount-input"><input id="blackbitEcrTarget" type="number" min="0" step="0.01" value="500"><span>USDT</span></div>
-              <label class="withdraw-fee-toggle"><input id="blackbitEcrFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
               <div class="withdraw-erub-results">
                 <div><span>Курс продажи ECR</span><strong id="blackbitEcrRate">Ожидание курса</strong></div>
                 <div><span>ECR к продаже</span><strong id="blackbitEcrNeeded">— ECR</strong></div>
-                <div><span>Торговая комиссия 0,1%</span><strong id="blackbitEcrTradeFee">— USDT</strong></div>
                 <div><span>Получите после продажи</span><strong id="blackbitEcrNet">— USDT</strong></div>
               </div>
               <p class="withdraw-erub-note" id="blackbitEcrStatus">Расчёт появится после получения актуального стакана BlackBit.</p>
@@ -57,11 +55,9 @@
               <div class="withdraw-erub-title"><strong>ERUB → USDT</strong><span class="live-pill">Winance</span></div>
               <label class="field-label" for="erubUsdtTarget">Сколько USDT нужно получить</label>
               <div class="amount-input"><input id="erubUsdtTarget" type="number" min="0" step="0.01" value="500"><span>USDT</span></div>
-              <label class="withdraw-fee-toggle"><input id="erubUsdtFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
               <div class="withdraw-erub-results">
                 <div><span>Курс продажи ERUB</span><strong id="erubUsdtRate">Ожидание курса</strong></div>
                 <div><span>ERUB к продаже</span><strong id="erubUsdtNeeded">— ERUB</strong></div>
-                <div><span>Торговая комиссия Winance</span><strong id="erubUsdtTradeFee">0,20%</strong></div>
                 <div><span>Комиссия вывода</span><strong id="erubUsdtWithdrawalFee">— USDT</strong></div>
                 <div><span>Остаток после комиссий</span><strong id="erubUsdtNet">— USDT</strong></div>
               </div>
@@ -71,11 +67,9 @@
               <div class="withdraw-erub-title"><strong>ERUB → RUB · российская карта</strong><span class="live-pill">Комиссия 5%</span></div>
               <label class="field-label" for="erubRubTarget">Сумма в RUB</label>
               <div class="amount-input"><input id="erubRubTarget" type="number" min="0" step="0.01" value="10000"><span>RUB</span></div>
-              <label class="withdraw-fee-toggle"><input id="erubRubFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
               <div class="withdraw-erub-results">
                 <div><span>Курс продажи ERUB</span><strong id="erubRubRate">Ожидание курса</strong></div>
                 <div><span>ERUB к продаже</span><strong id="erubRubNeeded">— ERUB</strong></div>
-                <div><span>Торговая комиссия Winance</span><strong id="erubRubTradeFee">0,20%</strong></div>
                 <div><span>Комиссия карты 5%</span><strong id="erubRubFee">— RUB</strong></div>
                 <div><span>Получите на карту</span><strong id="erubRubNet">— RUB</strong></div>
               </div>
