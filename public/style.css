@@ -381,3 +381,96 @@ td,th { overflow-wrap:anywhere; }
 @media(max-width:900px){.tariff-grid{grid-template-columns:1fr}.tariff-card{padding:19px}}
 @media(max-width:600px){.tariff-section-heading{align-items:flex-start}.tariff-section-heading .panel-kicker{display:none}.tariff-card,.shared-fees-card{padding:16px}.tariff-title{align-items:flex-start;flex-direction:column}.tariff-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.shared-fees-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shared-fees-heading{align-items:flex-start;flex-direction:column}.shared-lock{align-self:flex-start}.tariff-actions{align-items:stretch;flex-direction:column}.tariff-actions .primary-button{width:100%}}
 @media(max-width:380px){.tariff-form-grid,.shared-fees-grid{grid-template-columns:1fr}}
+
+/* FINAL WITHDRAWAL TARIFF UI OVERRIDES — keep the editor visually consistent */
+#withdraw .tariff-section{margin-top:30px!important}
+#withdraw .tariff-section-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;margin:0 0 16px!important;padding:0 0 14px!important;border-bottom:1px solid #dfe9e2!important}
+#withdraw .tariff-section-heading h2{font-size:19px!important;font-weight:800!important;color:#17251d!important}
+#withdraw .tariff-section-heading p{font-size:12px!important;color:#829087!important;margin-top:4px!important}
+#withdraw .tariff-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:18px!important;align-items:stretch!important}
+#withdraw .tariff-card{display:flex!important;flex-direction:column!important;gap:0!important;padding:22px!important;border:1px solid #e0eae3!important;border-radius:18px!important;background:#fff!important;box-shadow:0 8px 26px rgba(25,65,43,.055)!important;min-width:0!important}
+#withdraw .tariff-title{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 0 16px!important;margin:0 0 17px!important;border-bottom:1px solid #edf2ee!important}
+#withdraw .tariff-brand{display:flex!important;align-items:center!important;gap:12px!important}
+#withdraw .tariff-brand>div{display:flex!important;flex-direction:column!important;gap:3px!important}
+#withdraw .tariff-brand strong{font:800 17px/1.2 Manrope,sans-serif!important;color:#17251d!important}
+#withdraw .tariff-brand small{font:500 11px/1.4 "DM Sans",sans-serif!important;color:#87948b!important}
+#withdraw .exchange-mark{width:42px!important;height:42px!important;border-radius:13px!important;display:grid!important;place-items:center!important;font-size:20px!important;font-weight:900!important;flex:0 0 42px!important}
+#withdraw .blackbit-mark{background:#202622!important;color:#fff!important}
+#withdraw .winance-mark{background:#078747!important;color:#fff!important}
+#withdraw .tariff-status{display:inline-flex!important;align-items:center!important;white-space:normal!important;text-align:center!important;font-size:10px!important;line-height:1.3!important;font-weight:800!important;padding:7px 10px!important;border-radius:999px!important;background:#e8f6ed!important;color:#087443!important}
+#withdraw .tariff-form-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;margin:0!important}
+#withdraw .tariff-form-grid label,#withdraw .shared-fees-grid label{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;min-width:0!important;margin:0!important;color:#526157!important;font:700 12px/1.35 "DM Sans",sans-serif!important}
+#withdraw .tariff-form-grid label span,#withdraw .shared-fees-grid label span{display:block!important;color:#89968e!important;font:600 10px/1.3 "DM Sans",sans-serif!important}
+#withdraw .tariff-form-grid input,#withdraw .shared-fees-grid input{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;height:46px!important;padding:0 13px!important;border:1px solid #dce8df!important;border-radius:11px!important;background:#fbfdfb!important;color:#1d2b23!important;font:700 14px Manrope,sans-serif!important;box-shadow:none!important}
+#withdraw .tariff-form-grid input:focus,#withdraw .shared-fees-grid input:focus{border-color:#078747!important;box-shadow:0 0 0 3px rgba(7,135,71,.12)!important;background:#fff!important;outline:0!important}
+#withdraw .tariff-note{margin:16px 0 0!important;padding-top:13px!important;border-top:1px solid #edf2ee!important;color:#849188!important;font-size:11px!important;line-height:1.6!important}
+#withdraw .shared-fees-card{margin-top:18px!important;padding:22px!important;border:1px solid #dcebe1!important;border-radius:18px!important;background:linear-gradient(135deg,#fff 0%,#f5fbf7 100%)!important;box-shadow:0 8px 26px rgba(25,65,43,.045)!important}
+#withdraw .shared-fees-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;padding:0 0 16px!important;border-bottom:1px solid #e7f0e9!important}
+#withdraw .shared-fees-heading>div{display:flex!important;align-items:center!important;gap:12px!important}
+#withdraw .shared-fees-heading h3{margin:0!important;font:800 16px Manrope,sans-serif!important;color:#17251d!important}
+#withdraw .shared-fees-heading p{margin:4px 0 0!important;color:#829087!important;font-size:11px!important}
+#withdraw .shared-fees-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,230px))!important;gap:14px!important;margin-top:17px!important}
+#withdraw .shared-lock{font-size:10px!important;letter-spacing:.5px!important;padding:8px 11px!important;border-radius:999px!important;background:#e5f5eb!important;color:#087443!important}
+#withdraw .tariff-actions{display:flex!important;align-items:center!important;gap:14px!important;margin:18px 0!important}
+#withdraw #saveTariffs{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:46px!important;padding:0 22px!important;border:0!important;border-radius:12px!important;background:linear-gradient(135deg,#0a9b56,#06763f)!important;color:#fff!important;font:800 13px Manrope,sans-serif!important;box-shadow:0 6px 16px rgba(7,135,71,.2)!important;cursor:pointer!important}
+#withdraw #saveTariffs:hover{filter:brightness(.96)!important;transform:translateY(-1px)!important}
+#withdraw #tariffSaveStatus{font-size:11px!important;color:#7d8b82!important}
+#withdraw .tariff-warning{display:flex!important;flex-direction:column!important;gap:5px!important;padding:15px 17px!important;border:1px solid #d8eee0!important;border-radius:13px!important;background:#f0faf4!important;color:#63786b!important;font-size:11px!important;line-height:1.55!important}
+#withdraw .tariff-warning strong{color:#087443!important;font-size:12px!important}
+@media(max-width:900px){#withdraw .tariff-grid{grid-template-columns:1fr!important}}
+@media(max-width:600px){#withdraw .tariff-card,#withdraw .shared-fees-card{padding:16px!important}#withdraw .tariff-title{align-items:flex-start!important}#withdraw .tariff-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important}#withdraw .shared-fees-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#withdraw .tariff-section-heading{align-items:flex-start!important}#withdraw .tariff-section-heading .panel-kicker{display:none!important}#withdraw .tariff-actions{align-items:stretch!important;flex-direction:column!important}#withdraw #saveTariffs{width:100%!important}}
+@media(max-width:390px){#withdraw .tariff-form-grid,#withdraw .shared-fees-grid{grid-template-columns:1fr!important}#withdraw .tariff-title{flex-direction:column!important}}
+
+/* Locked tariff values: view-only, visually consistent with CashFlow cards. */
+#withdraw .tariff-form-grid input[readonly],
+#withdraw .shared-fees-grid input[readonly]{
+  background:#f1f6f2!important;
+  border-color:#e0e9e2!important;
+  color:#31483a!important;
+  cursor:not-allowed!important;
+  user-select:text;
+  box-shadow:inset 0 1px 2px rgba(25,65,43,.025)!important;
+}
+#withdraw .tariff-form-grid input[readonly]:focus,
+#withdraw .shared-fees-grid input[readonly]:focus{outline:none!important;border-color:#e0e9e2!important;box-shadow:none!important}
+#withdraw .tariff-locked-note{display:flex;align-items:center;gap:13px;margin-top:18px;padding:15px 18px;border:1px solid #dcece1;border-radius:13px;background:#f1faf4;color:#526b5b}
+#withdraw .tariff-locked-note .lock-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:#dff3e6;font-size:17px}
+#withdraw .tariff-locked-note span:last-child{display:grid;gap:4px;min-width:0}
+#withdraw .tariff-locked-note strong{font:800 13px Manrope,sans-serif;color:#087443}
+#withdraw .tariff-locked-note small{font-size:11px;line-height:1.5;color:#6d8174}
+@media(max-width:600px){#withdraw .tariff-locked-note{align-items:flex-start;padding:13px}#withdraw .tariff-locked-note small{font-size:10px}}
+
+/* CashFlow dark appearance — complete theme, including calculator and locked tariffs. */
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink);font:700 12px "DM Sans",sans-serif;white-space:nowrap;transition:background .18s,border-color .18s}
+.theme-toggle:hover{border-color:var(--green);background:var(--green-soft)}
+.theme-toggle-icon{font-size:17px;line-height:1}
+html[data-theme="dark"]{color-scheme:dark;--bg:#101713;--surface:#18221c;--surface-soft:#1d2a22;--ink:#e7efe9;--muted:#a0afa5;--line:#2b3a30;--green:#35c77d;--green-dark:#59d894;--green-soft:#203b2c;--red:#ff737b;--red-soft:#42272b;--shadow:0 10px 30px rgba(0,0,0,.22)}
+html[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+html[data-theme="dark"] .topbar,html[data-theme="dark"] .sidebar,html[data-theme="dark"] .panel,html[data-theme="dark"] .metric-card,html[data-theme="dark"] .card,html[data-theme="dark"] .source-detail,html[data-theme="dark"] .rate-source-card,html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .erub-total,html[data-theme="dark"] .erub-compare-card,html[data-theme="dark"] .erub-calculator,html[data-theme="dark"] .erub-calculator-details,html[data-theme="dark"] .erub-purchase-section{background:var(--surface);border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .topbar{background:rgba(20,29,23,.94)}
+html[data-theme="dark"] nav button{color:#d1ddd4}html[data-theme="dark"] nav button:hover,html[data-theme="dark"] nav button.active{background:var(--green-soft);color:var(--green-dark)}
+html[data-theme="dark"] .btn-outline,html[data-theme="dark"] .quick-actions button,html[data-theme="dark"] .candle-interval,html[data-theme="dark"] .live-indicator{background:#202d24;color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] .quick-actions button:hover,html[data-theme="dark"] .candle-interval:hover{background:#26392c}
+html[data-theme="dark"] .result-panel,html[data-theme="dark"] .shared-fees-card{background:linear-gradient(145deg,#1a2b20,#17231c)!important;border-color:#31513c!important}
+html[data-theme="dark"] .notice,html[data-theme="dark"] .tariff-warning,html[data-theme="dark"] .tariff-locked-note{background:#1c3024!important;border-color:#31533c!important;color:#b5c9bb!important}
+html[data-theme="dark"] .notice strong,html[data-theme="dark"] .tariff-warning strong,html[data-theme="dark"] .tariff-locked-note strong{color:#70d99b!important}
+html[data-theme="dark"] .bb-summary>div,html[data-theme="dark"] .erub-compare-columns>div,html[data-theme="dark"] .erub-calc-result,html[data-theme="dark"] .ub-mid,html[data-theme="dark"] .bb-level-head,html[data-theme="dark"] .book-row{background:#202d24;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .tariff-card{background:#18221c!important;border-color:#304137!important}
+html[data-theme="dark"] #withdraw .tariff-section-heading{border-color:var(--line)!important}
+html[data-theme="dark"] #withdraw .tariff-section-heading h2,html[data-theme="dark"] #withdraw .tariff-brand strong,html[data-theme="dark"] #withdraw .shared-fees-heading h3{color:var(--ink)!important}
+html[data-theme="dark"] #withdraw .tariff-title,html[data-theme="dark"] #withdraw .tariff-note,html[data-theme="dark"] .panel-heading,html[data-theme="dark"] .calc-breakdown{border-color:var(--line)!important}
+html[data-theme="dark"] #withdraw .tariff-form-grid label,html[data-theme="dark"] #withdraw .shared-fees-grid label{color:#c1cec5!important}
+html[data-theme="dark"] #withdraw .tariff-form-grid input[readonly],html[data-theme="dark"] #withdraw .shared-fees-grid input[readonly],html[data-theme="dark"] .calculator-panel .tariff-input,html[data-theme="dark"] .amount-input,html[data-theme="dark"] .erub-calculator input{background:#111a15!important;border-color:#35483b!important;color:#e7efe9!important}
+html[data-theme="dark"] .amount-input input{color:var(--ink)!important;background:transparent!important}
+html[data-theme="dark"] .minimum.good,html[data-theme="dark"] .live-pill,html[data-theme="dark"] .source-state{background:#203b2c;color:#70d99b}
+html[data-theme="dark"] .minimum.bad,html[data-theme="dark"] .source-state.error{background:#42272b;color:#ff9298}
+html[data-theme="dark"] .timeline-dot{background:var(--surface)}
+html[data-theme="dark"] .timeline-row:not(:last-child) .timeline-dot:after{background:#385341}
+html[data-theme="dark"] .skeleton{background:linear-gradient(90deg,#18221c,#223128,#18221c);background-size:200% 100%}
+html[data-theme="dark"] .mobile-nav{background:rgba(20,29,23,.96);border-color:var(--line)}
+html[data-theme="dark"] .mobile-nav button{color:#a9b8ad}html[data-theme="dark"] .mobile-nav button.active{background:var(--green-soft);color:var(--green-dark)}
+html[data-theme="dark"] .shared-lock{background:#203b2c!important;color:#70d99b!important}
+html[data-theme="dark"] .tariff-status.confirmed{background:#203b2c!important;color:#70d99b!important}
+html[data-theme="dark"] .history-table th,html[data-theme="dark"] .history-table td,html[data-theme="dark"] .rate-row,html[data-theme="dark"] .source-row{border-color:var(--line)}
+html[data-theme="dark"] select,html[data-theme="dark"] input,html[data-theme="dark"] textarea{color-scheme:dark}
+@media(max-width:760px){.theme-toggle{min-height:36px;padding:0 9px}.theme-toggle-label{display:none}.topbar-right{gap:7px}}

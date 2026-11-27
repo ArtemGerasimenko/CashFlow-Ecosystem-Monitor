@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f5f8f6"><meta name="description" content="CashFlow Ecosystem Monitor — мониторинг, аналитика и калькулятор">
+  <meta name="theme-color" content="#f5f8f6" id="themeColorMeta"><meta name="description" content="CashFlow Ecosystem Monitor — мониторинг, аналитика и калькулятор">
   <title>CashFlow Ecosystem Monitor</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
@@ -13,7 +13,7 @@
       <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M36.8 10.8 24 3.5 5.5 14.2v19.6L24 44.5l12.8-7.3-7-4-5.8 3.3-11.5-6.7V17.2L24 10.5l5.8 3.3 7-3Z"/><path d="M18.2 20.2h20.3v8H18.2z"/></svg></span>
       <span class="brand-copy"><strong><span>CashFlow</span> Ecosystem Monitor</strong><small>MONITOR · ANALYTICS · CALCULATOR</small></span>
     </a>
-    <div class="topbar-right"><span id="overall" class="status pending"><i></i>Подключение…</span><span class="top-divider"></span><span class="updated-label"><i class="icon-refresh">↻</i><span id="updated">Ожидание данных</span></span><button id="refresh" class="btn btn-outline refresh-btn"><span>↻</span> Обновить данные</button></div>
+    <div class="topbar-right"><button id="themeToggle" class="theme-toggle" type="button" aria-label="Включить тёмную тему" title="Переключить тему"><span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">Тёмная тема</span></button><span id="overall" class="status pending"><i></i>Подключение…</span><span class="top-divider"></span><span class="updated-label"><i class="icon-refresh">↻</i><span id="updated">Ожидание данных</span></span><button id="refresh" class="btn btn-outline refresh-btn"><span>↻</span> Обновить данные</button></div>
   </header>
   <div class="layout">
     <aside class="sidebar"><div class="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav aria-label="Основная навигация">
@@ -56,20 +56,20 @@
             <article class="panel tariff-card" data-tariff="blackbit">
               <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark blackbit-mark">B</span><div><strong>BlackBit</strong><small>Площадка продажи ECR</small></div></div><span class="tariff-status confirmed">Лимит по скриншоту</span></div>
               <div class="tariff-form-grid">
-                <label>Минимум вывода <span>USDT</span><input id="bbMin" type="number" min="0" step="0.000001" value="10"></label>
-                <label>Максимум вывода <span>USDT</span><input id="bbMax" type="number" min="0" step="0.000001" value="502.744987"></label>
-                <label>Торговая комиссия <span>%</span><input id="bbTrade" type="number" min="0" step="0.001" value="0.10"></label>
-                <label>Сеть вывода<input id="bbNetwork" type="text" value="TRC-20"></label>
+                <label>Минимум вывода <span>USDT</span><input id="bbMin" type="number" min="0" step="0.000001" value="10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Максимум вывода <span>USDT</span><input id="bbMax" type="number" min="0" step="0.000001" value="502.744987" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Торговая комиссия <span>%</span><input id="bbTrade" type="number" min="0" step="0.001" value="0.10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Сеть вывода<input id="bbNetwork" type="text" value="TRC-20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
               </div>
               <p class="tariff-note">Максимум 502.744987 USDT зафиксирован по скриншоту от 27.11.2026 и может изменяться. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
             <article class="panel tariff-card" data-tariff="winance">
               <div class="tariff-title"><div class="tariff-brand"><span class="exchange-mark winance-mark">W</span><div><strong>Winance</strong><small>Площадка обмена ERUB</small></div></div><span class="tariff-status confirmed">Лимит сообщён</span></div>
               <div class="tariff-form-grid">
-                <label>Минимум вывода <span>USDT</span><input id="winMin" type="number" min="0" step="0.000001" value="10"></label>
-                <label>Максимум вывода <span>USDT</span><input id="winMax" type="number" min="0" step="0.000001" value="5000"></label>
-                <label>Торговая комиссия <span>%</span><input id="winTrade" type="number" min="0" step="0.001" value="0.20"></label>
-                <label>Сеть вывода<input id="winNetwork" type="text" value="TRC-20"></label>
+                <label>Минимум вывода <span>USDT</span><input id="winMin" type="number" min="0" step="0.000001" value="10" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Максимум вывода <span>USDT</span><input id="winMax" type="number" min="0" step="0.000001" value="5000" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Торговая комиссия <span>%</span><input id="winTrade" type="number" min="0" step="0.001" value="0.20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+                <label>Сеть вывода<input id="winNetwork" type="text" value="TRC-20" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
               </div>
               <p class="tariff-note">Минимум 10 USDT и максимум 5 000 USDT — по сообщению пользователя. Торговая комиссия — ранее заданный тариф CashFlow.</p>
             </article>
@@ -77,12 +77,12 @@
           <article class="panel shared-fees-card">
             <div class="shared-fees-heading"><div><span class="shared-fees-icon">⊕</span><div><h3>Единая комиссия вывода</h3><p>Одинакова для BlackBit и Winance — задаётся один раз</p></div></div><span class="shared-lock">ОБЩИЕ УСЛОВИЯ</span></div>
             <div class="shared-fees-grid">
-              <label>Фиксированная комиссия <span>USDT</span><input id="sharedFixed" type="number" min="0" step="0.01" value="3"></label>
-              <label>Процентная комиссия <span>%</span><input id="sharedPercent" type="number" min="0" step="0.01" value="1"></label>
+              <label>Фиксированная комиссия <span>USDT</span><input id="sharedFixed" type="number" min="0" step="0.01" value="3" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
+              <label>Процентная комиссия <span>%</span><input id="sharedPercent" type="number" min="0" step="0.01" value="1" readonly aria-readonly="true" title="Значение зафиксировано и не редактируется"></label>
             </div>
             <p class="tariff-note">Текущие общие значения CashFlow: 3 USDT + 1%. Они применяются к выбранной площадке одинаково и не дублируются в её индивидуальных настройках.</p>
           </article>
-          <div class="tariff-actions"><button id="saveTariffs" class="primary-button" type="button">Сохранить настройки</button><span id="tariffSaveStatus" class="muted" aria-live="polite">Изменения сохраняются в этом браузере.</span></div>
+          <div class="tariff-locked-note"><span class="lock-icon">🔒</span><span><strong>Настройки зафиксированы</strong><small>Лимиты и комиссии доступны только для просмотра. Изменение значений в интерфейсе запрещено.</small></span></div>
           <div class="notice tariff-warning"><strong>Принцип расчёта</strong><span>Торговая комиссия площадки показывается отдельно. Единая комиссия вывода 3 USDT + 1% применяется к введённой сумме. Минимум и максимум проверяются до вычета комиссии.</span></div>
         </div>
       </section>

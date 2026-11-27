@@ -1,4 +1,19 @@
 const $ = id => document.getElementById(id);
+// Persistent light/dark appearance preference.
+(function initTheme(){
+  const root=document.documentElement;
+  let saved="light";
+  try{saved=localStorage.getItem("cashflow-monitor-theme")||"light";}catch(_){}
+  const apply=theme=>{
+    const dark=theme==="dark";
+    root.dataset.theme=dark?"dark":"light";
+    const button=document.getElementById("themeToggle");
+    if(button){button.innerHTML=dark?'<span class="theme-toggle-icon">☀</span><span class="theme-toggle-label">Светлая тема</span>':'<span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">Тёмная тема</span>';button.setAttribute("aria-label",dark?"Включить светлую тему":"Включить тёмную тему");button.title=dark?"Переключить на светлую тему":"Переключить на тёмную тему";}
+    const meta=document.getElementById("themeColorMeta");if(meta)meta.content=dark?"#111a16":"#f5f8f6";
+  };
+  apply(saved);
+  document.addEventListener("DOMContentLoaded",()=>{const button=document.getElementById("themeToggle");if(button)button.addEventListener("click",()=>{const next=root.dataset.theme==="dark"?"light":"dark";apply(next);try{localStorage.setItem("cashflow-monitor-theme",next);}catch(_){}});});
+})();
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const num = value => {
@@ -484,11 +499,20 @@ async function load() {
   } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
-const TARIFF_FIELDS = {
-  blackbit:["bbMin","bbMax","bbTrade","bbNetwork"],
-  winance:["winMin","winMax","winTrade","winNetwork"]
+// Зафиксированные тарифы. Пользовательский интерфейс доступен только для просмотра.
+const LOCKED_TARIFFS = {
+  bbMin:10, bbMax:502.744987, bbTrade:0.10, bbNetwork:"TRC-20",
+  winMin:10, winMax:5000, winTrade:0.20, winNetwork:"TRC-20",
+  sharedFixed:3, sharedPercent:1
 };
-const SHARED_FEE_FIELDS = ["sharedFixed","sharedPercent"];
+function applyLockedTariffs(){
+  for(const [id,value] of Object.entries(LOCKED_TARIFFS)){
+    const el=$(id); if(!el) continue;
+    el.value=String(value);
+    el.readOnly=true;
+    el.setAttribute("aria-readonly","true");
+  }
+}
 function tariffValue(id){const el=$(id); if(!el) return null; if(el.value.trim()==="") return null; const n=Number(el.value); return Number.isFinite(n)?n:null;}
 function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
 function calculate(){
@@ -514,28 +538,10 @@ function calculate(){
   $("fieldHelp").textContent=`Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не задан":max.toLocaleString("ru-RU")+" USDT"}.`;
   if(max!==null) $("gross").setAttribute("max",String(max)); else $("gross").removeAttribute("max");
 }
-function loadTariffs(){
-  try{const saved=JSON.parse(localStorage.getItem("cashflow-withdrawal-tariffs")||"{}");
-    for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) if(saved[id]!==undefined&&$(id)) $(id).value=saved[id];
-    // Migrate the previous duplicated fee settings into one shared commission.
-    if(saved.sharedFixed!==undefined) $("sharedFixed").value=saved.sharedFixed;
-    else if(saved.bbFixed!==undefined) $("sharedFixed").value=saved.bbFixed;
-    if(saved.sharedPercent!==undefined) $("sharedPercent").value=saved.sharedPercent;
-    else if(saved.bbPercent!==undefined) $("sharedPercent").value=saved.bbPercent;
-  }catch(_){}
-}
-function saveTariffs(){
-  const data={}; for(const ids of Object.values(TARIFF_FIELDS)) for(const id of ids) data[id]=$(id)?.value??"";
-  for(const id of SHARED_FEE_FIELDS) data[id]=$(id)?.value??"";
-  try{localStorage.setItem("cashflow-withdrawal-tariffs",JSON.stringify(data));$("tariffSaveStatus").textContent="Настройки сохранены в этом браузере.";}
-  catch(_){$("tariffSaveStatus").textContent="Не удалось сохранить настройки браузера.";}
-  calculate();
-}
-loadTariffs();
-["gross","withdrawExchange",...Object.values(TARIFF_FIELDS).flat(),...SHARED_FEE_FIELDS].forEach(id=>$(id)?.addEventListener("input",calculate));
+applyLockedTariffs();
+["gross","withdrawExchange"].forEach(id=>$(id)?.addEventListener("input",calculate));
 $("withdrawExchange")?.addEventListener("change",calculate);
-$("saveTariffs")?.addEventListener("click",saveTariffs);
-calculate();
+
 
 load();
 let refreshTimer = null;
