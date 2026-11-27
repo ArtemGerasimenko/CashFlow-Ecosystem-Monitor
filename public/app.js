@@ -482,6 +482,8 @@ function restoreInteractiveState(snapshot){
   }
 }
 
+let currentWithdrawalLimits = { blackbit: null, winance: null };
+let limitReachedNotice = false;
 async function load() {
   if (loadInProgress || document.hidden) return;
   loadInProgress = true;
@@ -489,6 +491,14 @@ async function load() {
   const savedInteractive=captureInteractiveState();
   try {
     const s=await api("/status");
+    try {
+      const withdrawal = await api("/withdrawal-limits");
+      currentWithdrawalLimits = withdrawal.limits || currentWithdrawalLimits;
+      applyWithdrawalLimits();
+    } catch (limitError) {
+      currentWithdrawalLimits = { blackbit: null, winance: null };
+      applyWithdrawalLimits();
+    }
     renderOverview(s);
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
@@ -515,17 +525,40 @@ async function load() {
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
 // Зафиксированные тарифы. Пользовательский интерфейс доступен только для просмотра.
 const LOCKED_TARIFFS = {
-  bbMin:10, bbMax:502.744987, bbTrade:0.10, bbNetwork:"TRC-20",
-  winMin:10, winMax:5000, winTrade:0.20, winNetwork:"TRC-20",
+  bbMin:10, bbMax:null, bbTrade:0.10, bbNetwork:"TRC-20",
+  winMin:10, winMax:null, winTrade:0.20, winNetwork:"TRC-20",
   sharedFixed:3, sharedPercent:1
 };
 function applyLockedTariffs(){
   for(const [id,value] of Object.entries(LOCKED_TARIFFS)){
     const el=$(id); if(!el) continue;
-    el.value=String(value);
+    el.value=value===null?"":String(value);
     el.readOnly=true;
     el.setAttribute("aria-readonly","true");
   }
+}
+function applyWithdrawalLimits(){
+  const rows=[
+    ["blackbit","bbMax","bbLimitStatus","bbLimitNote","BlackBit"],
+    ["winance","winMax","winLimitStatus","winLimitNote","Winance"]
+  ];
+  for(const [key,inputId,statusId,noteId,label] of rows){
+    const data=currentWithdrawalLimits?.[key];
+    const input=$(inputId), status=$(statusId), note=$(noteId);
+    const value=data?.ok && Number.isFinite(Number(data.maximum)) ? Number(data.maximum) : null;
+    if(input) input.value=value===null?"—":String(value);
+    if(status){
+      status.textContent=data?.ok?"API · обновлено":data?.status==="stale"?"Устаревшее значение":"API не подключён";
+      status.className=`tariff-status ${data?.ok?"confirmed":data?.status==="stale"?"pending":"pending"}`;
+    }
+    if(note){
+      const time=data?.checkedAt?new Date(data.checkedAt).toLocaleTimeString("ru-RU"):"";
+      note.textContent=value!==null
+        ? `Максимум из API аккаунта: ${value.toLocaleString("ru-RU",{maximumFractionDigits:8})} USDT${time?` · проверено ${time}`:""}.`
+        : `${label}: персональный максимум не получен. Публичные котировки не содержат лимит аккаунта.`;
+    }
+  }
+  calculate();
 }
 function tariffValue(id){const el=$(id); if(!el) return null; if(el.value.trim()==="") return null; const n=Number(el.value); return Number.isFinite(n)?n:null;}
 function selectedTariff(){return $("withdrawExchange")?.value==="winance"?"winance":"blackbit";}
@@ -544,17 +577,35 @@ function calculate(){
   $("percentFeeLabel").textContent=percent===null?"Не подтверждена":`${percent}%`;
   const m=$("minimum"), problems=[];
   if(min!==null&&gross+1e-9<min) problems.push(`Ниже минимума ${min} USDT`);
-  if(max!==null&&gross>max+1e-9) problems.push(`Превышен максимум ${max.toLocaleString("ru-RU")} USDT`);
+  if(max!==null&&gross>max+1e-9) problems.push(`Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT`);
   if(!feeKnown) problems.push("Нельзя определить сумму на руки без комиссии вывода");
   if(problems.length){m.textContent=problems.join(" · ");m.className="minimum bad";}
   else {m.textContent=`Сумма в пределах лимитов ${platform==="winance"?"Winance":"BlackBit"} · сеть ${network}`;m.className="minimum good";}
   $("resultNote").textContent=`Проверка лимита до комиссии · ${platform==="winance"?"Winance":"BlackBit"} · ${network}`;
-  $("fieldHelp").textContent=`Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не задан":max.toLocaleString("ru-RU")+" USDT"}.`;
+  $("fieldHelp").textContent=limitReachedNotice && max!==null
+    ? `Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT. Дальше увеличить сумму нельзя.`
+    : `Минимум: ${min===null?"не задан":min+" USDT"} · Максимум: ${max===null?"не получен из API":max.toLocaleString("ru-RU")+" USDT"}.`;
   if(max!==null) $("gross").setAttribute("max",String(max)); else $("gross").removeAttribute("max");
 }
 applyLockedTariffs();
-["gross","withdrawExchange"].forEach(id=>$(id)?.addEventListener("input",calculate));
-$("withdrawExchange")?.addEventListener("change",calculate);
+$("gross")?.addEventListener("input",()=>{
+  const platform=selectedTariff(), prefix=platform==="winance"?"win":"bb";
+  const max=tariffValue(prefix+"Max"), input=$("gross");
+  const entered=Number(input.value);
+  if(max!==null && Number.isFinite(entered) && entered>max){
+    input.value=String(max);
+    limitReachedNotice=true;
+    $("fieldHelp").textContent=`Достигнут максимальный лимит ${max.toLocaleString("ru-RU")} USDT. Увеличить сумму выше лимита нельзя.`;
+    $("fieldHelp").classList.add("limit-warning");
+  } else {
+    limitReachedNotice=false;
+    $("fieldHelp").classList.remove("limit-warning");
+  }
+  calculate();
+  $("fieldHelp").classList.toggle("limit-warning",limitReachedNotice);
+});
+$("withdrawExchange")?.addEventListener("input",()=>{limitReachedNotice=false;calculate();});
+$("withdrawExchange")?.addEventListener("change",()=>{limitReachedNotice=false;calculate();});
 // Render the withdrawal result immediately on first page load, before the user edits anything.
 calculate();
 
