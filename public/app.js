@@ -473,11 +473,11 @@ async function load() {
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
     savedScroll=captureScrollPositions();
-    const requiredSources=["blackbit","winance","erub"];
-    const onlineCount=requiredSources.filter(name=>s.sources?.[name]?.ok===true).length;
-    const totalSources=requiredSources.length;
+    const sourceEntries=Object.entries(s.sources||{});
+    const onlineCount=sourceEntries.filter(([,source])=>source?.ok===true).length;
+    const totalSources=sourceEntries.length;
     const overall=$("overall");
-    if(onlineCount===totalSources){
+    if(totalSources>0 && onlineCount===totalSources){
       overall.innerHTML="<i></i>Все системы онлайн"; overall.className="status ok";
     }else if(onlineCount>0){
       overall.innerHTML=`<i></i>Доступно источников: ${onlineCount} из ${totalSources}`; overall.className="status pending";
@@ -496,6 +496,7 @@ async function load() {
     });
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
     restoreInteractiveState(savedInteractive);
+    calculateBlackBitEcr(s);
     calculateErubWithdrawals(s);
     requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
@@ -504,8 +505,43 @@ async function load() {
   } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
-// Дополнительные ERUB-калькуляторы. Они не изменяют существующий расчёт BlackBit/Winance.
+// Расчёт продажи ECR на BlackBit по лучшей цене BUY из актуального стакана.
 const erubNumber = value => Number(value).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:8});
+function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
+  const source=snapshot?.sources?.blackbit;
+  const data=source?.ok?source.data:null;
+  const bid=Number(data?.bestBid);
+  const target=Math.max(0,Number($("blackbitEcrTarget")?.value)||0);
+  const included=Boolean($("blackbitEcrFeeIncluded")?.checked);
+  const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+  if(!(bid>0)||!(target>0)){
+    put("blackbitEcrRate",bid>0?`${erubNumber(bid)} USDT / ECR`:"Нет актуального курса");
+    put("blackbitEcrNeeded","— ECR");put("blackbitEcrTradeFee","— USDT");put("blackbitEcrNet","— USDT");
+    put("blackbitEcrStatus",bid>0?"Введите сумму USDT для расчёта продажи ECR.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
+    return;
+  }
+  const feeRate=0.001;
+  // Checked: entered amount is the total sale proceeds including the 0.1% fee.
+  // Unchecked: entered amount is the desired USDT after the trading fee.
+  const grossUsdt=included?target:target/(1-feeRate);
+  const tradeFee=grossUsdt*feeRate;
+  const netUsdt=grossUsdt-tradeFee;
+  const ecrToSell=grossUsdt/bid;
+  const min=10, max=502.744987;
+  const warnings=[];
+  if(netUsdt+1e-9<min)warnings.push(`ниже минимума вывода ${min} USDT`);
+  if(netUsdt>max+1e-9)warnings.push(`превышен зафиксированный максимум ${erubNumber(max)} USDT`);
+  put("blackbitEcrRate",`${erubNumber(bid)} USDT / ECR`);
+  put("blackbitEcrNeeded",`${erubNumber(ecrToSell)} ECR`);
+  put("blackbitEcrTradeFee",`${erubNumber(tradeFee)} USDT`);
+  put("blackbitEcrNet",`${erubNumber(netUsdt)} USDT`);
+  put("blackbitEcrStatus",`Расчёт по лучшей цене BUY стакана BlackBit. ${included?"Введённая сумма включает торговую комиссию.":"Введена желаемая сумма после торговой комиссии."} Для получения ${erubNumber(netUsdt)} USDT нужно продать примерно ${erubNumber(ecrToSell)} ECR. Комиссия торговли 0,1%. Комиссия вывода BlackBit не подтверждена и здесь не учитывается.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит вывода по USDT соблюдён."}`);
+}
+["blackbitEcrTarget","blackbitEcrFeeIncluded"].forEach(id=>{
+  $(id)?.addEventListener("input",()=>calculateBlackBitEcr());
+  $(id)?.addEventListener("change",()=>calculateBlackBitEcr());
+});
+
 function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
   const win=snapshot?.sources?.winance;
   const pairs=win?.ok?win.data?.pairs||{}:{};

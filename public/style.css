@@ -529,14 +529,3 @@ html[data-theme="dark"] body,html[data-theme="dark"] .topbar,html[data-theme="da
 /* Amount inputs: keep a quiet border while focused (no bright outer frame). */
 .amount-input:focus-within{outline:none!important;box-shadow:none!important;border-color:#dce7df!important}
 .amount-input input:focus,.amount-input input:focus-visible{outline:none!important;box-shadow:none!important}
-
-
-/* FINAL RELEASE OVERRIDES: enforce the light theme regardless of stale theme state. */
-:root,html,html[data-theme="dark"],html[data-theme="light"]{color-scheme:light!important;--bg:#f3f6f4!important;--surface:#fff!important;--surface-soft:#f7faf8!important;--ink:#17231c!important;--muted:#68776e!important;--line:#dfe8e2!important;--green:#079653!important;--green-dark:#087342!important;--green-soft:#e3f5eb!important;--red:#c9434d!important;--red-soft:#fff0f0!important;--shadow:0 5px 20px rgba(22,48,32,.055)!important}
-html,html[data-theme="dark"] body,body{background:#f3f6f4!important;color:#17231c!important}
-html[data-theme="dark"] .topbar,html[data-theme="dark"] .sidebar,html[data-theme="dark"] .panel,html[data-theme="dark"] .metric-card,html[data-theme="dark"] .card,html[data-theme="dark"] .source-detail,html[data-theme="dark"] .rate-source-card,html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .erub-total,html[data-theme="dark"] .erub-compare-card,html[data-theme="dark"] .erub-calculator,html[data-theme="dark"] .erub-calculator-details,html[data-theme="dark"] .erub-purchase-section,html[data-theme="dark"] .withdraw-erub-card{background:#fff!important;color:#17231c!important;border-color:#dfe8e2!important}
-html[data-theme="dark"] .amount-input,html[data-theme="dark"] .calculator-panel select,html[data-theme="dark"] .tariff-input,html[data-theme="dark"] .erub-calculator input,html[data-theme="dark"] .erub-converter-input input{background:#fbfdfc!important;color:#17231c!important;border-color:#d5e2da!important}
-html[data-theme="dark"] .amount-input input{background:transparent!important;color:#17231c!important}
-#themeToggle{display:none!important}
-.amount-input:focus-within,.amount-input:focus,.amount-input:focus-visible{outline:0!important;box-shadow:none!important;border-color:#dce7df!important}
-.amount-input input:focus,.amount-input input:focus-visible,input:focus-visible{outline:0!important;box-shadow:none!important}
