@@ -529,3 +529,14 @@ html[data-theme="dark"] body,html[data-theme="dark"] .topbar,html[data-theme="da
 /* Amount inputs: keep a quiet border while focused (no bright outer frame). */
 .amount-input:focus-within{outline:none!important;box-shadow:none!important;border-color:#dce7df!important}
 .amount-input input:focus,.amount-input input:focus-visible{outline:none!important;box-shadow:none!important}
+
+/* Three independent withdrawal calculators */
+@media (min-width: 1100px){
+  .withdraw-erub-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+}
+.withdraw-erub-card{min-width:0;display:flex;flex-direction:column;gap:12px}
+.withdraw-erub-card .withdraw-erub-results{margin-top:4px}
+.withdraw-erub-card .withdraw-erub-note{margin-top:auto;padding-top:8px}
+.withdraw-erub-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.withdraw-erub-title strong{font-size:16px}
+.withdraw-erub-card .amount-input input{min-width:0}

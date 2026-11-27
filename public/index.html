@@ -36,10 +36,10 @@
       </section>
       <section id="rates" class="page"><div class="page-heading"><div><p class="eyebrow">КОТИРОВКИ ИСТОЧНИКОВ</p><h1>Курсы</h1><p class="page-subtitle">Актуальные валютные пары, цены и состояние источников.</p></div></div><div id="ratesSources" class="rates-grid"><div class="panel">Загрузка курсов…</div></div></section>
       <section id="withdraw" class="page">
-        <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода USDT</h1><p class="page-subtitle">Расчёт суммы к получению с учётом комиссий выбранной площадки.</p></div></div>
+        <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода средств</h1><p class="page-subtitle">Три независимых направления: BlackBit ECR, Winance ERUB и вывод на российскую карту.</p></div></div>
         <div class="withdraw-layout">
           <div class="panel calculator-panel">
-            <div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Параметры расчёта</h2></div></div>
+            <div class="panel-heading"><div><span class="panel-icon">▦</span><h2>Проверка вывода USDT</h2></div></div>
             <label class="field-label" for="withdrawExchange">Площадка вывода</label>
             <select id="withdrawExchange" class="tariff-input"><option value="blackbit">BlackBit</option><option value="winance">Winance</option></select>
             <label class="field-label" for="gross">Сумма <span>USDT</span></label>
@@ -51,7 +51,7 @@
           <div class="panel result-panel"><span class="result-eyebrow">ИТОГОВАЯ СУММА</span><div class="muted">Ориентировочно получите</div><strong id="net" class="net-value">— USDT</strong><div id="fee" class="fee-value">Комиссия: —</div><div id="minimum" class="minimum"></div><div id="resultNote" class="result-footnote">Проверка по параметрам выбранной площадки.</div></div>
         </div>
         <section class="erub-purchase-section withdrawal-erub-section">
-          <div class="erub-section-heading"><span>ERUB</span><div><h3>Расчёт продажи ECR и ERUB</h3><p>BlackBit: продажа ECR за USDT, торговая комиссия 0,1%. Winance: продажа ERUB за USDT или RUB, торговая комиссия 0,2%.</p></div></div>
+          <div class="erub-section-heading"><span>3</span><div><h3>Основные варианты расчёта</h3><p>Каждая карточка рассчитывается отдельно. Комиссия включается в сумму или добавляется сверху — в зависимости от переключателя.</p></div></div>
           <div class="withdraw-erub-grid">
             <article class="withdraw-erub-card">
               <div class="withdraw-erub-title"><strong>ECR → USDT</strong><span class="live-pill">BlackBit · 0,1%</span></div>
@@ -75,7 +75,8 @@
                 <div><span>Курс продажи ERUB</span><strong id="erubUsdtRate">Ожидание курса</strong></div>
                 <div><span>ERUB к продаже</span><strong id="erubUsdtNeeded">— ERUB</strong></div>
                 <div><span>Торговая комиссия Winance</span><strong id="erubUsdtTradeFee">0,20%</strong></div>
-                <div><span>Комиссия вывода</span><strong>3 USDT + 1%</strong></div>
+                <div><span>Комиссия вывода</span><strong id="erubUsdtWithdrawalFee">— USDT</strong></div>
+                <div><span>Остаток после комиссий</span><strong id="erubUsdtNet">— USDT</strong></div>
               </div>
               <p class="withdraw-erub-note" id="erubUsdtStatus">Расчёт появится после получения актуального курса Winance.</p>
             </article>
@@ -87,7 +88,8 @@
               <div class="withdraw-erub-results">
                 <div><span>Курс продажи ERUB</span><strong id="erubRubRate">Ожидание курса</strong></div>
                 <div><span>ERUB к продаже</span><strong id="erubRubNeeded">— ERUB</strong></div>
-                <div><span>Комиссия 5%</span><strong id="erubRubFee">— RUB</strong></div>
+                <div><span>Торговая комиссия Winance</span><strong id="erubRubTradeFee">0,20%</strong></div>
+                <div><span>Комиссия карты 5%</span><strong id="erubRubFee">— RUB</strong></div>
                 <div><span>Получите на карту</span><strong id="erubRubNet">— RUB</strong></div>
               </div>
               <p class="withdraw-erub-note" id="erubRubStatus">Расчёт появится после получения актуального курса Winance.</p>
