@@ -529,30 +529,34 @@ function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
   const data=source?.ok?source.data:null;
   const bid=Number(data?.bestBid);
   const target=Math.max(0,Number($("blackbitEcrTarget")?.value)||0);
-  const included=true;
   const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
   if(!(bid>0)||!(target>0)){
     put("blackbitEcrRate",bid>0?`${erubNumber(bid)} USDT / ECR`:"Нет актуального курса");
-    put("blackbitEcrNeeded","— ECR");put("blackbitEcrTradeFee","— USDT");put("blackbitEcrNet","— USDT");
-    put("blackbitEcrStatus",bid>0?"Введите сумму USDT для расчёта продажи ECR.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
+    put("blackbitEcrNeeded","— ECR"); put("blackbitEcrTradeFee","— USDT");
+    put("blackbitEcrWithdrawalFee","— USDT"); put("blackbitWinanceTradeFee","— USDT");
+    put("blackbitEcrNet","— USDT");
+    put("blackbitEcrStatus",bid>0?"Введите целевую сумму USDT после всех комиссий.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
     return;
   }
-  const feeRate=0.001;
-  // Checked: entered amount is the total sale proceeds including the 0.1% fee.
-  // Unchecked: entered amount is the desired USDT after the trading fee.
-  const grossUsdt=included?target:target/(1-feeRate);
-  const tradeFee=grossUsdt*feeRate;
-  const netUsdt=grossUsdt-tradeFee;
-  const ecrToSell=grossUsdt/bid;
-  const min=10, max=502.744987;
-  const warnings=[];
-  if(netUsdt+1e-9<min)warnings.push(`ниже минимума вывода ${min} USDT`);
-  if(netUsdt>max+1e-9)warnings.push(`превышен зафиксированный максимум ${erubNumber(max)} USDT`);
+  const bbTradeRate=0.001, bbWithdrawFixed=3, bbWithdrawRate=0.01, winTradeRate=0.002;
+  // Важно: 1% считается от целевой суммы. При цели 500 USDT выводная комиссия = 3 + 5 = 8 USDT.
+  const bbWithdrawalFee=bbWithdrawFixed+target*bbWithdrawRate;
+  const winanceTradeFee=target*winTradeRate;
+  const bbTransferAmount=target+winanceTradeFee;
+  const bbNetRequired=bbTransferAmount+bbWithdrawalFee;
+  const bbGrossSale=bbNetRequired/(1-bbTradeRate);
+  const bbTradeFee=bbGrossSale*bbTradeRate;
+  const ecrToSell=bbGrossSale/bid;
+  const min=10, max=502.744987, warnings=[];
+  if(bbTransferAmount+1e-9<min)warnings.push(`сумма перевода на Winance ниже минимума ${min} USDT`);
+  if(bbTransferAmount>max+1e-9)warnings.push(`превышен зафиксированный максимум вывода ${erubNumber(max)} USDT`);
   put("blackbitEcrRate",`${erubNumber(bid)} USDT / ECR`);
   put("blackbitEcrNeeded",`${erubNumber(ecrToSell)} ECR`);
-  put("blackbitEcrTradeFee",`${erubNumber(tradeFee)} USDT`);
-  put("blackbitEcrNet",`${erubNumber(netUsdt)} USDT`);
-  put("blackbitEcrStatus",`Расчёт по лучшей цене BUY стакана BlackBit. ${"Обязательные комиссии автоматически учтены."} Для получения ${erubNumber(netUsdt)} USDT нужно продать примерно ${erubNumber(ecrToSell)} ECR. Комиссия вывода BlackBit не подтверждена и здесь не учитывается.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит вывода по USDT соблюдён."}`);
+  put("blackbitEcrTradeFee",`${erubNumber(bbTradeFee)} USDT`);
+  put("blackbitEcrWithdrawalFee",`${erubNumber(bbWithdrawalFee)} USDT`);
+  put("blackbitWinanceTradeFee",`${erubNumber(winanceTradeFee)} USDT`);
+  put("blackbitEcrNet",`${erubNumber(target)} USDT`);
+  put("blackbitEcrStatus",`Для цели ${erubNumber(target)} USDT: комиссия вывода BlackBit — 3 USDT + 1% от цели (${erubNumber(bbWithdrawalFee)} USDT); комиссия ордера Winance 0,2% (${erubNumber(winanceTradeFee)} USDT) учитывается отдельно. На Winance переводится ${erubNumber(bbTransferAmount)} USDT. С учётом торговой комиссии BlackBit 0,1% нужно продать примерно ${erubNumber(ecrToSell)} ECR.${warnings.length?` Проверка лимита вывода BlackBit: ${warnings.join("; ")}.`:" Лимит вывода BlackBit соблюдён."}`);
 }
 ["blackbitEcrTarget"].forEach(id=>{
   $(id)?.addEventListener("input",()=>calculateBlackBitEcr());
