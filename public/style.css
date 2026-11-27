@@ -644,3 +644,58 @@ html[data-theme="dark"] .erub-bounty-banner{background:#20364a!important}
 html[data-theme="dark"] .erub-converter-line.bonus{background:#203b50!important;border-color:#315d79!important}
 html[data-theme="dark"] .amount-input,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--surface-soft);color:var(--ink);border-color:var(--line)}
 html[data-theme="dark"] .quick-actions .quick-primary{background:linear-gradient(110deg,#176db4,#2597d8)!important}
+
+
+/* CASHFLOW SIMULATOR THEME — graphite, soft grey and signature red */
+:root{
+  color-scheme:light;
+  --bg:#eef0f3;--surface:#ffffff;--surface-soft:#f6f7f9;
+  --ink:#20242b;--muted:#77808c;--line:#dfe3e8;
+  --green:#d83b45;--green-dark:#b92e38;--green-soft:#fae9eb;
+  --accent:#d83b45;--accent-strong:#b92e38;--accent-soft:#fae9eb;
+  --red:#d83b45;--red-soft:#fae9eb;
+  --shadow:0 8px 26px rgba(25,32,42,.055);--radius:15px;
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#11151b;--surface:#1b222c;--surface-soft:#222b36;
+  --ink:#edf1f5;--muted:#9aa6b4;--line:#303b49;
+  --green:#e46a72;--green-dark:#f08a91;--green-soft:#38272d;
+  --accent:#e46a72;--accent-strong:#f08a91;--accent-soft:#38272d;
+  --red:#f07880;--red-soft:#3b252b;
+  --shadow:0 12px 32px rgba(0,0,0,.22);
+}
+body{background:var(--bg)!important;color:var(--ink);letter-spacing:0}
+.topbar{background:#202630!important;color:#f4f6f8;border-color:#303945!important;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+.topbar .brand{color:#f4f6f8}.brand-copy strong span{color:#e15a63!important}.brand-copy small{color:#a5afbb}
+.logo-mark{background:linear-gradient(145deg,#424b59,#202630)!important;box-shadow:none!important}
+.sidebar{background:var(--surface)!important;border-color:var(--line)!important}
+nav:not(.mobile-nav) button{color:var(--muted)}
+nav:not(.mobile-nav) button:hover,nav:not(.mobile-nav) button.active{background:var(--accent-soft)!important;color:var(--accent-strong)!important}
+nav:not(.mobile-nav) button.active:after{background:var(--accent)!important}
+.nav-icon,.active .nav-icon,.eyebrow,.panel-icon,.metric-icon,.brand-copy strong span{color:var(--accent)!important}
+.sidebar-mark{background:var(--accent-soft)!important;color:var(--accent)!important}
+.metric-card,.panel,.card,.source-detail,.rate-source-card,.winance-market-card,.withdraw-erub-card,.calculator-panel,.result-panel{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important;border-radius:var(--radius)!important}
+.metric-icon,.source-state,.metric-change,.shared-lock,.tariff-status.confirmed,.live-pill{background:var(--accent-soft)!important;color:var(--accent-strong)!important}
+.btn-outline{background:var(--surface)!important;color:var(--accent-strong)!important;border:1px solid var(--line)!important}
+.btn-outline:hover,.quick-actions button:hover{background:var(--accent-soft)!important;border-color:var(--accent)!important}
+.quick-actions button{background:var(--surface-soft)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.quick-actions .quick-primary{background:#d83b45!important;color:#fff!important;box-shadow:0 5px 14px rgba(216,59,69,.18)!important}
+.amount-input,.erub-converter-input,.erub-converter-line,.withdraw-erub-results>div,.erub-compare-columns>div,.erub-calc-result,.bb-summary>div,.ub-mid,.book-row{background:var(--surface-soft)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.amount-input:focus-within{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-soft)!important}
+.amount-input input{color:var(--ink)!important}
+input,select,textarea{accent-color:var(--accent)}
+.candle-interval.active{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+.notice,.erub-bounty-banner,.erub-verdict.better{background:var(--accent-soft)!important;border-color:var(--line)!important;color:var(--ink)!important}
+.notice strong,.bonus-value,.erub-converter-line.bonus strong{color:var(--accent-strong)!important}
+.erub-converter-line.bonus{background:var(--accent-soft)!important;border-color:var(--line)!important}
+.theme-toggle{background:#2b3440!important;color:#f4f6f8!important;border-color:#46515f!important}
+html[data-theme="dark"] body{background:var(--bg)!important}
+html[data-theme="dark"] .topbar{background:#171d26!important;border-color:var(--line)!important}
+html[data-theme="dark"] .sidebar,html[data-theme="dark"] .panel,html[data-theme="dark"] .metric-card,html[data-theme="dark"] .rate-source-card,html[data-theme="dark"] .withdraw-erub-card,html[data-theme="dark"] .card,html[data-theme="dark"] .source-detail,html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .calculator-panel,html[data-theme="dark"] .result-panel{background:var(--surface)!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme="dark"] nav:not(.mobile-nav) button{color:var(--muted)!important}
+html[data-theme="dark"] nav:not(.mobile-nav) button.active,html[data-theme="dark"] nav:not(.mobile-nav) button:hover{background:var(--accent-soft)!important;color:var(--accent-strong)!important}
+html[data-theme="dark"] .amount-input,html[data-theme="dark"] .erub-converter-input,html[data-theme="dark"] .erub-converter-line,html[data-theme="dark"] .withdraw-erub-results>div,html[data-theme="dark"] .erub-compare-columns>div,html[data-theme="dark"] .erub-calc-result,html[data-theme="dark"] .bb-summary>div,html[data-theme="dark"] .ub-mid,html[data-theme="dark"] .book-row{background:var(--surface-soft)!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme="dark"] .notice,html[data-theme="dark"] .erub-bounty-banner,html[data-theme="dark"] .erub-verdict.better{background:var(--accent-soft)!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme="dark"] .theme-toggle{background:#2b3440!important;color:#f4f6f8!important;border-color:#46515f!important}
+html[data-theme="dark"] .site-footer{background:var(--surface)!important;color:var(--muted);border-color:var(--line)!important}
