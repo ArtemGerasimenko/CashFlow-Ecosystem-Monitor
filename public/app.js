@@ -473,7 +473,17 @@ async function load() {
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
     savedScroll=captureScrollPositions();
-    $("overall").innerHTML="<i></i>Все системы онлайн"; $("overall").className="status ok";
+    const sourceEntries=Object.entries(s.sources||{});
+    const onlineCount=sourceEntries.filter(([,source])=>source?.ok===true).length;
+    const totalSources=sourceEntries.length;
+    const overall=$("overall");
+    if(totalSources>0 && onlineCount===totalSources){
+      overall.innerHTML="<i></i>Все системы онлайн"; overall.className="status ok";
+    }else if(onlineCount>0){
+      overall.innerHTML=`<i></i>Доступно источников: ${onlineCount} из ${totalSources}`; overall.className="status pending";
+    }else{
+      overall.innerHTML="<i></i>Нет связи с источниками"; overall.className="status error";
+    }
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
     // Rates are rendered above with actual quotes, not source-status placeholders.
     $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance);
@@ -581,7 +591,9 @@ function calculate(){
   let net=entered, tradeFee=0, withdrawalFee=null, totalNeeded=entered;
   if(included){
     if(platform==="winance"){
-      const divisor=(1+tradeRate)*(1+(percent||0)/100);
+      // The entered amount is the total budget including both commissions.
+      // Both percentage fees are calculated from the traded nominal, so they add.
+      const divisor=1+tradeRate+(percent||0)/100;
       net=Math.max(0,(entered-(fixed||0))/divisor);
       tradeFee=net*tradeRate;
       withdrawalFee=(fixed||0)+net*(percent||0)/100;

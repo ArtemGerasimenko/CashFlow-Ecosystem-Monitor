@@ -525,3 +525,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #75bd91!important;outline
 .minimum.bad{background:var(--red-soft)!important;color:#a82e39!important}.minimum.good{background:var(--green-soft)!important;color:var(--green-dark)!important}
 html[data-theme="dark"]{color-scheme:light!important;--bg:#f3f6f4;--surface:#fff;--surface-soft:#f7faf8;--ink:#17231c;--muted:#68776e;--line:#dfe8e2;--green:#079653;--green-dark:#087342;--green-soft:#e3f5eb;--red:#c9434d;--red-soft:#fff0f0;--shadow:0 5px 20px rgba(22,48,32,.055)}
 html[data-theme="dark"] body,html[data-theme="dark"] .topbar,html[data-theme="dark"] .sidebar,html[data-theme="dark"] .panel,html[data-theme="dark"] .metric-card,html[data-theme="dark"] .card,html[data-theme="dark"] .source-detail,html[data-theme="dark"] .rate-source-card,html[data-theme="dark"] .winance-market-card,html[data-theme="dark"] .erub-total,html[data-theme="dark"] .erub-compare-card,html[data-theme="dark"] .erub-calculator,html[data-theme="dark"] .erub-calculator-details,html[data-theme="dark"] .erub-purchase-section{background:#fff!important;color:#17231c!important;border-color:#dfe8e2!important}
+
+/* Amount inputs: keep a quiet border while focused (no bright outer frame). */
+.amount-input:focus-within{outline:none!important;box-shadow:none!important;border-color:#dce7df!important}
+.amount-input input:focus,.amount-input input:focus-visible{outline:none!important;box-shadow:none!important}

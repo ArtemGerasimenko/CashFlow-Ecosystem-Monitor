@@ -58,3 +58,9 @@ Open `http://localhost:8080`.
 - Withdrawal fees are configured once in shared settings and apply identically to both platforms (default: 3 USDT + 1%).
 - Existing saved tariff settings are migrated from the previous duplicated fee fields where possible.
 - The withdrawal settings layout is responsive for desktop, tablet, and mobile.
+
+## Исправления проверки 27.11.2026
+- Статус верхней панели теперь отражает реальное число доступных источников, а не всегда сообщает «Все системы онлайн».
+- Исправлена формула включённой комиссии Winance: процентные торговая и выводная комиссии рассчитываются от номинала и суммируются, фиксированная комиссия учитывается отдельно.
+- Убрана яркая рамка фокуса у полей суммы.
+- Если внешний источник недоступен, интерфейс показывает ошибку источника; котировки не подменяются выдуманными значениями.
