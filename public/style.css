@@ -480,3 +480,42 @@ html[data-theme="dark"] select,html[data-theme="dark"] input,html[data-theme="da
 .tariff-status.pending{color:#8a641b;background:#fff3d8}
 .field-help.limit-warning{color:#b42318;font-weight:800}
 [data-theme="dark"] .tariff-status.pending{color:#f2cf82;background:#47391f}
+
+
+/* FINAL layout repair: withdrawal tariff cards */
+#withdraw .tariff-section{display:block;width:100%;min-width:0}
+#withdraw .tariff-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:22px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+#withdraw .tariff-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;align-items:stretch}
+#withdraw .tariff-card{display:flex!important;flex-direction:column!important;gap:0!important;min-width:0!important;width:100%!important;padding:22px!important;border:1px solid var(--line)!important;border-radius:18px!important;overflow:hidden}
+#withdraw .tariff-title{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;width:100%!important;margin:0 0 16px!important;padding:0 0 14px!important;border-bottom:1px solid var(--line)!important}
+#withdraw .tariff-brand{display:flex!important;align-items:center!important;gap:12px!important;min-width:0}
+#withdraw .tariff-brand>div{display:flex!important;flex-direction:column!important;gap:3px!important}
+#withdraw .tariff-brand strong{font-size:16px!important;line-height:1.25}
+#withdraw .tariff-brand small{font-size:11px!important;color:var(--muted)!important}
+#withdraw .tariff-status{flex:0 0 auto;white-space:nowrap}
+#withdraw .tariff-form-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;width:100%!important;margin:0!important}
+#withdraw .tariff-form-grid label,
+#withdraw .shared-fees-grid label{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;min-width:0!important;margin:0!important;line-height:1.35!important;font-size:12px!important;font-weight:700!important}
+#withdraw .tariff-form-grid label span,
+#withdraw .shared-fees-grid label span{display:block!important;margin:0!important;font-size:10px!important;line-height:1.2!important}
+#withdraw .tariff-form-grid input,
+#withdraw .shared-fees-grid input{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;height:44px!important;margin:0!important;padding:0 12px!important;border:1px solid var(--line)!important;border-radius:10px!important;font-size:14px!important;line-height:normal!important}
+#withdraw .tariff-form-grid input[readonly],
+#withdraw .shared-fees-grid input[readonly]{cursor:default!important;opacity:1!important}
+#withdraw .tariff-note{display:block!important;margin:16px 0 0!important;font-size:11px!important;line-height:1.6!important;overflow-wrap:anywhere}
+#withdraw .shared-fees-card{display:block!important;width:100%!important;margin-top:16px!important;padding:22px!important;border:1px solid var(--line)!important;border-radius:18px!important}
+#withdraw .shared-fees-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important;margin-bottom:16px!important}
+#withdraw .shared-fees-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;max-width:720px!important}
+#withdraw .tariff-locked-note,#withdraw .tariff-warning{margin-top:14px!important}
+@media(max-width:900px){
+  #withdraw .tariff-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:560px){
+  #withdraw .tariff-card,#withdraw .shared-fees-card{padding:16px!important}
+  #withdraw .tariff-title{align-items:flex-start!important}
+  #withdraw .tariff-form-grid,#withdraw .shared-fees-grid{grid-template-columns:1fr!important}
+  #withdraw .tariff-status{font-size:9px!important;white-space:normal!important;text-align:center}
+  #withdraw .tariff-section-heading{align-items:flex-start!important}
+}
+html[data-theme="dark"] #withdraw .tariff-form-grid input[readonly],
+html[data-theme="dark"] #withdraw .shared-fees-grid input[readonly]{background:#111a15!important;color:#e7efe9!important;border-color:#35483b!important}
