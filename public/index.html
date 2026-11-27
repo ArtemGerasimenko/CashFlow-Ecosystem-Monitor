@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08764b" id="themeColorMeta"><meta name="description" content="CashFlow Ecosystem Monitor — мониторинг, аналитика и калькулятор">
+  <title>CashFlow Ecosystem Monitor</title><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icons/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#page=dashboard" aria-label="CashFlow — главная">
+      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M36.8 10.8 24 3.5 5.5 14.2v19.6L24 44.5l12.8-7.3-7-4-5.8 3.3-11.5-6.7V17.2L24 10.5l5.8 3.3 7-3Z"/><path d="M18.2 20.2h20.3v8H18.2z"/></svg></span>
+      <span class="brand-copy"><strong><span>CashFlow</span> Ecosystem Monitor</strong><small>MONITOR · ANALYTICS · CALCULATOR</small></span>
+    </a>
+    <div class="topbar-right"><button id="installApp" class="btn btn-outline install-app-btn" type="button" hidden>⇩ Установить</button><button id="themeToggle" class="theme-toggle" type="button" aria-label="Включить тёмную тему" title="Переключить тему"><span class="theme-toggle-icon">☾</span><span class="theme-toggle-label">Тёмная тема</span></button><span id="overall" class="status pending"><i></i>Подключение…</span><span class="top-divider"></span><span class="updated-label"><i class="icon-refresh">↻</i><span id="updated">Ожидание данных</span></span><button id="refresh" class="btn btn-outline refresh-btn"><span>↻</span> Обновить данные</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar"><div class="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav aria-label="Основная навигация">
+      <button class="active" data-page="dashboard"><span class="nav-icon">⌂</span><span>Обзор</span></button>
+      <button data-page="rates"><span class="nav-icon">↗</span><span>Курсы</span></button>
+      <button data-page="withdraw"><span class="nav-icon">▦</span><span>Расчёт вывода</span></button>
+      <button data-page="erub"><span class="nav-icon">⇄</span><span>Сравнение ERUB</span></button>
+      <button data-page="markets"><span class="nav-icon">▥</span><span>Рынок и стакан</span></button>
+      <button data-page="history"><span class="nav-icon">◷</span><span>История</span></button>
+    </nav><div class="sidebar-bottom"><div class="sidebar-mark">CF</div><div><strong>CashFlow</strong><small>ECOSYSTEM</small></div></div></aside>
+    <main class="main-content">
+      <section id="dashboard" class="page active">
+        <div class="page-heading"><div><p class="eyebrow">ПАНЕЛЬ УПРАВЛЕНИЯ</p><h1>Обзор экосистемы</h1><p class="page-subtitle">Рыночные данные и аналитика CashFlow в одном месте.</p></div><div class="heading-actions"><span class="live-indicator"><i></i>Мониторинг активен</span></div></div>
+        <div id="dashboardMetrics" class="metric-grid"><article class="metric-card skeleton">Загрузка рыночных данных…</article></div>
+        <div class="dashboard-grid"><section class="panel platform-panel"><div class="panel-heading"><div><span class="panel-icon">▱</span><h2>Мониторинг площадок</h2></div><span class="panel-kicker">ИСТОЧНИКИ ДАННЫХ</span></div><div id="sources" class="source-list"><div class="empty-state">Получаем статус площадок…</div></div></section>
+          <section class="panel quick-panel"><div class="panel-heading"><div><span class="panel-icon">ϟ</span><h2>Быстрые действия</h2></div></div><div class="quick-actions"><button data-go="withdraw" class="quick-primary"><span>▦</span><b>Открыть расчёт вывода</b><span class="arrow">›</span></button><button data-go="erub"><span>⇄</span><b>Сравнить курсы ERUB</b><span class="arrow">›</span></button><button data-go="markets"><span>▥</span><b>Перейти к рынку</b><span class="arrow">›</span></button></div></section>
+          <section class="panel chart-panel"><div class="panel-heading"><div><span class="panel-icon">⌁</span><h2>Рыночная динамика</h2></div><span class="chart-tag">ECR / USDT</span></div><div id="overviewChart" class="overview-chart"><div class="empty-state">График появится после получения истории котировок.</div></div></section>
+          <section class="panel updates-panel"><div class="panel-heading"><div><span class="panel-icon">◷</span><h2>Последние обновления</h2></div></div><div id="recentUpdates" class="timeline"><div class="empty-state">Ожидание обновлений…</div></div></section>
+        </div>
+      </section>
+      <section id="rates" class="page"><div class="page-heading"><div><p class="eyebrow">КОТИРОВКИ ИСТОЧНИКОВ</p><h1>Курсы</h1><p class="page-subtitle">Актуальные валютные пары, цены и состояние источников.</p></div></div><div id="ratesSources" class="rates-grid"><div class="panel">Загрузка курсов…</div></div></section>
+      <section id="withdraw" class="page">
+        <div class="page-heading"><div><p class="eyebrow">ФИНАНСОВЫЙ ИНСТРУМЕНТ</p><h1>Расчёт вывода средств</h1><p class="page-subtitle">Три независимых направления: BlackBit ECR, Winance ERUB и вывод на российскую карту.</p></div></div>
+        <section class="erub-purchase-section withdrawal-erub-section">
+          <div class="erub-section-heading"><span>3</span><div><h3>Основные варианты расчёта</h3><p>Каждая карточка рассчитывается отдельно. Комиссия включается в сумму или добавляется сверху — в зависимости от переключателя.</p></div></div>
+          <div class="withdraw-erub-grid">
+            <article class="withdraw-erub-card">
+              <div class="withdraw-erub-title"><strong>ECR → USDT</strong><span class="live-pill">BlackBit · 0,1%</span></div>
+              <label class="field-label" for="blackbitEcrTarget">Сколько USDT нужно получить</label>
+              <div class="amount-input"><input id="blackbitEcrTarget" type="number" min="0" step="0.01" value="500"><span>USDT</span></div>
+              <label class="withdraw-fee-toggle"><input id="blackbitEcrFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
+              <div class="withdraw-erub-results">
+                <div><span>Курс продажи ECR</span><strong id="blackbitEcrRate">Ожидание курса</strong></div>
+                <div><span>ECR к продаже</span><strong id="blackbitEcrNeeded">— ECR</strong></div>
+                <div><span>Торговая комиссия 0,1%</span><strong id="blackbitEcrTradeFee">— USDT</strong></div>
+                <div><span>Получите после продажи</span><strong id="blackbitEcrNet">— USDT</strong></div>
+              </div>
+              <p class="withdraw-erub-note" id="blackbitEcrStatus">Расчёт появится после получения актуального стакана BlackBit.</p>
+            </article>
+            <article class="withdraw-erub-card">
+              <div class="withdraw-erub-title"><strong>ERUB → USDT</strong><span class="live-pill">Winance</span></div>
+              <label class="field-label" for="erubUsdtTarget">Сколько USDT нужно получить</label>
+              <div class="amount-input"><input id="erubUsdtTarget" type="number" min="0" step="0.01" value="500"><span>USDT</span></div>
+              <label class="withdraw-fee-toggle"><input id="erubUsdtFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
+              <div class="withdraw-erub-results">
+                <div><span>Курс продажи ERUB</span><strong id="erubUsdtRate">Ожидание курса</strong></div>
+                <div><span>ERUB к продаже</span><strong id="erubUsdtNeeded">— ERUB</strong></div>
+                <div><span>Торговая комиссия Winance</span><strong id="erubUsdtTradeFee">0,20%</strong></div>
+                <div><span>Комиссия вывода</span><strong id="erubUsdtWithdrawalFee">— USDT</strong></div>
+                <div><span>Остаток после комиссий</span><strong id="erubUsdtNet">— USDT</strong></div>
+              </div>
+              <p class="withdraw-erub-note" id="erubUsdtStatus">Расчёт появится после получения актуального курса Winance.</p>
+            </article>
+            <article class="withdraw-erub-card">
+              <div class="withdraw-erub-title"><strong>ERUB → RUB · российская карта</strong><span class="live-pill">Комиссия 5%</span></div>
+              <label class="field-label" for="erubRubTarget">Сумма в RUB</label>
+              <div class="amount-input"><input id="erubRubTarget" type="number" min="0" step="0.01" value="10000"><span>RUB</span></div>
+              <label class="withdraw-fee-toggle"><input id="erubRubFeeIncluded" type="checkbox" checked><span>Включить комиссию в сумму</span></label>
+              <div class="withdraw-erub-results">
+                <div><span>Курс продажи ERUB</span><strong id="erubRubRate">Ожидание курса</strong></div>
+                <div><span>ERUB к продаже</span><strong id="erubRubNeeded">— ERUB</strong></div>
+                <div><span>Торговая комиссия Winance</span><strong id="erubRubTradeFee">0,20%</strong></div>
+                <div><span>Комиссия карты 5%</span><strong id="erubRubFee">— RUB</strong></div>
+                <div><span>Получите на карту</span><strong id="erubRubNet">— RUB</strong></div>
+              </div>
+              <p class="withdraw-erub-note" id="erubRubStatus">Расчёт появится после получения актуального курса Winance.</p>
+            </article>
+          </div>
+        </section>
+      </section>
+      <section id="erub" class="page"><div class="page-heading"><div><p class="eyebrow">СРАВНИТЕЛЬНАЯ АНАЛИТИКА</p><h1>Сравнение ERUB</h1><p class="page-subtitle">Сопоставление курсов eRub.site и Winance с учётом Bounty.</p></div></div><div id="erubData" class="erub-dashboard">Загрузка курсов eRub…</div></section>
+      <section id="markets" class="page"><div class="page-heading"><div><p class="eyebrow">ТОРГОВЫЙ ТЕРМИНАЛ</p><h1>Рынок и стакан</h1><p class="page-subtitle">Публичные котировки, история свечей и глубина рынка.</p></div><span class="live-indicator"><i></i>Live market data</span></div><div id="blackbitData" class="market-source-panel">Ожидание данных BlackBit…</div><div id="winanceData" class="market-source-panel">Ожидание данных Winance…</div></section>
+      <section id="history" class="page"><div class="page-heading"><div><p class="eyebrow">АРХИВ РЫНКА</p><h1>История котировок</h1><p class="page-subtitle">Последние сохранённые обновления рыночных источников.</p></div></div><div id="historyData" class="panel history-panel">История загружается…</div></section>
+    </main>
+  </div>
+  <nav class="mobile-nav" aria-label="Мобильная навигация"><button class="active" data-page="dashboard"><span>⌂</span><small>Обзор</small></button><button data-page="rates"><span>↗</span><small>Курсы</small></button><button data-page="withdraw"><span>▦</span><small>Расчёт</small></button><button data-page="erub"><span>⇄</span><small>ERUB</small></button><button data-page="markets"><span>▥</span><small>Рынок</small></button><button data-page="history"><span>◷</span><small>История</small></button></nav>
+  <footer class="site-footer">CashFlow Ecosystem Monitor <span>·</span> API-ключи хранятся только на сервере <span>·</span> Данные рынка не являются торговой рекомендацией.</footer>
+  <script type="module" src="./app.js"></script><script type="module" src="./app-install.js"></script>
+</body></html>
