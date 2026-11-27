@@ -44,3 +44,11 @@ Open `http://localhost:8080`.
 - Hardened horizontal overflow handling for market tables, order books, and long currency values.
 - Improved mobile touch targets, safe-area spacing, and bottom navigation sizing.
 - Kept market polling cadence and all calculation/API behavior unchanged.
+
+## Лимиты вывода USDT
+
+В разделе «Расчёт вывода» отображаются последние зафиксированные значения:
+- BlackBit: 502.744987 USDT (по скриншоту формы вывода от 27.11.2026).
+- Winance: 5 000 USDT (значение сообщено пользователем).
+
+Калькулятор предупреждает о превышении зафиксированного максимума BlackBit. Значения не являются автоматической онлайн-синхронизацией с личными кабинетами и должны обновляться после повторной проверки формы вывода. Комиссии сетей Winance не считаются подтверждёнными.

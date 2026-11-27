@@ -484,7 +484,16 @@ async function load() {
   } finally { loadInProgress = false; }
 }
 $("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
-function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
+const WITHDRAWAL_LIMITS = { blackbitUsdtMax: 502.744987, winanceUsdtMax: 5000 };
+function calculate(){
+  const input=$("gross"), gross=Math.max(0,Number(input.value)||0), net=Math.max(0,(gross-3)/1.01), fee=gross-net;
+  $("net").textContent=`${net.toFixed(2)} USDT`; $("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;
+  const m=$("minimum"), minOk=gross+1e-9>=10, maxOk=gross<=WITHDRAWAL_LIMITS.blackbitUsdtMax+1e-9;
+  if(!maxOk){m.textContent=`Превышен последний зафиксированный максимум BlackBit: ${WITHDRAWAL_LIMITS.blackbitUsdtMax.toFixed(6)} USDT`;m.className="minimum bad";}
+  else if(!minOk){m.textContent="Минимум 10 USDT до комиссии не достигнут";m.className="minimum bad";}
+  else {m.textContent="Сумма в пределах зафиксированного лимита BlackBit; минимум 10 USDT достигнут";m.className="minimum good";}
+  input.setAttribute("aria-valuemax",String(WITHDRAWAL_LIMITS.blackbitUsdtMax));
+}
 $("gross").addEventListener("input",calculate); calculate();
 
 load();

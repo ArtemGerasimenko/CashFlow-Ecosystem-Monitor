@@ -330,3 +330,7 @@ td,th { overflow-wrap:anywhere; }
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
+
+/* Exchange withdrawal limits and fee matrix */
+.tariff-section{margin-top:24px}.tariff-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tariff-card{padding:20px;min-width:0}.tariff-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:13px;border-bottom:1px solid var(--line);margin-bottom:7px}.tariff-title strong{font-family:Manrope,sans-serif;font-size:19px}.tariff-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #eff3f0;font-size:12px}.tariff-row span{color:var(--muted)}.tariff-row b{text-align:right;font-variant-numeric:tabular-nums}.tariff-row .unknown{color:#a36b18}.tariff-note{font-size:11px;line-height:1.55;color:var(--muted);margin:13px 0 0}.tariff-warning{margin-top:14px}.tariff-warning strong{color:#8b641e}.tariff-warning{background:#fff9ed;border-color:#f0dfb8;color:#725b32}
+@media(max-width:760px){.tariff-grid{grid-template-columns:1fr}.tariff-card{padding:16px}.tariff-title{align-items:flex-start;flex-direction:column}.tariff-row{font-size:11px}.tariff-row b{max-width:52%;overflow-wrap:anywhere}}
