@@ -473,11 +473,11 @@ async function load() {
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
     savedScroll=captureScrollPositions();
-    const sourceEntries=Object.entries(s.sources||{});
-    const onlineCount=sourceEntries.filter(([,source])=>source?.ok===true).length;
-    const totalSources=sourceEntries.length;
+    const requiredSources=["blackbit","winance","erub"];
+    const onlineCount=requiredSources.filter(name=>s.sources?.[name]?.ok===true).length;
+    const totalSources=requiredSources.length;
     const overall=$("overall");
-    if(totalSources>0 && onlineCount===totalSources){
+    if(onlineCount===totalSources){
       overall.innerHTML="<i></i>Все системы онлайн"; overall.className="status ok";
     }else if(onlineCount>0){
       overall.innerHTML=`<i></i>Доступно источников: ${onlineCount} из ${totalSources}`; overall.className="status pending";
