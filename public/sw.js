@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cashflow-monitor-shell-v2';
+const CACHE_NAME = 'cashflow-monitor-v-theme-20261128';
 const APP_SHELL = [
   '/',
   '/index.html',
