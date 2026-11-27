@@ -12,7 +12,21 @@ const $ = id => document.getElementById(id);
     const meta=document.getElementById("themeColorMeta");if(meta)meta.content=dark?"#111a16":"#f5f8f6";
   };
   apply(saved);
-  document.addEventListener("DOMContentLoaded",()=>{const button=document.getElementById("themeToggle");if(button)button.addEventListener("click",()=>{const next=root.dataset.theme==="dark"?"light":"dark";apply(next);try{localStorage.setItem("cashflow-monitor-theme",next);}catch(_){}});});
+  // The module script is deferred by the browser, so the button already exists here.
+  // Bind immediately instead of relying on DOMContentLoaded (which may already have fired
+  // in embedded previews or hot-reload environments).
+  const bindToggle=()=>{
+    const button=document.getElementById("themeToggle");
+    if(!button || button.dataset.themeBound==="1") return;
+    button.dataset.themeBound="1";
+    button.addEventListener("click",()=>{
+      const next=root.dataset.theme==="dark"?"light":"dark";
+      apply(next);
+      try{localStorage.setItem("cashflow-monitor-theme",next);}catch(_){}
+    });
+  };
+  bindToggle();
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",bindToggle,{once:true});
 })();
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -541,7 +555,8 @@ function calculate(){
 applyLockedTariffs();
 ["gross","withdrawExchange"].forEach(id=>$(id)?.addEventListener("input",calculate));
 $("withdrawExchange")?.addEventListener("change",calculate);
-
+// Render the withdrawal result immediately on first page load, before the user edits anything.
+calculate();
 
 load();
 let refreshTimer = null;
