@@ -502,3 +502,8 @@ html[data-theme="dark"] select,html[data-theme="dark"] input,html[data-theme="da
 .withdraw-fee-toggle input{width:17px;height:17px;accent-color:var(--green)}
 @media(max-width:800px){.withdraw-erub-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.withdraw-erub-card{padding:15px}.withdraw-erub-results{grid-template-columns:1fr 1fr}.erub-section-heading{align-items:flex-start}}
+
+/* Withdrawal amount inputs: no bright focus frame while typing. */
+#withdraw .amount-input:focus-within{border-color:var(--line)!important;box-shadow:none!important;outline:none!important}
+#withdraw .amount-input input:focus,#withdraw .amount-input input:focus-visible{outline:none!important;box-shadow:none!important}
+#withdraw :focus-visible{outline:none!important}
