@@ -1,29 +1,4 @@
 const $ = id => document.getElementById(id);
-// Theme preference: light by default, user choice is persisted locally.
-(function initTheme(){
-  const root=document.documentElement;
-  const button=document.getElementById("themeToggle");
-  const meta=document.getElementById("themeColorMeta");
-  let theme="light";
-  try{const saved=localStorage.getItem("cashflow-monitor-theme");if(saved==="dark"||saved==="light")theme=saved;}catch(_){}
-  const applyTheme=(next)=>{
-    theme=next==="dark"?"dark":"light";
-    root.dataset.theme=theme;
-    if(meta)meta.content=theme==="dark"?"#101713":"#f5f8f6";
-    if(button){
-      const dark=theme==="dark";
-      button.setAttribute("aria-label",dark?"Включить светлую тему":"Включить тёмную тему");
-      button.title=dark?"Переключить на светлую тему":"Переключить на тёмную тему";
-      const icon=button.querySelector(".theme-toggle-icon");
-      const label=button.querySelector(".theme-toggle-label");
-      if(icon)icon.textContent=dark?"☀":"☾";
-      if(label)label.textContent=dark?"Светлая тема":"Тёмная тема";
-    }
-    try{localStorage.setItem("cashflow-monitor-theme",theme);}catch(_){}
-  };
-  applyTheme(theme);
-  if(button)button.addEventListener("click",()=>applyTheme(theme==="dark"?"light":"dark"));
-})();
 const API_BASE = "/api";
 const esc = value => String(value ?? "—").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const num = value => {
@@ -67,7 +42,6 @@ if(navigation){
 pageButtons.forEach(button=>button.addEventListener("click",()=>{
   activatePage(button.dataset.page,true);
 }));
-document.querySelectorAll("[data-go]").forEach(button=>button.addEventListener("click",()=>activatePage(button.dataset.go,true)));
 window.addEventListener("hashchange",()=>{
   const page=pageFromHash();
   if(page) activatePage(page,false);
@@ -122,52 +96,6 @@ function renderRatesSources(snapshot){
   ].join("");
 }
 
-function renderOverview(snapshot){
-  const sources=snapshot?.sources||{};
-  const bb=sources.blackbit?.ok?sources.blackbit.data:null;
-  const win=sources.winance?.ok?sources.winance.data:null;
-  const erub=sources.erub?.ok?sources.erub.data:null;
-  const pairs=win?.pairs||{};
-  const fmt=(v,d=8)=>v===null||v===undefined||v===""||!Number.isFinite(Number(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:d});
-  const metric=(title,value,source,icon,change="")=>`<article class="metric-card"><div class="metric-top"><span>${title}</span><span class="metric-icon">${icon}</span></div><div class="metric-value">${value}</div><div class="metric-foot"><span class="metric-source">● ${source}</span>${change?`<span class="metric-change">${change}</span>`:""}</div></article>`;
-  const connected=Object.values(sources).filter(x=>x?.ok).length;
-  const total=Object.keys(sources).length;
-  const metrics=[
-    metric("ECR / USDT",bb?`${fmt(bb.lastRate,6)}`:"—","BlackBit", "◉"),
-    metric("ERUB / USDT",pairs.erubUsdt?fmt(pairs.erubUsdt.rate):"—","Winance","▱"),
-    metric("ERUB / RUB",pairs.erubRub?fmt(pairs.erubRub.rate):"—","Winance","₽"),
-    metric("Источники данных",`${connected} / ${total||3}`,connected===total&&total?"Все подключены":"Подключение","▤")
-  ];
-  const metricsRoot=$("dashboardMetrics"); if(metricsRoot) metricsRoot.innerHTML=metrics.join("");
-  const labels={blackbit:"BlackBit",winance:"Winance",erub:"еРубль"};
-  const sourceRoot=$("sources"); if(sourceRoot) sourceRoot.innerHTML=Object.entries(sources).map(([key,v])=>{
-    const data=v?.data||{};
-    let detail="Публичный источник данных";
-    if(key==="blackbit") detail=`ECR/USDT · ${fmt(data.lastRate,6)} USDT`;
-    if(key==="winance") detail=`ERUB/USDT · ${fmt(data.pairs?.erubUsdt?.rate)} · ERUB/RUB · ${fmt(data.pairs?.erubRub?.rate)}`;
-    if(key==="erub") detail=`Получено валютных курсов: ${(data.rates||[]).length}`;
-    return `<div class="source-row"><div><div class="source-title">${esc(labels[key]||key)}</div><div class="source-sub">${esc(detail)}</div></div><span class="source-state ${v?.ok?"":"error"}">${v?.ok?"● LIVE":"Недоступен"}</span><span class="source-sub">${esc(v?.checkedAt?new Date(v.checkedAt).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}):"—")}</span></div>`;
-  }).join("")||'<div class="empty-state">Источники ещё не опрошены.</div>';
-  const chartRoot=$("overviewChart");
-  const candles=Array.isArray(bb?.candles)?bb.candles.slice(-48):[];
-  if(chartRoot){
-    if(candles.length>1){
-      const values=candles.map(c=>Number(c.close)).filter(Number.isFinite);
-      const min=Math.min(...values),max=Math.max(...values),range=max-min||1;
-      const w=760,h=190,pad=12;
-      const pts=values.map((v,i)=>`${pad+i/(values.length-1)*(w-pad*2)},${h-pad-(v-min)/range*(h-pad*2)}`);
-      const path=pts.join(" "),area=`${pad},${h-pad} ${path} ${w-pad},${h-pad}`;
-      const last=values.at(-1);
-      chartRoot.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Динамика ECR USDT по последним свечам"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#12a85e" stop-opacity=".22"/><stop offset="1" stop-color="#12a85e" stop-opacity="0"/></linearGradient></defs><g stroke="#e9efeb" stroke-width="1"><path d="M0 35H760 M0 82H760 M0 129H760 M0 176H760"/></g><polygon points="${area}" fill="url(#chartFill)"/><polyline points="${path}" fill="none" stroke="#0aa65a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${w-pad}" cy="${h-pad-(last-min)/range*(h-pad*2)}" r="5" fill="#078747" stroke="white" stroke-width="3"/><text x="12" y="15" font-size="11" fill="#7c8b81">${fmt(max,6)}</text><text x="12" y="187" font-size="11" fill="#7c8b81">${fmt(min,6)}</text></svg>`;
-    }else chartRoot.innerHTML='<div class="empty-state">График появится после получения истории котировок.</div>';
-  }
-  const recent=$("recentUpdates");
-  if(recent){
-    const rows=Object.entries(sources).map(([key,v])=>({key,v,time:v?.checkedAt||v?.data?.receivedAt})).filter(x=>x.time).sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,5);
-    recent.innerHTML=rows.map(x=>`<div class="timeline-row"><span class="timeline-time">${new Date(x.time).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span><span class="timeline-dot"></span><span class="timeline-text">${esc(labels[x.key]||x.key)}: ${x.v?.ok?"данные успешно обновлены":"ошибка получения данных"}</span></div>`).join("")||'<div class="empty-state">Ожидание обновлений…</div>';
-  }
-}
-
 function unifiedBook(bids,asks,unit,baseLabel,format=(v)=>num(v),orders=false,midText="—"){
   // Keep the 10 best market levels, then apply the requested visual order.
   // SELL/ASK: choose the 10 lowest asks (closest to market), display descending.
@@ -212,19 +140,6 @@ function candleControls(source,pair,defaultInterval){
   const selected=Number(candleSelections.get(candleKey(source,pair))??defaultInterval);
   return `<div class="candle-controls" style="display:flex;flex-wrap:nowrap;gap:6px;margin:10px 0 14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin">${CANDLE_INTERVALS.map(([value,label])=>`<button type="button" class="candle-interval ${selected===value?"active":""}" data-candle-source="${source}" data-candle-pair="${pair}" data-candle-interval="${value}" aria-pressed="${selected===value}" style="flex:0 0 auto;min-width:54px;padding:9px 12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:8px;background:${selected===value?"rgba(99,102,241,.22)":"transparent"};color:inherit">${label}</button>`).join("")}</div>`;
 }
-function candleChart(items){
-  const rows=(Array.isArray(items)?items:[]).filter(c=>[c.open,c.high,c.low,c.close].every(v=>Number.isFinite(Number(v)))).slice(-90);
-  if(rows.length<2) return '<div class="empty-state">Для свечного графика пока недостаточно точек истории.</div>';
-  const w=900,h=250,left=58,right=14,top=14,bottom=30,plotH=170,volH=28;
-  const lo=Math.min(...rows.map(x=>Number(x.low))),hi=Math.max(...rows.map(x=>Number(x.high))),span=hi-lo||1;
-  const step=(w-left-right)/rows.length,cw=Math.max(3,Math.min(9,step*.58));
-  const maxVol=Math.max(1,...rows.map(x=>Number(x.volume)||0));
-  const y=v=>top+(hi-v)/span*plotH;
-  const grid=[0,.25,.5,.75,1].map(t=>{const yy=top+t*plotH,val=hi-t*span;return `<path d="M${left} ${yy}H${w-right}" stroke="#e9efeb"/><text x="${left-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#829087">${Number(val).toPrecision(5)}</text>`}).join("");
-  const sticks=rows.map((c,i)=>{const x=left+i*step+step/2,o=Number(c.open),cl=Number(c.close),up=cl>=o,color=up?"#0aa65a":"#dc5960",bodyY=Math.min(y(o),y(cl)),bodyH=Math.max(1.5,Math.abs(y(o)-y(cl))),vh=(Number(c.volume)||0)/maxVol*volH;return `<g><path d="M${x} ${y(Number(c.high))}V${y(Number(c.low))}" stroke="${color}" stroke-width="1.3"/><rect x="${x-cw/2}" y="${bodyY}" width="${cw}" height="${bodyH}" rx="1" fill="${color}"/><rect x="${x-cw/2}" y="${top+plotH+8+volH-vh}" width="${cw}" height="${vh}" fill="${color}" opacity=".35"/></g>`}).join("");
-  return `<div class="advanced-chart-wrap"><div class="advanced-chart-legend"><span><i class="up"></i>Рост</span><span><i class="down"></i>Снижение</span><small>${rows.length} свечей · OHLC + объём</small></div><svg class="advanced-candles" viewBox="0 0 ${w} ${h}" role="img" aria-label="Свечной график с объёмами">${grid}${sticks}<text x="${left}" y="${h-5}" font-size="10" fill="#829087">${new Date(Number(rows[0].timestamp)*1000).toLocaleString("ru-RU")}</text><text x="${w-right}" y="${h-5}" text-anchor="end" font-size="10" fill="#829087">${new Date(Number(rows.at(-1).timestamp)*1000).toLocaleString("ru-RU")}</text></svg></div>`;
-}
-
 function candleRows(items,source,interval=86400){
   const date = c => {
     const raw=Number(c.timestamp);
@@ -246,7 +161,7 @@ document.addEventListener("click",async event=>{
   panel.querySelectorAll("[data-candle-interval]").forEach(b=>{
     const active=Number(b.dataset.candleInterval)===selected;
     b.classList.toggle("active",active); b.setAttribute("aria-pressed",String(active));
-    b.style.background=active?"#078747":"#fff"; b.style.color=active?"#fff":"#5b695f"; b.style.borderColor=active?"#078747":"#e5ece7";
+    b.style.background=active?"rgba(99,102,241,.22)":"transparent";
   });
   const title=panel.querySelector("[data-candle-title]");
   if(title) title.textContent=`История ${panel.dataset.candlePairName||""} · ${candleLabel(selected)}`;
@@ -256,7 +171,6 @@ document.addEventListener("click",async event=>{
     const result=await api(`/candles?source=${encodeURIComponent(source)}&pair=${encodeURIComponent(pair)}&interval=${encodeURIComponent(selected)}`);
     if(candleRequests.get(panel)!==requestToken) return;
     candleDataCache.set(`${candleKey(source,pair)}:${selected}`,Array.isArray(result.candles)?result.candles:[]);
-    const chart=panel.querySelector(".advanced-chart-wrap"); if(chart) chart.outerHTML=candleChart(result.candles);
     if(table) table.innerHTML=result.candles?.length?candleRows(result.candles,source,selected):'<p class="muted">Для этого интервала история отсутствует</p>';
   } catch(error){
     if(candleRequests.get(panel)===requestToken&&table) table.innerHTML=`<p class="muted">Не удалось загрузить историю: ${esc(error.message)}</p>`;
@@ -272,7 +186,7 @@ function blackbitView(source){
   const selected=Number(candleSelections.get(candleKey("blackbit","ecrUsdt"))??900);
   const cached=candleDataCache.get(`${candleKey("blackbit","ecrUsdt")}:${selected}`);
   const candles=Array.isArray(cached)?cached:(selected===900&&Array.isArray(d.candles)?d.candles:[]);
-  const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}${candleChart(candles)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+  const candleTable=`<div data-candle-panel data-candle-pair-name="ECR/USDT"><h3 data-candle-title>История ECR/USDT · ${candleLabel(selected)}</h3>${candleControls("blackbit","ecrUsdt",900)}<div class="candle-results">${candles.length?candleRows(candles,"blackbit",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   return `<div class="market-head"><div><div class="eyebrow">ПУБЛИЧНЫЕ ДАННЫЕ BLACKBIT</div><h2>ECR / USDT</h2></div><span class="live-pill">● LIVE</span></div>
   <div class="bb-summary"><div><span>Последняя цена</span><strong>${num(d.lastRate)} USDT</strong></div><div><span>Лучшая покупка</span><strong class="bid-label">${num(d.bestBid)} USDT</strong></div><div><span>Лучшая продажа</span><strong class="ask-label">${num(d.bestAsk)} USDT</strong></div><div><span>Спред</span><strong>${num(spread)} USDT</strong><small>${spreadPct===null?"—":spreadPct.toFixed(5)+"%"}</small></div><div><span>Объём пары (API)</span><strong>${num(d.pair?.volumeBase)} ECR</strong><small>${num(d.pair?.volumeQuoted)} USDT</small></div><div><span>Минимум сделки</span><strong>${num(d.pair?.minimumAmount)} ECR</strong></div></div>
   <p class="market-meta">Глубина стакана: до 100 уровней · Цена: ${esc(d.priceSource||"API")} · ${d.priceInsideSpread===false?"Цена вне текущего спреда — требуется проверка":"Цена согласуется со спредом"}</p>
@@ -290,7 +204,7 @@ function winanceView(source){
     const selected=Number(candleSelections.get(candleKey("winance",pairKey))??900);
     const cached=candleDataCache.get(`${candleKey("winance",pairKey)}:${selected}`);
     const items=Array.isArray(cached)?cached:[];
-    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,900)}${candleChart(items)}<div class="candle-results">${items.length?candleRows(items,"winance",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
+    return `<div data-candle-panel data-candle-pair-name="${pairName}"><h3 data-candle-title>История ${pairName} · ${candleLabel(selected)}</h3>${candleControls("winance",pairKey,900)}<div class="candle-results">${items.length?candleRows(items,"winance",selected):'<p class="muted">История свечей пока отсутствует</p>'}</div></div>`;
   };
   const market=(key,pairName,unit)=>{
     const pair=key==="erubUsdt"?pairs.erubUsdt:pairs.erubRub;
@@ -369,12 +283,9 @@ function erubView(source, winanceSource){
     ${comparisonCard("RUB → ERUB",rubErub,"RUB",winRub)}</section>
     <section class="erub-purchase-section erub-converter-section">
       <div class="erub-section-heading"><span>03</span><div><h3>Конвертер ERUB</h3><p>Введи количество ERUB — расчёт в USDT и RUB учитывает Bounty +10% по актуальным курсам eRub.site</p></div></div>
-      <div class="erub-converter-layout">
-        <label class="erub-converter-input">Сумма ERUB
-          <input id="erubConvertAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Например, 1000">
-          <small>Укажи количество ERUB для пересчёта в две валюты</small>
-        </label>
-        <div class="erub-converter-results" aria-live="polite">
+      <div class="erub-calculator">
+        <label>Сумма ERUB<input id="erubConvertAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Например, 1000"></label>
+        <div class="erub-calc-result erub-converter-results">
           <div class="erub-converter-line"><span>USDT · без Bounty</span><strong id="erubConvertUsdtBase">— USDT</strong></div>
           <div class="erub-converter-line bonus"><span>USDT · с Bounty +10%</span><strong id="erubConvertUsdt">— USDT</strong></div>
           <div class="erub-converter-line"><span>RUB · без Bounty</span><strong id="erubConvertRubBase">— RUB</strong></div>
@@ -485,23 +396,12 @@ async function load() {
   const savedInteractive=captureInteractiveState();
   try {
     const s=await api("/status");
-    window.__cashflowSnapshot=s;
-    renderOverview(s);
     // Render the dedicated rates page immediately from the same live snapshot.
     renderRatesSources(s);
     savedScroll=captureScrollPositions();
-    const sourceEntries=Object.entries(s.sources||{});
-    const onlineCount=sourceEntries.filter(([,source])=>source?.ok===true).length;
-    const totalSources=sourceEntries.length;
-    const overall=$("overall");
-    if(totalSources>0 && onlineCount===totalSources){
-      overall.innerHTML="<i></i>Все системы онлайн"; overall.className="status ok";
-    }else if(onlineCount>0){
-      overall.innerHTML=`<i></i>Доступно источников: ${onlineCount} из ${totalSources}`; overall.className="status pending";
-    }else{
-      overall.innerHTML="<i></i>Нет связи с источниками"; overall.className="status error";
-    }
+    $("overall").textContent="● Сервер работает"; $("overall").className="status ok";
     $("updated").textContent=s.updatedAt?`Обновлено: ${new Date(s.updatedAt).toLocaleString("ru-RU")}`:"Ожидание первого обновления";
+    $("sources").innerHTML=Object.entries(s.sources||{}).map(([k,v])=>sourceCard(k,v)).join("")||'<div class="card">Источники ещё не опрошены</div>';
     // Rates are rendered above with actual quotes, not source-status placeholders.
     $("winanceData").innerHTML=winanceView(s.sources?.winance); $("erubData").innerHTML=erubView(s.sources?.erub,s.sources?.winance);
     $("blackbitData").innerHTML=blackbitView(s.sources?.blackbit); bindErubCalculator();
@@ -513,141 +413,16 @@ async function load() {
     });
     $("historyData").innerHTML=(s.history||[]).slice(-30).reverse().map(x=>`<div class="source-state">${esc(x.at)} · ${esc(x.source)}</div>`).join("")||"История пока пуста";
     restoreInteractiveState(savedInteractive);
-    calculateBlackBitEcr(s);
-    calculateErubWithdrawals(s);
     requestAnimationFrame(()=>requestAnimationFrame(()=>restoreScrollPositions(savedScroll)));
   } catch(e) {
-    $("overall").innerHTML="<i></i>Сервер недоступен"; $("overall").className="status error";
+    $("overall").textContent="● Сервер недоступен"; $("overall").className="status error";
     $("sources").innerHTML=`<div class="card"><strong>Не удалось получить данные API</strong><p>${esc(e.message)}</p><p class="muted">Откройте приложение через запущенный Node.js сервер.</p></div>`;
   } finally { loadInProgress = false; }
 }
-$("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.innerHTML="<span>↻</span> Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.innerHTML="<span>↻</span> Обновить данные";}});
-// Расчёт продажи ECR на BlackBit по лучшей цене BUY из актуального стакана.
-const erubNumber = value => Number(value).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:8});
-function calculateBlackBitEcr(snapshot=window.__cashflowSnapshot){
-  const source=snapshot?.sources?.blackbit;
-  const data=source?.ok?source.data:null;
-  const bid=Number(data?.bestBid);
-  const target=Math.max(0,Number($("blackbitEcrTarget")?.value)||0);
-  const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
-  if(!(bid>0)||!(target>0)){
-    put("blackbitEcrRate",bid>0?`${erubNumber(bid)} USDT / ECR`:"Нет актуального курса");
-    put("blackbitEcrNeeded","— ECR"); put("blackbitEcrTradeFee","— USDT");
-    put("blackbitEcrWithdrawalFee","— USDT"); put("blackbitWinanceTradeFee","— USDT");
-    put("blackbitWinanceWithdrawalFee","— USDT"); put("blackbitEcrNet","— USDT");
-    put("blackbitEcrStatus",bid>0?"Введите желаемую сумму после вывода Winance.":"Нет актуальной цены BUY ECR/USDT в стакане BlackBit; старый курс не используется.");
-    return;
-  }
-  const bbTradeRate=0.001;
-  const winanceTradeRate=0.002;
-  const winanceWithdrawFixed=3;
-  const winanceWithdrawRate=0.01;
-  // Цель — сумма после вывода с Winance. Комиссия вывода:
-  // 3 USDT + 1% от целевой суммы. Для 500 USDT это 8 USDT,
-  // значит на Winance требуется 508 USDT до вывода.
-  const winanceWithdrawalFee=winanceWithdrawFixed+target*winanceWithdrawRate;
-  const amountNeededOnWinance=target+winanceWithdrawalFee;
-  // Торговая комиссия Winance 0,2% показывается отдельно и учитывается
-  // в ERUB→USDT калькуляторе; она не добавляется второй раз к маршруту USDT.
-  const winanceTradeFee=amountNeededOnWinance*winanceTradeRate;
-  // На BlackBit продаём ровно сумму, нужную для перевода на Winance,
-  // с учётом только комиссии торгового ордера BlackBit 0,1%.
-  const bbGrossSale=amountNeededOnWinance/(1-bbTradeRate);
-  const bbTradeFee=bbGrossSale*bbTradeRate;
-  const ecrToSell=bbGrossSale/bid;
-  const min=10, max=502.744987, warnings=[];
-  if(amountNeededOnWinance+1e-9<min)warnings.push(`сумма ниже минимума ${min} USDT`);
-  if(amountNeededOnWinance>max+1e-9)warnings.push(`превышен зафиксированный максимум вывода ${erubNumber(max)} USDT`);
-  put("blackbitEcrRate",`${erubNumber(bid)} USDT / ECR`);
-  put("blackbitEcrNeeded",`${erubNumber(ecrToSell)} ECR`);
-  put("blackbitEcrTradeFee",`${erubNumber(bbTradeFee)} USDT`);
-  put("blackbitEcrWithdrawalFee","— USDT");
-  put("blackbitWinanceTradeFee",`${erubNumber(winanceTradeFee)} USDT (0,20%; справочно)`);
-  put("blackbitWinanceWithdrawalFee",`${erubNumber(winanceWithdrawalFee)} USDT`);
-  put("blackbitEcrNet",`${erubNumber(target)} USDT`);
-  put("blackbitEcrStatus",`Цель после вывода Winance: ${erubNumber(target)} USDT. Комиссия вывода Winance: 3 USDT + 1% от цели = ${erubNumber(winanceWithdrawalFee)} USDT. На Winance нужно получить ${erubNumber(amountNeededOnWinance)} USDT. На BlackBit нужно продать на ${erubNumber(bbGrossSale)} USDT с учётом торговой комиссии BlackBit 0,1%; потребуется ${erubNumber(ecrToSell)} ECR. Торговая комиссия Winance 0,2% (${erubNumber(winanceTradeFee)} USDT) отображается отдельно и не добавляется повторно к USDT-маршруту.${warnings.length?` Проверка лимита: ${warnings.join("; ")}.`:" Лимит проверен."}`);
-}
-["blackbitEcrTarget"].forEach(id=>{
-  $(id)?.addEventListener("input",()=>calculateBlackBitEcr());
-  $(id)?.addEventListener("change",()=>calculateBlackBitEcr());
-});
+$("refresh").addEventListener("click",async()=>{const b=$("refresh");b.disabled=true;b.textContent="Обновление…";try{await api("/refresh");await load();}catch(e){alert(e.message);}finally{b.disabled=false;b.textContent="Обновить сейчас";}});
+function calculate(){const gross=Math.max(0,Number($("gross").value)||0),net=Math.max(0,(gross-3)/1.01),fee=gross-net;$("net").textContent=`${net.toFixed(2)} USDT`;$("fee").textContent=`Комиссия: ${fee.toFixed(2)} USDT`;const m=$("minimum"),ok=net+1e-9>=10;m.textContent=ok?"Минимум 10 USDT чистыми достигнут":"Минимум 10 USDT чистыми не достигнут";m.className=`minimum ${ok?"good":"bad"}`;}
+$("gross").addEventListener("input",calculate); calculate();
 
-function calculateErubWithdrawals(snapshot=window.__cashflowSnapshot){
-  const win=snapshot?.sources?.winance;
-  const pairs=win?.ok?win.data?.pairs||{}:{};
-  const books=win?.ok?win.data?.orderBooks||{}:{};
-  const sellRate=key=>{
-    const book=books[key];
-    const bid=Number(book?.ok?book.bestBid:NaN);
-    if(bid>0) return {rate:bid,source:"лучшая цена BUY (стакан)"};
-    const fallback=Number(pairs[key]?.rate);
-    return fallback>0?{rate:fallback,source:"последняя цена пары; стакан недоступен"}:null;
-  };
-  const usdt=sellRate("erubUsdt");
-  const rub=sellRate("erubRub");
-  const put=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
-  const target=Math.max(0,Number($("erubUsdtTarget")?.value)||0);
-  const usdtIncluded=true;
-  if(usdt&&target>0){
-    // Winance trading fee 0.2%; withdrawal fee 3 USDT + 1%.
-    const tradeRate=0.002, withdrawalRate=0.01;
-    const beforeTrade=usdtIncluded?target:((target/(1-withdrawalRate)+3)/(1-tradeRate));
-    const afterTrade=beforeTrade*(1-tradeRate);
-    const payout=usdtIncluded?Math.max(0,(afterTrade-3)/(1+withdrawalRate)):target;
-    const withdrawalBase=usdtIncluded?Math.max(0,(afterTrade-3)/(1+withdrawalRate)):target/(1-withdrawalRate);
-    const withdrawalFee=3+withdrawalBase*withdrawalRate;
-    const tradeFee=beforeTrade*tradeRate;
-    const received=payout;
-    put("erubUsdtRate",`${erubNumber(usdt.rate)} USDT / ERUB`);
-    put("erubUsdtNeeded",`${erubNumber(beforeTrade/usdt.rate)} ERUB`);
-    put("erubUsdtTradeFee",`${erubNumber(tradeFee)} USDT (0,20%)`);
-    put("erubUsdtWithdrawalFee",`${erubNumber(withdrawalFee)} USDT`);
-    put("erubUsdtNet",`${erubNumber(received)} USDT`);
-    put("erubUsdtStatus",`Курс: ${usdt.source}. ${usdtIncluded?`Введённая сумма включает торговую и выводную комиссии; на руки поступит около ${erubNumber(received)} USDT.`:`Цель к получению ${erubNumber(received)} USDT; для этого потребуется около ${erubNumber(beforeTrade)} USDT до вывода.`} Вывод 3 USDT + 1% от суммы вывода.`);
-  }else{
-    put("erubUsdtRate","Нет актуального курса");put("erubUsdtNeeded","— ERUB");
-    put("erubUsdtWithdrawalFee","— USDT");put("erubUsdtNet","— USDT");
-    put("erubUsdtStatus","Нет доступной котировки ERUB/USDT на Winance; расчёт не подменяется старым курсом.");
-  }
-  const rubTarget=Math.max(0,Number($("erubRubTarget")?.value)||0);
-  const included=true;
-  if(rub&&rubTarget>0){
-    const fee=rubTarget*0.05;
-    const grossRub=included?rubTarget:rubTarget+fee;
-    const netRub=included?rubTarget-fee:rubTarget;
-    const erubToSell=grossRub/(rub.rate*(1-0.002));
-    put("erubRubRate",`${erubNumber(rub.rate)} RUB / ERUB`);
-    put("erubRubNeeded",`${erubNumber(erubToSell)} ERUB`);
-    put("erubRubTradeFee","0,20% (учтена)");
-    put("erubRubFee",`${erubNumber(fee)} RUB`);
-    put("erubRubNet",`${erubNumber(netRub)} RUB`);
-    put("erubRubStatus",included
-      ?`Введённая сумма включает комиссии: из ${erubNumber(rubTarget)} RUB комиссия карты ${erubNumber(fee)} RUB, на карту поступит ${erubNumber(netRub)} RUB. Курс: ${rub.source}.`
-      :`Введена сумма к получению: ${erubNumber(rubTarget)} RUB. Комиссия ${erubNumber(fee)} RUB добавляется сверху; всего потребуется ${erubNumber(grossRub)} RUB. Курс: ${rub.source}; торговая комиссия Winance 0,20% учтена.`);
-  }else{
-    put("erubRubRate","Нет актуального курса");put("erubRubNeeded","— ERUB");
-    put("erubRubTradeFee","0,20% (ожидание курса)");
-    put("erubRubFee","— RUB");put("erubRubNet","— RUB");
-    put("erubRubStatus","Нет доступной котировки ERUB/RUB на Winance; расчёт не подменяется старым курсом.");
-  }
-}
-["erubUsdtTarget","erubRubTarget"].forEach(id=>{
-  $(id)?.addEventListener("input",()=>calculateErubWithdrawals());
-  $(id)?.addEventListener("change",()=>calculateErubWithdrawals());
-});
-
-// Зафиксированные тарифы. Пользовательский интерфейс доступен только для просмотра.
-const LOCKED_TARIFFS = {
-  bbMin:10, bbMax:502.744987, bbTrade:0.10,
-  winMin:10, winMax:5000, winTrade:0.20,
-  winFixed:3, winPercent:1
-};
-function applyLockedTariffs(){
-  for(const [id,value] of Object.entries(LOCKED_TARIFFS)){
-    const el=$(id); if(!el) continue;
-    el.value=String(value);el.readOnly=true;el.setAttribute("aria-readonly","true");
-  }
-}
 load();
 let refreshTimer = null;
 function scheduleRefresh(){
