@@ -12,7 +12,7 @@ import { fetchWinanceCandles } from "./src/adapters/winance.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
-const mime = {".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".json":"application/json; charset=utf-8",".svg":"image/svg+xml",".png":"image/png",".webmanifest":"application/manifest+json; charset=utf-8"};
+const mime = {".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".json":"application/json; charset=utf-8",".svg":"image/svg+xml"};
 
 function send(res, status, data, type="application/json; charset=utf-8") {
   res.writeHead(status, {"Content-Type":type,"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"});
@@ -20,7 +20,7 @@ function send(res, status, data, type="application/json; charset=utf-8") {
 }
 function sendStatic(req, res, body, type, stat) {
   const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}"`;
-  const headers = {"Content-Type":type,"Cache-Control":(type.includes("text/html") || type.includes("javascript"))?"no-cache":"public, max-age=300, stale-while-revalidate=86400", "ETag":etag,"Last-Modified":stat.mtime.toUTCString(),"X-Content-Type-Options":"nosniff","Vary":"Accept-Encoding"};
+  const headers = {"Content-Type":type,"Cache-Control":type.includes("text/html")?"no-cache":"public, max-age=300, stale-while-revalidate=86400", "ETag":etag,"Last-Modified":stat.mtime.toUTCString(),"X-Content-Type-Options":"nosniff","Vary":"Accept-Encoding"};
   if (req.headers["if-none-match"] === etag) { res.writeHead(304, headers); return res.end(); }
   const acceptsGzip = /\bgzip\b/.test(req.headers["accept-encoding"] || "") && body.length > 1024 && !type.includes("image/");
   if (acceptsGzip) { headers["Content-Encoding"]="gzip"; res.writeHead(200, headers); const gzip=createGzip({level:6}); gzip.pipe(res); gzip.end(body); }
